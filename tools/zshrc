@@ -65,7 +65,10 @@ source /etc/profile
 
 # source <(kubectl completion zsh)
 
-autoload -U compinit && compinit
+# autoload -U compinit && compinit
+
+# autoload -U promptinit && promptinit
+
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 

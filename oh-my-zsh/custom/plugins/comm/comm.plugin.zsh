@@ -374,8 +374,8 @@ elif [[ $theme == "power" ]]; then
 elif [[ $theme == "minimal" ]]; then
     PROMPT='%(?,%{${fg_bold[green]}%}☀%{$reset_color%},%{${fg_bold[red]}%}☂%{$reset_color%}) %{$fg_bold[yellow]%}%~%{$reset_color%}$(git_prompt_info) %{${fg_bold[magenta]}%}%(!.➤.⨠)%{${reset_color}%} '
 else
-    PROMPT="%{${fg_bold[blue]}%}✿ %{${fg_bold[red]}%}%m%(!.☢.❖)%n %{${fg_bold[magenta]}%}:: %{${fg_bold[yellow]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) %(?,%{${fg_bold[green]}%}☀%{$reset_color%},%{${fg_bold[red]}%}☂%{$reset_color%}) %{${fg_bold[blue]}%}»%{${reset_color}%} "
-    RPROMPT='%{${fg_bold[red]}%}< %w %T %! > %{${fg_bold[blue]}%}✿%{${reset_color}%}'
+    PROMPT="%{${fg_bold[blue]}%}✿ %{${fg_bold[red]}%}%m%(!.☢.❖)%n %{${fg_bold[magenta]}%}:: %{${fg_bold[cyan]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) %(?,%{${fg_bold[green]}%}☀%{$reset_color%},%{${fg_bold[red]}%}☂%{$reset_color%}) %{${fg_bold[blue]}%}»%{${reset_color}%} "
+    RPROMPT='%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}✿%{${reset_color}%}'
     # TODO 继续完善
 fi
 
@@ -716,6 +716,10 @@ command_not_found_handler () {      #if the command is not found, let bash show 
  
 #setopt correctall
 #autoload compinstall
+
+autoload -U compinit && compinit
+
+autoload -U promptinit && promptinit
 
 ## END OF FILE #################################################################
 # vim:filetype=zsh foldmethod=marker autoindent expandtab shiftwidth=4
