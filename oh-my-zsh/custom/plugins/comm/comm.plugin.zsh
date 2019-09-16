@@ -440,7 +440,7 @@ setopt HIST_IGNORE_SPACE
 #}
 #mkdir -p $HOME/.zsh_history$PWD
 #export HISTFILE="$HOME/.zsh_history$PWD/zhistory"
- 
+#
 #function allhistory { cat $(find $HOME/.zsh_history -name zhistory) }
 #function convhistory {
 #sort $1 | uniq |
@@ -661,6 +661,14 @@ bindkey "^[[11~" arith-eval-echo
 # ccat 高亮显示输出
 # alias cat='ccat'
 
+# kubectl 自动补全延迟加载
+function kubectl() {
+    if ! type __start_kubectl >/dev/null 2>&1; then
+    ¦   source <(command kubectl completion zsh)
+    fi
+    command kubectl "$@"
+}
+
 # pygments 高亮显示输出
 function pat() {
     local style="monokai"
@@ -686,7 +694,7 @@ function hl() {
 }
 # alias cat='hl'
 
-command_not_found_handler () {      #if the command is not found, let bash show the message and advice(zsh could only show "command not found").
+command_not_found_handler () { #if command is not found, let bash show the message and advice(zsh could only show "command not found").
         runcnf=1 
         retval=127 
         [ ! -S /var/run/dbus/system_bus_socket ] && runcnf=0 
@@ -696,7 +704,7 @@ command_not_found_handler () {      #if the command is not found, let bash show 
                 /usr/libexec/pk-command-not-found $@
                 retval=$? 
         fi
-        return 0                   #if return $retval, both the bash and zsh messages will be shown in the terminal, if return 0, only the bash massage will be shown.
+        return 0    #if return $retval, both the bash and zsh messages will be shown in the terminal, if return 0, only the bash massage will be shown.
 }
 
 ####{{{
