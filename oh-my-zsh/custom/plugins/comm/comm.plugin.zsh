@@ -390,7 +390,7 @@ fi
 #}}}
 
 # 开启256色
-if [ "$TERM" == "xterm" ]; then
+if [[ "$TERM" == "xterm" ]]; then
     # No it isn't, it's gnome-terminal
     export TERM=xterm-256color
 fi

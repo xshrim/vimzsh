@@ -27,6 +27,7 @@ vim配置文件, 安装vim后复制为`~/.vim`目录生效.
 - DIR_COLORS:  ls命令目录和文件基于后缀的颜色高亮显示, 复制到`/etc/`目录下生效, 已在comm主题中自动应用, 无需手动复制.
 - pycp-8.0.7.zip: 提供`pycp`和`pymv`命令做为系统cp和mv命令的替代, 支持显示进度条.
 - highlight: 对标准输出进行语法高亮, 替代cat命令, 复制到`/usr/bin/`目录下生效.
+- filetypes.conf: highlight支持的文件类型与语法引擎关联文件
 - h: 对highlight进行增强, 适配命令行管道需求, 统一为`h`命令,  完全替代cat命令.
 - gitstatus.py: 为zsh提供git插件支持, zsh内置git插件, 因此已废弃.
 - zshrc: zsh配置文件, 复制为`~/.zshrc`文件即可自动生效.
