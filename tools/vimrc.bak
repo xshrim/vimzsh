@@ -114,10 +114,10 @@ set autowrite
 set magic                   " 设置魔术
 "set guioptions-=T           " 隐藏工具栏
 "set guioptions-=m           " 隐藏菜单栏
-set foldcolumn=0
+"set foldcolumn=0
 set foldmethod=indent
 set nofoldenable
-set foldlevel=8
+"set foldlevel=3
 
 " 去掉输入错误的提示声音
 set noerrorbells
@@ -147,6 +147,7 @@ set showmatch
 " 匹配括号高亮的时间（单位是十分之一秒）
 set matchtime=1
 
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "键盘命令
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -172,8 +173,8 @@ nnoremap <F10> :g/^\s*$/d<CR>
 "taglist
 :nmap <silent> <F4> <ESC>:Tlist<RETURN>
 "复制粘贴映射
-"map <C-c> "+y
-"map <C-v> "+p
+map <C-c> "+y
+map <C-v> "+p
 "输入法
 :let g:vimim_map='c-/'
 ":let g:vimim_cloud='sougou' " QQ云输入
@@ -216,7 +217,7 @@ set selectmode=mouse,key
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 augroup new_file
     autocmd!
-    autocmd BufNewFile *.[ch],*.hpp,*.sh,*.py,*.go,*.rb,*.php,*.java,*.jsp,*.html,*.htm,*.asp,*.ini,*.conf,*.sql,*.xml,*.css,*.js,*.cs,*.cpp exec ":call SetTitle()"
+    ""autocmd BufNewFile *.[ch],*.hpp,*.sh,*.py,*.go,*.rb,*.php,*.java,*.jsp,*.html,*.htm,*.asp,*.ini,*.conf,*.sql,*.xml,*.css,*.js,*.cs,*.cpp exec ":call SetTitle()"
 augroup END
 "" autocmd BufNewFile *.[ch],*.hpp,*.sh,*.py,*.rb,*.php,*.java,*.jsp,*.html,*.htm,*.asp,*.ini,*.conf,*.sql,*.xml,*.css,*.js,*.cs,*.cpp exec ":call SetTitle()"
 
@@ -274,7 +275,7 @@ endfunc
 "定义函数SetTitle，自动插入文件头
 func SetTitle()
     let l:type = tolower(expand('%:e'))
-    "call SetComment(l:type)
+    call SetComment(l:type)
     if l:type ==? 'hpp'
         call append(line('.')+10, '#ifndef _'.toupper(expand('%:t:r')).'_H')
         call append(line('.')+11, '#define _'.toupper(expand('%:t:r')).'_H')
@@ -664,6 +665,7 @@ call vundle#begin()
 " let Vundle manage Vundle, required
 Plugin 'gmarik/Vundle.vim'
 
+"Plugin 'Valloric/YouCompleteMe'
 " The following are examples of different formats supported.
 " Keep Plugin commands between vundle#begin/end.
 " plugin on GitHub repo
@@ -854,6 +856,8 @@ nmap sn <Plug>(ale_next_wrap)
 nmap <Leader>s :ALEToggle<CR>
 "<Leader>d查看错误或警告的详细信息
 nmap <Leader>d :ALEDetail<CR>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""YouCompleteMe"""""""""""""""""""""""""""""""""""""""""""""""""""""
+Plugin 'Valloric/YouCompleteMe'
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""Vimmake"""""""""""""""""""""""""""""""""""""""""""""""""""""
 Plugin 'skywind3000/vimmake'
