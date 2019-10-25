@@ -66,6 +66,10 @@ set incsearch
 " 命令行高度
 set cmdheight=1
 
+"设置映射延迟和按键延迟
+set timeoutlen=100
+set ttimeoutlen=10
+
 " 侦测文件类型
 filetype on
 " 载入文件类型插件
