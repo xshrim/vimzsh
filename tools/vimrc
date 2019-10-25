@@ -174,7 +174,8 @@ nnoremap <F2> gg=G<CR>
 nnoremap <F10> :g/^\s*$/d<CR>
 
 "taglist
-:nmap <silent> <F4> <ESC>:Tlist<RETURN>
+":nmap <silent> <F4> <ESC>:Tlist<RETURN>
+
 "复制粘贴映射
 "map <C-c> "+y
 "map <C-v> "+p
@@ -886,6 +887,19 @@ let g:UltiSnipsJumpBackwardTrigger='<c-z>'
 
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit='vertical'
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""tagbar"""""""""""""""""""""""""""""""""""""""""""""""""""""
+Plugin 'majutsushi/tagbar'
+nmap <F4> :TagbarToggle<CR>
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""ctrlp"""""""""""""""""""""""""""""""""""""""""""""""""""""
+Plugin 'ctrlpvim/ctrlp.vim'
+let g:ctrlp_map = '<c-p>'
+let g:ctrlp_cmd = 'CtrlP'
+
+""""""""""""""""""""""""""""""""""""""""""""""""""lightline"""""""""""""""""""""""""""""""""""""""""""
+"Plugin 'itchyny/lightline.vim'
+"set laststatus=2
 
 """""""""""""""""""""""""""""""""""""""""""""""""vim-airline"""""""""""""""""""""""""""""""""""""""""""
 Plugin 'bling/vim-airline'
