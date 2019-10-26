@@ -1,0 +1,15 @@
+fcitx#activate()	vim-fcitx.txt	/*fcitx#activate()*
+fcitx#inactivate()	vim-fcitx.txt	/*fcitx#inactivate()*
+fcitx#inactivate_with_state()	vim-fcitx.txt	/*fcitx#inactivate_with_state()*
+fcitx#is_on()	vim-fcitx.txt	/*fcitx#is_on()*
+fcitx#restore_state()	vim-fcitx.txt	/*fcitx#restore_state()*
+fcitx#toggle()	vim-fcitx.txt	/*fcitx#toggle()*
+g:fcitx#commandline_behavior	vim-fcitx.txt	/*g:fcitx#commandline_behavior*
+g:fcitx#insert_mode_behavior	vim-fcitx.txt	/*g:fcitx#insert_mode_behavior*
+vim-fcitx-contents	vim-fcitx.txt	/*vim-fcitx-contents*
+vim-fcitx-faq	vim-fcitx.txt	/*vim-fcitx-faq*
+vim-fcitx-functions	vim-fcitx.txt	/*vim-fcitx-functions*
+vim-fcitx-install	vim-fcitx.txt	/*vim-fcitx-install*
+vim-fcitx-introduction	vim-fcitx.txt	/*vim-fcitx-introduction*
+vim-fcitx-variables	vim-fcitx.txt	/*vim-fcitx-variables*
+vim-fcitx.txt	vim-fcitx.txt	/*vim-fcitx.txt*
