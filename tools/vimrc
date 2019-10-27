@@ -420,7 +420,15 @@ endfunc
 """"""""""""""""""""""""""""""""vim-colorschemes""""""""""""""""""""""""""
 " 配色方案
 Plug 'flazz/vim-colorschemes'
+Plug 'felixhummel/setcolors.vim'
+" onehalf theme
+Plug 'sonph/onehalf'
+" onedark theme
+Plug 'joshdick/onedark.vim'
+
 colorscheme molokai
+" :SetColors all
+" F8/Alt+F8 switch scheme
 
 """""""""""""""""""""""""""""""""""unite.vim"""""""""""""""""""""""""""""""
 " 自定义弹出菜单
@@ -618,7 +626,7 @@ nmap <Leader>d :ALEDetail<CR>
 """"""""""""""""""""""""""""""""""""""tagbar""""""""""""""""""""""""""""""""""""
 " 标记显示
 Plug 'majutsushi/tagbar'
-nmap <F8> :TagbarToggle<CR>
+nmap <F7> :TagbarToggle<CR>
 
 """"""""""""""""""""""""""""""""""""ultisnips"""""""""""""""""""""""""""""""""""
 " 代码片段生成
