@@ -1,3 +1,7 @@
+" debug vim
+" vim --noplugin -D
+" disable all pulgins
+" vim -U NONE -u
 set encoding=utf-8
 scriptencoding utf-8
 "识别文件编码
