@@ -480,6 +480,10 @@ Plug 'skywind3000/vimmake'
 " fcitx状态切换
 Plug 'h-youhei/vim-fcitx'
 
+""""""""""""""""""""""""""""""""""vim-alias"""""""""""""""""""""""""""""""""
+" 命令别名
+Plug 'Konfekt/vim-alias'
+
 """"""""""""""""""""""""""""""""""delimitMate"""""""""""""""""""""""""""""""
 " 符号自动补全
 Plug 'Raimondi/delimitMate'
