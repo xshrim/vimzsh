@@ -1,3 +1,4 @@
+# zsh文档: https://github.com/goreliu/zshguide
 ########################################
 # Git
 ########################################
@@ -79,7 +80,6 @@ RCURRENT_BG='NONE'
   RSEGMENT_SEPARATOR=$'\ue0b2'
 }
 
-
 # Begin a segment
 # Takes two arguments, background and foreground. Both can be omitted,
 # rendering default background/foreground.
@@ -110,7 +110,6 @@ rprompt_segment() {
   RCURRENT_BG=$1
   [[ -n $3 ]] && echo -n $3
 }
-
 
 prompt_start() {
   if [[ $RCURRENT_BG == 'NONE' || $1 != $RCURRENT_BG ]]; then
@@ -282,7 +281,6 @@ rprompt_status() {
 rprompt_segment yellow black '%?'
 }
 
-
 ## Main prompt
 build_prompt() {
   RETVAL=$?
@@ -305,7 +303,6 @@ build_rprompt() {
 ########################################
 # Settings
 ########################################
-
 
 #color{{{
 autoload colors zsh/terminfo
@@ -389,12 +386,6 @@ fi
 
 #}}}
 
-# 开启256色
-if [[ "$TERM" == "xterm" ]]; then
-    # No it isn't, it's gnome-terminal
-    export TERM=xterm-256color
-fi
-
 #清空历史记录
 #cat /dev/null > ${HOME}/.zhistory
 #cat /dev/null > ${HOME}/.zsh_history
@@ -446,7 +437,7 @@ setopt HIST_IGNORE_SPACE
 #}
 #mkdir -p $HOME/.zsh_history$PWD
 #export HISTFILE="$HOME/.zsh_history$PWD/zhistory"
-#
+ 
 #function allhistory { cat $(find $HOME/.zsh_history -name zhistory) }
 #function convhistory {
 #sort $1 | uniq |
@@ -627,9 +618,8 @@ alias -g grep='grep -P --color=auto'
 
 #alias -g history='history -fi'
 alias open='xdg-open'
-#git log
-alias glog='git log --oneline --graph --decorate'
 
+alias glog='git log --oneline --graph --decorate'
 
 #[Esc][h] man 当前命令时，显示简短说明
 alias run-help >&/dev/null && unalias run-help
@@ -648,9 +638,9 @@ hash -d HIST="$HISTDIR"
 #补全 ping
 zstyle ':completion:*:ping:*' hosts g.cn facebook.com
 
-#def pacman-color completion as pacman
-#compdef pacman-color=pacman
-#}}}
+# def pacman-color completion as pacman
+# compdef pacman-color=pacman
+# }}}
 
 #{{{ F1 计算器
 arith-eval-echo() {
@@ -668,14 +658,6 @@ bindkey "^[[11~" arith-eval-echo
 
 # ccat 高亮显示输出
 # alias cat='ccat'
-
-# kubectl 自动补全延迟加载
-function kubectl() {
-    if ! type __start_kubectl >/dev/null 2>&1; then
-    ¦   source <(command kubectl completion zsh)
-    fi
-    command kubectl "$@"
-}
 
 # pygments 高亮显示输出
 function pat() {
@@ -702,7 +684,7 @@ function hl() {
 }
 # alias cat='hl'
 
-command_not_found_handler () { #if command is not found, let bash show the message and advice(zsh could only show "command not found").
+command_not_found_handler () {      #if the command is not found, let bash show the message and advice(zsh could only show "command not found").
         runcnf=1 
         retval=127 
         [ ! -S /var/run/dbus/system_bus_socket ] && runcnf=0 
@@ -712,7 +694,7 @@ command_not_found_handler () { #if command is not found, let bash show the messa
                 /usr/libexec/pk-command-not-found $@
                 retval=$? 
         fi
-        return 0    #if return $retval, both the bash and zsh messages will be shown in the terminal, if return 0, only the bash massage will be shown.
+        return 0                   #if return $retval, both the bash and zsh messages will be shown in the terminal, if return 0, only the bash massage will be shown.
 }
 
 ####{{{
@@ -805,12 +787,13 @@ function web_search() {
   #url="${url%?}" # remove the last '+'
   nohup $open_cmd "$url" &> /dev/null 
 }
+
 alias baidu='web_search baidu'
 alias bing='web_search bing'
 alias google='web_search google'
-#add your own !bang searches here
 alias pan='web_search pan115'
 alias zzl='web_search zhongzilou'
+# add your own !bang searches here
 
 #extract自动解压，同样适用于bash
 function extract {
@@ -877,7 +860,6 @@ recolor-cmd() {
         start_pos=$end_pos
     done
 }
-
  
 #高亮命令和自动补全命令的插件均注册了self-insert和backward-delete-char事件，一次后注册的会覆盖前注册的，所以直接在后注册的函数中调用命令高亮的函数即可
 check-cmd-self-insert() { zle .self-insert && recolor-cmd }
@@ -967,7 +949,6 @@ TRAPWINCH() {
 zle -N zle-keymap-select
 zle -N edit-command-line
 
-
 bindkey -v
 
 # allow v to edit the command line (standard behaviour)
@@ -1004,6 +985,21 @@ if [[ "$RPS1" == "" && "$RPROMPT" == "" ]]; then
   RPS1='$(vi_mode_prompt_info)'
 fi
 
+#目录跳转后自动显示目录内容
+function listpwd() {
+  emulate -L zsh
+  ls -F --color=auto
+}
+autoload -U add-zsh-hook
+add-zsh-hook -Uz chpwd listpwd #(){ listpwd }
+# add-zsh-hook -Uz precmd (){ echo "AAA" }
+# Hook Functions (http://zsh.sourceforge.net/Doc/Release/Functions.html)
+# chpwd: 当前目录改变时触发
+# periodic: 设置PERIOD环境变量后, 每隔PERIOD秒触发一次(输出在提示符前)
+# precmd: 每次绘制提示符前触发
+# preexec: 每次执行命令前触发
+# zshaddhistory: 写入历史记录前执行
+# zshexit: zsh退出前触发
 
 #使用:<<' 注释内容 ' 的形式注释掉Incremental completion插件，删除空行的单引号可以重新启用
 :<<'
