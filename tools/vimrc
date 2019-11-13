@@ -823,7 +823,7 @@ autocmd BufWritePost *.go :call completor#do('format')
 " 代码自动补全
 " Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
-"""""""""""""""""""""""""""""""""""""completor.nvim"""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""deoplete.nvim"""""""""""""""""""""""""""""""""""
 " 代码自动补全
 "Plug 'Shougo/deoplete.nvim'
 "Plug 'Shougo/deoplete.nvim'
