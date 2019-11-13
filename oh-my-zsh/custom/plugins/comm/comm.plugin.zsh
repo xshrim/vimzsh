@@ -351,13 +351,13 @@ if [[ $theme == "complex" ]]; then
     PROMPT=$(echo "$_BLUE♆<$_CYAN%M $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} $_MAGENTA%D %T$_BLUE>♆$FINISH
 $fg_bold[yellow][ $MAGENTA%n $BLUE%h ${smile}$fg_bold[yellow] ] $_RED%(!.➤.⨠) $FINISH")
 elif [[ $theme == "simple" ]]; then
-    local leftsize=${#${(%):-♆<%M@%n %/}}+$gitpromptsize+$count_db_wth_char
+    local leftsize=${#${(%):-♆<%M✦%n %/}}+$gitpromptsize+$count_db_wth_char
     local rightsize=${#${(%):-%D %T %h>♆}}+2
 
     FILLBAR="\${(l.(($COLUMNS - ($leftsize + $rightsize +2)))..${HBAR}.)}"
 
     #RPROMPT=$(echo "%(?..$RED%?$FINISH)")
-    PROMPT=$(echo "$_BLUE♆<$_CYAN%M$YELLOW@$MAGENTA%n $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} ${smile} $_MAGENTA%D %T %h$_BLUE>♆$FINISH
+    PROMPT=$(echo "$_BLUE♆<$_CYAN%M$YELLOW✦$MAGENTA%n $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} ${smile} $_MAGENTA%D %T %h$_BLUE>♆$FINISH
 $_RED%(!.➤.⨠) $FINISH")
 elif [[ $theme == "classic" ]]; then
     PROMPT="%{${fg_bold[blue]}%}✿ %{${fg_bold[red]}%}%m%(!.☢.❖)%n %{${fg_bold[magenta]}%}:: %{${fg_bold[yellow]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) %(?,%{${fg_bold[green]}%}☀%{$reset_color%},%{${fg_bold[red]}%}☂%{$reset_color%}) %{${fg_bold[blue]}%}»%{${reset_color}%} "
