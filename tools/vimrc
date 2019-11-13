@@ -432,6 +432,7 @@ if empty(glob('~/.vim/autoload/plug.vim'))
 endif
 
 """"""""""""""""""""""""""""""""toggle-terminal"""""""""""""""""""""""""""
+" vim8
 " terminal toggle
 Plug 'pakutoma/toggle-terminal'
 " map <C-@> to toggle
@@ -531,6 +532,7 @@ Plug 'Lokaltog/vim-easymotion'
 Plug 'romainl/vim-qf'
 
 """"""""""""""""""""""""""""""""""asyncrun.vim""""""""""""""""""""""""""""""
+" vim8
 " 异步执行
 Plug 'skywind3000/asyncrun.vim'
 " let g:asyncrun_open = 8
@@ -753,6 +755,7 @@ Plug 'majutsushi/tagbar'
 nmap <F7> :TagbarToggle<CR>
 
 """""""""""""""""""""""""""""""""simpleterm.vim"""""""""""""""""""""""""""""""""
+" vim8
 " 更方便的terminal
 Plug 'gu-fan/simpleterm.vim'
 "let g:simpleterm.row = 10
@@ -774,6 +777,7 @@ let g:UltiSnipsJumpBackwardTrigger='<c-z>'
 let g:UltiSnipsEditSplit='vertical'
 
 """""""""""""""""""""""""""""""""""""completor.nvim"""""""""""""""""""""""""""""""""""
+" vim8
 " 代码自动补全
 Plug 'maralla/completor.vim'
 Plug 'kyouryuukunn/completor-necovim'
@@ -820,10 +824,12 @@ autocmd BufWritePost *.go :call completor#do('format')
 "Plug 'ycm-core/YouCompleteMe'
 
 """""""""""""""""""""""""""""""""""""coc.nvim"""""""""""""""""""""""""""""""""""
+" vim8
 " 代码自动补全
 " Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
 """""""""""""""""""""""""""""""""""""deoplete.nvim"""""""""""""""""""""""""""""""""""
+" vim8
 " 代码自动补全
 "Plug 'Shougo/deoplete.nvim'
 "Plug 'Shougo/deoplete.nvim'
