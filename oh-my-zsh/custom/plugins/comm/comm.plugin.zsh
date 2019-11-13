@@ -1001,6 +1001,14 @@ add-zsh-hook -Uz chpwd listpwd #(){ listpwd }
 # zshaddhistory: 写入历史记录前执行
 # zshexit: zsh退出前触发
 
+# kubectl自动补全加载较慢, 启用延迟加载
+function kubectl() {
+  if ! type __start_kubectl >/dev/null 2>&1; then
+    source <(command kubectl completion zsh)
+  fi
+  command kubectl "$@"
+}
+
 #使用:<<' 注释内容 ' 的形式注释掉Incremental completion插件，删除空行的单引号可以重新启用
 :<<'
 # Incremental completion for zsh
