@@ -610,19 +610,38 @@ if [ -f ~/.vimrc ];then
   alias vim='vim -u ~/.vimrc'
 fi
 alias -g vi='vim'
-if [ -f ~/.bin/bat ];then
-  alias -g cat='bat -p'
+
+if [ -f $cdir/bin/fping ];then
+  alias -g ping='fping -e'
 fi
-if [ -f ~/.bin/exa ];then
-  alias -g ls='exa'
+
+if [ -f $cdir/bin/pycp ];then
+  alias -g cp='pycp -g'
 fi
+
+if [ -f $cdir/bin/pymv ];then
+  alias -g mv='pymv -g'
+fi
+
+if [ -f $cdir/bin/highlight ];then
+  alias -g highlight="highlight -D $cdir/highlight --config-file $cdir/highlight/filetypes.conf"
+fi
+
+if [ -f $cdir/bin/bat ];then
+  alias -g cat='bat --paging never -p'
+fi
+
 alias -g ls='ls -F --color=auto'
+if [ -f $cdir/bin/exa ];then
+  alias -g ls='exa -F --color=auto'
+fi
 alias -g ll='ls -l'
 alias -g la='ls -a'
 alias -g l='ls'
 alias -g cls='clear'
 alias -g mkdir='mkdir -p'
 alias -g ps='ps -elf'
+alias -g ss='ss -ntlp'
 alias open='xdg-open'
 alias -g grep='grep -P --color=auto'
 alias -g glog='git log --oneline --graph --decorate'
@@ -683,6 +702,7 @@ function pat() {
 }
 # alias cat='pat'
 
+# 输出的指定字符串高亮
 function hl() {
 	declare -A fg_color_map
 	fg_color_map[black]=30
@@ -704,28 +724,36 @@ function hl() {
 # alias cat='h'
 function h() {
   #local cmds="*ls* *echo* *cat* *ps* *who* *pwd* *arch* *lspci* *lsusb* *time* *date* *cal* *tree* *iconv* *env* *set* *df* *dfc* *tree* *free* *alias* *rpm* *yum* *dnf* *apt* *apt-get* *pacman* *sar* *lsattr* *h* *tar* *sort* *grep* *egrep* *recode* *pvs* *pvdisplay* *pvscan* *vgscan* *lvs* *lvdisplay* *vgs* *vgdisplay* *pvcreate* *pvremove* *lvcreate* *lvremove* *lvextend* *lvresize* *lvreduce* *lvrename* *lvconvert* *lvscan* *lvchange* *vgchange* *vgcreate* *vgreduce* *vgextend**vgrename* *ip* *ping* *ifconfig* *route* *hostname* *iwlist* *host* *npm* *nslookup* *whois* *dig* *dmesg* *rsync* *cp* *mv* *glog* *git* *mtr* *ss* *fd* *ag* *bat* *pycp* *pymv* *highlight* *xargs* *more* *less* *wd* *dict* *exa* *sysctl* *nmap* *convert* *ethtool* *smbclient* *mount* *umount* *tar* *zip* *unzip* *firewall-cmd* *iptables* *gs* *systemctl* *journalctl* *hostnamectl* *dmidecode* *hdparm* *which* *whereis* *locate* *jobs* *uname* *head* *tail* *cut* *tr* *sed* *awk* *file* *lsof* *netstat* *vmstat* *iostat* *docker* *docker-compose* *kubectl* *helm* *redis-cli* *mc* *mysql* *pgsql* *node* *python* *python3* *java* *go* *pip* *pip3* *make* *gcc* *tsc* *perl* *lua* *ruby* *rust* *scala* *julia* "
-  local CAT="cat"
-  local SYNTAX=""
-  if [ -f /usr/bin/highlight ];then
-    CAT="highlight -O xterm256 -t 4 -s bipolar"
-    SYNTAX="-S sh"
-  elif [ -f $cdir/bin/bat ];then
-    CAT="bat -p"
-  elif [ -f $cdir/bin/ccat ];then
-    CAT="ccat"
-  else
-    CAT="cat"
-  fi
 
   if [ $# -eq 0 ]
   then
     #highlight -O xterm256 -t 4 -s $style -S $syntax
-    $CAT $SYNTAX
+    if [ -f $cdir/bin/highlight ];then
+      highlight -O xterm256 -t 4 -s bipolar -S sh 
+    elif [ -f $cdir/bin/bat ];then
+      bat --paging never -p
+    elif [ -f $cdir/bin/ccat ];then
+      ccat
+    else
+      cat
+    fi
   else
     if [[ $(file "$1" | grep -o "text" | wc -l ) -lt 1 ]];then
+      echo -en "\033[1m"
       cat $@
+      echo -en "\033[0m"
     else
-      $CAT $@ 2> /dev/null || $CAT $SYNTAX $@
+      if [ -f $cdir/bin/highlight ];then
+        highlight -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight -O xterm256 -t 4 -s bipolar -S sh $@ 2> /dev/null || cat $@
+      elif [ -f $cdir/bin/bat ];then
+        bat --paging never -p $@ 2> /dev/null || cat $@
+      elif [ -f $cdir/bin/ccat ];then
+        ccat $@ 2> /dev/null || cat $@
+      else
+        echo -en "\033[1m"
+        cat $@
+        echo -en "\033[0m"
+      fi
     fi
 #        if [[ "$cmds" =~ "*"$1"*" ]]
 #         then
