@@ -705,7 +705,7 @@ function h() {
 #         else
 #             highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@
 #         fi
-        highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@ || cat $@
+        highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@ 2> /dev/null || cat $@
     fi
 }
 
