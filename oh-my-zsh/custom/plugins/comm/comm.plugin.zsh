@@ -605,6 +605,7 @@ if [ -f ~/.vimrc ];then
     alias vim='vim -u ~/.vimrc'
 fi
 alias -g vi='vim'
+#alias -g cat='bat -p'
 #alias -g ls='exa'
 alias -g ls='ls -F --color=auto'
 alias -g ll='ls -l'
@@ -660,10 +661,6 @@ bindkey "^[[11~" arith-eval-echo
 
 # }}}
 
-# ccat 高亮显示输出
-# alias cat='ccat'
-# alias cat='ｂat'
-
 # pygments 高亮显示输出
 function pat() {
     local style="monokai"
@@ -677,18 +674,25 @@ function pat() {
 }
 # alias cat='pat'
 
-# highlight 高亮显示输出
 function hl() {
-    local syntax="sh"
-    local style="bipolar"
-    if [ $# -eq 0 ]; then
-        highlight -O xterm256 -t 4 -s $style -S $syntax
-    else
-        highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@
-    fi
+	declare -A fg_color_map
+	fg_color_map[black]=30
+	fg_color_map[red]=31
+	fg_color_map[green]=32
+	fg_color_map[yellow]=33
+	fg_color_map[blue]=34
+	fg_color_map[magenta]=35
+	fg_color_map[cyan]=36
+	 
+	fg_c=$(echo -e "\e[1;${fg_color_map[$1]}m")
+	c_rs=$'\e[0m'
+	sed -u s"/$2/$fg_c\0$c_rs/g"
 }
-# alias cat='hl'
 
+# ccat 高亮显示输出
+# alias cat='ccat'
+# highlight 高亮显示输出
+# alias cat='h'
 function h() {
     local syntax="sh"
     local style="bipolar"
@@ -696,7 +700,7 @@ function h() {
 
     if [ $# -eq 0 ]
     then
-        highlight -O xterm256 -t 4 -s $style -S $syntax
+        highlight -O xterm256 --force -t 4 -s $style -S $syntax
     else
 #        if [[ "$cmds" =~ "*"$1"*" ]]
 #         then
@@ -705,7 +709,7 @@ function h() {
 #         else
 #             highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@
 #         fi
-        highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@ 2> /dev/null || cat $@
+        highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@ 2> /dev/null || bat -p $@ 2> /dev/null || cat $@
     fi
 }
 
