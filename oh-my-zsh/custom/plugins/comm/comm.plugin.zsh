@@ -609,50 +609,55 @@ export PATH=$cdir/bin:$PATH
 if [ -f ~/.vimrc ];then
   alias vim='vim -u ~/.vimrc'
 fi
-alias -g vi='vim'
+alias vi='vim'
 
 if [ -f $cdir/bin/fping ];then
-  alias -g ping='fping -e'
+  alias ping='fping -e'
 fi
 
 if [ -f $cdir/bin/pycp ];then
-  alias -g cp='pycp -g'
+  alias cp='pycp -g'
 fi
 
 if [ -f $cdir/bin/pymv ];then
-  alias -g mv='pymv -g'
+  alias mv='pymv -g'
 fi
 
-if [ -f $cdir/bin/highlight ];then
-  alias -g highlight="highlight -D $cdir/highlight --config-file $cdir/highlight/filetypes.conf"
+if [ -f $cdir/bin/highlight ] || [ -f /usr/bin/highlight ];then
+  alias highlight="highlight -D $cdir/highlight"
+  highlight -h > /dev/null
+  if [ $? -ne 0 ] && [ -f $cdir/bin/highlight.low ];then
+    alias highlight="highlight.low -D $cdir/highlight"
+  fi
+  # alias highlight="highlight -D $cdir/highlight --config-file=$cdir/highlight/filetypes.conf"
 fi
 
 if [ -f $cdir/bin/bat ];then
-  alias -g cat='bat --paging never -p'
+  alias cat='bat --paging never -p'
 fi
 
-alias -g ls='ls -F --color=auto'
+alias ls='ls -F --color=auto'
 if [ -f $cdir/bin/exa ];then
-  alias -g ls='exa -F --color=auto'
+  alias ls='exa -F --color=auto'
 fi
-alias -g ll='ls -l'
-alias -g la='ls -a'
-alias -g l='ls'
-alias -g cls='clear'
-alias -g mkdir='mkdir -p'
-alias -g ps='ps -elf'
-alias -g ss='ss -ntlp'
+alias ll='ls -l'
+alias la='ls -a'
+alias l='ls'
+alias cls='clear'
+alias mkdir='mkdir -p'
+alias ps='ps -elf'
+alias ss='ss -ntlp'
 alias open='xdg-open'
-alias -g grep='grep -P --color=auto'
-alias -g glog='git log --oneline --graph --decorate'
-alias -g rsync='rsync -avP --progress'
-#alias -g md='mkdir'
-#alias -g jobs='jobs -l'
-#alias -g cp='rsync -avP --progress'
-#alias -g mv='rsync -avP --progress --remove-source-files'
+alias grep='grep -P --color=auto'
+alias glog='git log --oneline --graph --decorate'
+alias rsync='rsync -avP --progress'
+#alias md='mkdir'
+#alias jobs='jobs -l'
+#alias cp='rsync -avP --progress'
+#alias mv='rsync -avP --progress --remove-source-files'
 #alias ping='fping -e'
 #alias sudo='sudo env PATH=$PATH'
-#alias -g history='history -fi'
+#alias history='history -fi'
 
 #[Esc][h] man 当前命令时，显示简短说明
 alias run-help >&/dev/null && unalias run-help
@@ -728,8 +733,8 @@ function h() {
   if [ $# -eq 0 ]
   then
     #highlight -O xterm256 -t 4 -s $style -S $syntax
-    if [ -f $cdir/bin/highlight ];then
-      highlight -O xterm256 -t 4 -s bipolar -S sh 
+    if [ -f $cdir/bin/highlight ] || [ -f /usr/bin/highlight ];then
+      highlight -O xterm256 -t 4 -s bipolar -S sh
     elif [ -f $cdir/bin/bat ];then
       bat --paging never -p
     elif [ -f $cdir/bin/ccat ];then
@@ -743,7 +748,7 @@ function h() {
       cat $@
       echo -en "\033[0m"
     else
-      if [ -f $cdir/bin/highlight ];then
+      if [ -f $cdir/bin/highlight ] || [ -f /usr/bin/highlight ];then
         highlight -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight -O xterm256 -t 4 -s bipolar -S sh $@ 2> /dev/null || cat $@
       elif [ -f $cdir/bin/bat ];then
         bat --paging never -p $@ 2> /dev/null || cat $@
