@@ -155,9 +155,6 @@ set mousemodel=popup
 set mouse-=a
 set selection=exclusive
 set selectmode=mouse,key
-"复制粘贴映射
-"map <C-c> "+y
-"map <C-v> "+p
 "输入法
 :let g:vimim_map='c-/'
 ":let g:vimim_cloud='sougou' " QQ云输入
@@ -172,6 +169,14 @@ inoremap <silent><C-H> <Left>
 inoremap <silent><C-L> <Right>
 inoremap <silent><C-J> <Down>
 inoremap <silent><C-K> <Up>
+
+"大于小于号缩进
+xnoremap < <gv
+xnoremap > >gv
+
+"复制粘贴映射
+map <C-y> "+y
+map <C-p> "+gp
 
 "禁用箭头按键
 "nnoremap <left> <Nop>
@@ -434,16 +439,18 @@ endif
 """"""""""""""""""""""""""""""""toggle-terminal"""""""""""""""""""""""""""
 " vim8
 " terminal toggle
-Plug 'pakutoma/toggle-terminal'
-" map <C-@> to toggle
-tnoremap <silent> <C-@> <C-w>:ToggleTerminal<CR>
-nnoremap <silent> <C-@> :ToggleTerminal<CR>
-" set your favorite shell
-let g:toggle_terminal#command = 'zsh'
+if version >= 800
+  Plug 'pakutoma/toggle-terminal'
+  tnoremap <silent> <C-@> <C-w>:ToggleTerminal<CR>
+  nnoremap <silent> <C-@> :ToggleTerminal<CR>
+  let g:toggle_terminal#command = 'zsh'
+  let g:toggle_terminal#position = 'topleft'
+endif
 
+" map <C-@> to toggle
+" set your favorite shell
 " set terminal window position
 " (see possible options at :help vertical)
-let g:toggle_terminal#position = 'topleft'
 
 ":term
 ":vert term
@@ -521,7 +528,10 @@ Plug 'liuchengxu/vim-which-key'
 
 """""""""""""""""""""""""""""""""""""LeaderF""""""""""""""""""""""""""""""""
 " 模糊查找
-Plug 'Yggdroot/LeaderF'
+"if version >= 704 || (version == 704 && has('patch399'))
+if has("patch-7.4-399")
+  Plug 'Yggdroot/LeaderF'
+endif
 
 """"""""""""""""""""""""""""""""""vim-easymotion""""""""""""""""""""""""""""
 " 快速跳转
@@ -534,7 +544,9 @@ Plug 'romainl/vim-qf'
 """"""""""""""""""""""""""""""""""asyncrun.vim""""""""""""""""""""""""""""""
 " vim8
 " 异步执行
-Plug 'skywind3000/asyncrun.vim'
+if version >=800
+  Plug 'skywind3000/asyncrun.vim'
+endif
 " let g:asyncrun_open = 8
 
 """""""""""""""""""""""""""""""""""ranger.vim"""""""""""""""""""""""""""""""
@@ -757,7 +769,9 @@ nmap <F7> :TagbarToggle<CR>
 """""""""""""""""""""""""""""""""simpleterm.vim"""""""""""""""""""""""""""""""""
 " vim8
 " 更方便的terminal
-Plug 'gu-fan/simpleterm.vim'
+if version >= 800
+  Plug 'gu-fan/simpleterm.vim'
+endif
 "let g:simpleterm.row = 10
 "let g:simpleterm.pos = 'below'
 "let g:simpleterm.bufs
@@ -779,36 +793,38 @@ let g:UltiSnipsEditSplit='vertical'
 """""""""""""""""""""""""""""""""""""completor.nvim"""""""""""""""""""""""""""""""""""
 " vim8
 " 代码自动补全
-Plug 'maralla/completor.vim'
-Plug 'kyouryuukunn/completor-necovim'
-Plug 'tokorom/completor-shell'
-Plug 'masawada/completor-dictionary'
-Plug 'maralla/completor-typescript'
+if version >= 800
+  Plug 'maralla/completor.vim'
+  Plug 'kyouryuukunn/completor-necovim'
+  Plug 'tokorom/completor-shell'
+  Plug 'masawada/completor-dictionary'
+  Plug 'maralla/completor-typescript'
 
-let g:completor_python_binary = 'python3'
-let g:completor_clang_binary = 'clang'
-let g:completor_gocode_binary = 'gocode'
-let g:completor_node_binary = 'node'
-let g:completor_tsserver_binary = 'tsserver'
+  let g:completor_python_binary = 'python3'
+  let g:completor_clang_binary = 'clang'
+  let g:completor_gocode_binary = 'gocode'
+  let g:completor_node_binary = 'node'
+  let g:completor_tsserver_binary = 'tsserver'
+  let g:completor_css_omni_trigger = '([\w-]+|@[\w-]*|[\w-]+:\s*[\w-]*)$'
+
+  let g:completor_auto_trigger = 1
+  let g:completor_complete_options = 'menuone,noselect,preview'
+
+  let g:completor_go_guru_binary = 'guru'
+  let g:completor_go_gofmt_binary = 'goimports'
+
+  noremap <silent> <leader>d :call completor#do('definition')<CR>
+  noremap <silent> <leader>c :call completor#do('doc')<CR>
+  noremap <silent> <leader>f :call completor#do('format')<CR>
+  noremap <silent> <leader>s :call completor#do('hover')<CR>
+
+  autocmd BufWritePost *.go :call completor#do('format')
+endif
+
 "let g:completor_racer_binary = '/path/to/racer'
-
 
 " other languages
 "let g:completor_{filetype}_omni_trigger = '<python regex>'
-let g:completor_css_omni_trigger = '([\w-]+|@[\w-]*|[\w-]+:\s*[\w-]*)$'
-
-let g:completor_auto_trigger = 1
-let g:completor_complete_options = 'menuone,noselect,preview'
-
-let g:completor_go_guru_binary = 'guru'
-let g:completor_go_gofmt_binary = 'goimports'
-
-noremap <silent> <leader>d :call completor#do('definition')<CR>
-noremap <silent> <leader>c :call completor#do('doc')<CR>
-noremap <silent> <leader>f :call completor#do('format')<CR>
-noremap <silent> <leader>s :call completor#do('hover')<CR>
-
-autocmd BufWritePost *.go :call completor#do('format')
 
 " Enable LSP
 "let g:completor_filetype_map = {}
@@ -826,20 +842,24 @@ autocmd BufWritePost *.go :call completor#do('format')
 """""""""""""""""""""""""""""""""""""coc.nvim"""""""""""""""""""""""""""""""""""
 " vim8
 " 代码自动补全
-" Plug 'neoclide/coc.nvim', {'branch': 'release'}
+"if version >= 800
+  " Plug 'neoclide/coc.nvim', {'branch': 'release'}
+"endif
 
 """""""""""""""""""""""""""""""""""""deoplete.nvim"""""""""""""""""""""""""""""""""""
 " vim8
 " 代码自动补全
-"Plug 'Shougo/deoplete.nvim'
-"Plug 'Shougo/deoplete.nvim'
-"Plug 'roxma/nvim-yarp'
-"Plug 'roxma/vim-hug-neovim-rpc'
-" 补全源
-"Plug 'tbodt/deoplete-tabnine', { 'do': './install.sh' }
-"Plug 'deoplete-plugins/deoplete-go', { 'do': 'make'}
+" if version >= 800
+  "Plug 'Shougo/deoplete.nvim'
+  "Plug 'Shougo/deoplete.nvim'
+  "Plug 'roxma/nvim-yarp'
+  "Plug 'roxma/vim-hug-neovim-rpc'
+  " 补全源
+  "Plug 'tbodt/deoplete-tabnine', { 'do': './install.sh' }
+  "Plug 'deoplete-plugins/deoplete-go', { 'do': 'make'}
 
-"let g:deoplete#enable_at_startup = 1
+  "let g:deoplete#enable_at_startup = 1
+"endif
 
 """""""""""""""""""""""""""""""""""lightline.vim""""""""""""""""""""""""""""""""""
 " 轻量级状态栏
