@@ -1093,7 +1093,7 @@ function kubectl() {
 #########################################################################
 _listpwd() {
   emulate -L zsh
-  ls -F --color=auto
+  \ls -F --color=auto
 }
 
 chpwd_functions+=(_listpwd)
