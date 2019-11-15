@@ -599,6 +599,14 @@ zle -N sudo-command-line
 bindkey "\e\e" sudo-command-line
 #}}}
 
+checkcommand() {
+  if type $1 &>/dev/null; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 # 默认编辑器
 export EDITOR=vim
 
@@ -611,35 +619,23 @@ if [ -f ~/.vimrc ];then
 fi
 alias vi='vim'
 
-if [ -f $cdir/bin/fping ];then
-  alias ping='fping -e'
-fi
+type fping &>/dev/null && alias ping='fping -e'
 
-if [ -f $cdir/bin/pycp ];then
-  alias cp='pycp -g'
-fi
+type pycp &>/dev/null && alias cp='pycp -g'
 
-if [ -f $cdir/bin/pymv ];then
-  alias mv='pymv -g'
-fi
+type pymv &>/dev/null && alias mv='pymv -g'
 
-if [ -f $cdir/bin/highlight ] || [ -f /usr/bin/highlight ];then
+type bat &>/dev/null && alias cat='bat --paging never -p'
+
+if type highlight &>/dev/null;then
   alias highlight="highlight -D $cdir/highlight"
-  highlight -h > /dev/null
-  if [ $? -ne 0 ] && [ -f $cdir/bin/highlight.low ];then
-    alias highlight="highlight.low -D $cdir/highlight"
-  fi
+  ! highlight -h &> /dev/null && type highlight.low &>/dev/null && alias highlight="highlight.low -D $cdir/highlight --add-config-dir=$cdir/highlight"
+  alias cat='h'
   # alias highlight="highlight -D $cdir/highlight --config-file=$cdir/highlight/filetypes.conf"
 fi
 
-if [ -f $cdir/bin/bat ];then
-  alias cat='bat --paging never -p'
-fi
-
 alias ls='ls -F --color=auto'
-if [ -f $cdir/bin/exa ];then
-  alias ls='exa -F --color=auto'
-fi
+type exa &>/dev/null && alias ls='exa -F --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias l='ls'
@@ -723,8 +719,6 @@ function hl() {
 	sed -u s"/$2/$fg_c\0$c_rs/g"
 }
 
-# ccat 高亮显示输出
-# alias cat='ccat'
 # highlight 高亮显示输出
 # alias cat='h'
 function h() {
@@ -732,31 +726,32 @@ function h() {
 
   if [ $# -eq 0 ]
   then
+    CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
     #highlight -O xterm256 -t 4 -s $style -S $syntax
-    if [ -f $cdir/bin/highlight ] || [ -f /usr/bin/highlight ];then
+    if type highlight &>/dev/null;then
       highlight -O xterm256 -t 4 -s bipolar -S sh
-    elif [ -f $cdir/bin/bat ];then
+    elif type bat &>/dev/null;then
       bat --paging never -p
-    elif [ -f $cdir/bin/ccat ];then
+    elif type ccat &>/dev/null;then
       ccat
     else
-      cat
+      \cat
     fi
   else
     if [[ $(file "$1" | grep -o "text" | wc -l ) -lt 1 ]];then
       echo -en "\033[1m"
-      cat $@
+      \cat $@
       echo -en "\033[0m"
     else
-      if [ -f $cdir/bin/highlight ] || [ -f /usr/bin/highlight ];then
-        highlight -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight -O xterm256 -t 4 -s bipolar -S sh $@ 2> /dev/null || cat $@
-      elif [ -f $cdir/bin/bat ];then
-        bat --paging never -p $@ 2> /dev/null || cat $@
-      elif [ -f $cdir/bin/ccat ];then
-        ccat $@ 2> /dev/null || cat $@
+      if type highlight &>/dev/null;then
+        highlight -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight -O xterm256 -t 4 -s bipolar -S sh $@ 2> /dev/null || \cat $@
+      elif type bat &>/dev/null;then
+        bat --paging never -p $@ 2> /dev/null || \cat $@
+      elif type ccat &>/dev/null;then
+        ccat $@ 2> /dev/null || \cat $@
       else
         echo -en "\033[1m"
-        cat $@
+        \cat $@
         echo -en "\033[0m"
       fi
     fi
