@@ -619,11 +619,18 @@ if [ -f ~/.vimrc ];then
 fi
 alias vi='vim'
 
+if [ $(id -u) -ne 0 ] && type fping -h &>/dev/null && ! fping -h &>/dev/null 
+then
+  sudo chown root:root $(which fping)
+  sudo chmod ug+s $(which fping)
+fi
 type fping &>/dev/null && alias ping='fping -e'
 
 type pycp &>/dev/null && alias cp='pycp -g'
 
 type pymv &>/dev/null && alias mv='pymv -g'
+
+type htop &>/dev/null && alias top='htop'
 
 type bat &>/dev/null && alias cat='bat --paging never -p'
 
@@ -635,7 +642,7 @@ if type highlight &>/dev/null;then
 fi
 
 alias ls='ls -F --color=auto'
-type exa &>/dev/null && alias ls='exa -F --color=auto'
+type exa &>/dev/null && exa --help &>/dev/null && alias ls='exa -F --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias l='ls'
@@ -724,9 +731,12 @@ function hl() {
 function h() {
   #local cmds="*ls* *echo* *cat* *ps* *who* *pwd* *arch* *lspci* *lsusb* *time* *date* *cal* *tree* *iconv* *env* *set* *df* *dfc* *tree* *free* *alias* *rpm* *yum* *dnf* *apt* *apt-get* *pacman* *sar* *lsattr* *h* *tar* *sort* *grep* *egrep* *recode* *pvs* *pvdisplay* *pvscan* *vgscan* *lvs* *lvdisplay* *vgs* *vgdisplay* *pvcreate* *pvremove* *lvcreate* *lvremove* *lvextend* *lvresize* *lvreduce* *lvrename* *lvconvert* *lvscan* *lvchange* *vgchange* *vgcreate* *vgreduce* *vgextend**vgrename* *ip* *ping* *ifconfig* *route* *hostname* *iwlist* *host* *npm* *nslookup* *whois* *dig* *dmesg* *rsync* *cp* *mv* *glog* *git* *mtr* *ss* *fd* *ag* *bat* *pycp* *pymv* *highlight* *xargs* *more* *less* *wd* *dict* *exa* *sysctl* *nmap* *convert* *ethtool* *smbclient* *mount* *umount* *tar* *zip* *unzip* *firewall-cmd* *iptables* *gs* *systemctl* *journalctl* *hostnamectl* *dmidecode* *hdparm* *which* *whereis* *locate* *jobs* *uname* *head* *tail* *cut* *tr* *sed* *awk* *file* *lsof* *netstat* *vmstat* *iostat* *docker* *docker-compose* *kubectl* *helm* *redis-cli* *mc* *mysql* *pgsql* *node* *python* *python3* *java* *go* *pip* *pip3* *make* *gcc* *tsc* *perl* *lua* *ruby* *rust* *scala* *julia* "
 
-  if [ $# -eq 0 ]
+  if [ ! -t 1 ]
   then
-    CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
+    \cat $@
+  elif [ $# -eq 0 ]
+  then
+    #CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
     #highlight -O xterm256 -t 4 -s $style -S $syntax
     if type highlight &>/dev/null;then
       highlight -O xterm256 -t 4 -s bipolar -S sh
