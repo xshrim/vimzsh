@@ -207,8 +207,8 @@ function! LinterStatus() abort
 endfunction
 
 " 自定义状态栏
-"set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}\ %{LinterStatus()}   "状态行显示的内容
-set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}   "状态行显示的内容
+"set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %=\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}\ %{LinterStatus()}   "状态行显示的内容
+set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %=\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}   "状态行显示的内容
 
 
 " 设置当文件被改动时自动载入
