@@ -619,12 +619,12 @@ if [ -f ~/.vimrc ];then
 fi
 alias vi='vim'
 
-if [ $(id -u) -ne 0 ] && type fping -h &>/dev/null && ! fping -h &>/dev/null 
+if [ $(id -u) -ne 0 ] && type fping &>/dev/null && ! fping -h &>/dev/null 
 then
   sudo chown root:root $(which fping)
   sudo chmod ug+s $(which fping)
 fi
-type fping &>/dev/null && alias ping='fping -e'
+type fping &>/dev/null && alias ping='fping -Aen'
 
 type pycp &>/dev/null && alias cp='pycp -g'
 
