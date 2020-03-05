@@ -624,7 +624,7 @@ then
   sudo chown root:root $(which fping)
   sudo chmod ug+s $(which fping)
 fi
-type fping &>/dev/null && alias ping='fping -Aen'
+type fping &>/dev/null && alias ping='fping -Ae'
 
 type pycp &>/dev/null && alias cp='pycp -g'
 
