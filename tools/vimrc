@@ -536,6 +536,13 @@ endif
 """"""""""""""""""""""""""""""""""vim-easymotion""""""""""""""""""""""""""""
 " 快速跳转
 Plug 'Lokaltog/vim-easymotion'
+" s{char}{char} to move to {char}{char}
+nmap s <Plug>(easymotion-overwin-f2)
+"let g:EasyMotion_smartcase = 1
+
+""""""""""""""""""""""""""""""""""vim-sneak"""""""""""""""""""""""""""""""""
+" 快速跳转
+"Plug 'justinmk/vim-sneak'
 
 """"""""""""""""""""""""""""""""""""""vim-qf""""""""""""""""""""""""""""""""
 " quickfix增强
