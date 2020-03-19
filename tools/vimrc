@@ -164,7 +164,7 @@ set selectmode=mouse,key
 "外部粘贴
 nnoremap  :set invpaste paste? imap :set invpaste paste? set pastetoggle=
 
-"编辑模式下映射方向键使hjkl能移动光标
+"编辑模式下映射方向键使hjkl能移动光标(可能导致部分系统上backspace无法正常工作)
 inoremap <silent><C-H> <Left>
 inoremap <silent><C-L> <Right>
 inoremap <silent><C-J> <Down>
