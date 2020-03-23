@@ -900,6 +900,20 @@ alias pan='web_search pan115'
 alias zzl='web_search zhongzilou'
 # add your own !bang searches here
 
+# zshrc重载
+src() {
+	local cache="$ZSH_CACHE_DIR"
+	autoload -U compinit zrecompile
+	compinit -i -d "$cache/zcomp-$HOST"
+
+	for f in ~/.zshrc "$cache/zcomp-$HOST"; do
+		zrecompile -p $f && command rm -f $f.zwc.old
+	done
+
+	# Use $SHELL if available; remove leading dash if login shell
+	[[ -n "$SHELL" ]] && exec ${SHELL#-} || exec zsh
+}
+
 #extract自动解压，同样适用于bash
 function extract {
  if [ -z "$1" ]; then
@@ -935,6 +949,8 @@ function extract {
     done
 fi
 }
+
+alias x='extract'
 
 #漂亮又实用的命令高亮界面
 setopt extended_glob
@@ -1107,6 +1123,31 @@ fi
 autoload -U compinit && compinit
 autoload -U promptinit && promptinit
 autoload -U add-zsh-hook
+autoload -U zcalc
+
+#########################################################################
+# 计算器
+#########################################################################
+
+calc() {
+    zcalc -e "$*"
+}
+
+#########################################################################
+# 大小写转换
+#########################################################################
+
+upper() {
+    echo "$*" | tr '[:lower:]' '[:upper:]'
+}
+
+lower() {
+    echo "$*" | tr '[:upper:]' '[:lower:]'
+}
+
+capitalize() {
+    echo "$*" | tr '[:upper:]' '[:lower:]' | sed 's/^\w\|\s\w/\U&/g'
+}
 
 #########################################################################
 # 自动执行sudo命令(Alt+Enter)
