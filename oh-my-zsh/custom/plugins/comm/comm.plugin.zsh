@@ -1086,6 +1086,9 @@ bindkey '^r' history-incremental-search-backward
 bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line
 
+# 将回车绑定到其他键上(如按a代表回车)
+# bindkey 'a' accept-line
+
 # if mode indicator wasn't setup by theme, define default
 if [[ "$MODE_INDICATOR" == "" ]]; then
   MODE_INDICATOR="%{$fg_bold[red]%}<%{$fg[red]%}<<%{$reset_color%}"
@@ -1104,6 +1107,32 @@ fi
 autoload -U compinit && compinit
 autoload -U promptinit && promptinit
 autoload -U add-zsh-hook
+
+#########################################################################
+# 自动执行sudo命令(Alt+Enter)
+#########################################################################
+
+sudo-command-line() {
+    [[ -z $BUFFER ]] && zle up-history
+    if [[ $BUFFER == sudo\ * ]]; then
+        LBUFFER="${LBUFFER#sudo }"
+    elif [[ $BUFFER == $EDITOR\ * ]]; then
+        LBUFFER="${LBUFFER#$EDITOR }"
+        LBUFFER="sudoedit $LBUFFER"
+    elif [[ $BUFFER == sudoedit\ * ]]; then
+        LBUFFER="${LBUFFER#sudoedit }"
+        LBUFFER="$EDITOR $LBUFFER"
+    else
+        LBUFFER="sudo $LBUFFER"
+    fi
+    
+    zle accept-line
+}
+zle -N sudo-command-line
+# Defined shortcut keys: [Alt] [Enter]
+bindkey -M emacs '^[^M' sudo-command-line
+bindkey -M vicmd '^[^M' sudo-command-line
+bindkey -M viins '^[^M' sudo-command-line
 
 #########################################################################
 # kubectl自动补全加载较慢, 启用延迟加载
