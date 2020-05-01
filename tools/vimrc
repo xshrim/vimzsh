@@ -127,7 +127,7 @@ set showmatch
 " 匹配括号高亮的时间（单位是十分之一秒）
 set matchtime=1
 "设置映射延迟和按键延迟
-set timeoutlen=10
+set timeoutlen=500
 set ttimeoutlen=10
 " 保存全局变量
 set viminfo+=!
@@ -164,7 +164,7 @@ set selectmode=mouse,key
 "外部粘贴
 nnoremap  :set invpaste paste? imap :set invpaste paste? set pastetoggle=
 
-"编辑模式下映射方向键使hjkl能移动光标(可能导致部分系统上backspace无法正常工作)
+"编辑模式下映射方向键使hjkl能移动光标
 inoremap <silent><C-H> <Left>
 inoremap <silent><C-L> <Right>
 inoremap <silent><C-J> <Down>
@@ -207,8 +207,8 @@ function! LinterStatus() abort
 endfunction
 
 " 自定义状态栏
-"set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %=\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}\ %{LinterStatus()}   "状态行显示的内容
-set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %=\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}   "状态行显示的内容
+"set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}\ %{LinterStatus()}   "状态行显示的内容
+set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}   "状态行显示的内容
 
 
 " 设置当文件被改动时自动载入
@@ -347,7 +347,7 @@ endfunc
 map <F4> :call FormatSrc()<CR><CR>
 
 "定义FormartSrc()
-func FormatSrc()
+func! FormatSrc()
     exec 'w'
     if &filetype ==? 'c'
         exec '!astyle --style=ansi -a --suffix=none %'
@@ -624,6 +624,16 @@ Plug 'mzlogin/vim-markdown-toc'
 let g:vmt_auto_update_on_save = 0
 " 高亮数学公式
 let g:vim_markdown_math = 1
+" 禁用代码块语法隐藏
+let g:vim_markdown_conceal_code_blocks = 0
+" 启用删除线
+let g:vim_markdown_strikethrough = 1
+" 列表缩进
+let g:vim_markdown_new_list_item_indent = 2
+" 语法突出
+let g:vim_markdown_frontmatter = 1
+let g:vim_markdown_toml_frontmatter = 1
+let g:vim_markdown_json_frontmatter = 1
 
 """""""""""""""""""""""""""""""""""indentLine"""""""""""""""""""""""""""""""
 " 可视化缩进
