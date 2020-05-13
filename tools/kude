@@ -254,7 +254,6 @@ then
   then
     kubectl $kc $context get pod $podname $ns -o json
     exit 0
-  fi
   elif [ $darg == "exec" ];
   then
     kubectl $kc $context exec -it $podname -c $cname sh $ns
