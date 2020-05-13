@@ -47,7 +47,7 @@ kude -k get pod   #相当于kubectl get pod
 kude xos
 
 # xshrim命名空间中寻找名称带xos字段的pod, 部署Debug容器共享该pod下第一个容器的命名空间并进入交互模式
-kude -n xshrin xos
+kude -n xshrim xos
 
 # xshrim命名空间中寻找名称带xos字段的pod, 部署Debug容器共享该pod下第一个容器的命名空间进入交互模式并chroot到该容器的文件系统
 kude -n xshrim -i 0 -r xos
@@ -223,7 +223,7 @@ then
     then
       cmd="docker logs $cid"
     else
-      kubectl $kc $context logs $podname $ns
+      kubectl $kc $context logs $podname $cname $ns
       exit 0
     fi
   elif [ $darg == "logf" ];
@@ -232,7 +232,7 @@ then
     then
       cmd="docker logs -f $cid"
     else
-      kubectl $kc $context logs -f $podname $ns
+      kubectl $kc $context logs -f $podname $cname $ns
       exit 0
     fi
   elif [ $darg == "inspect" ] || [ $darg == "insp" ];
