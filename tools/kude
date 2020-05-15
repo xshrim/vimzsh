@@ -104,7 +104,12 @@ function dockerpush() {
   rlib=${2#*/}
 
   if [ "$rlib" == "" ] || [ "$rlib" == "$rrepo" ]; then
-    rlib="library"
+    if [[ "$rrepo" =~ "." ]]; then
+      rlib="library"
+    else
+      rlib=$rrepo
+      rrepo="docker.io"
+    fi
   fi
 
   docker tag $1 $rrepo/$rlib/$limg
