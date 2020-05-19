@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubecfg=$HOME/.kube/config
+kubecfg=""
 image=xo
 port=16022
 timeout=60
@@ -179,7 +179,7 @@ while [ $# -gt 0 ] && [ "$1" != "--" ]; do
       image=""
       ;;
     f)
-      kubeconfig=$OPTARG
+      kubecfg=$OPTARG
       ;;
     i)
       idx=$OPTARG
@@ -253,7 +253,7 @@ if [ -z "$pod" ] && [ ${#mandatory[@]} -gt 0 ]; then
   pod=${mandatory[0]}
 fi
 
-if [ -n "$kubecfg" ] && [ -f "$HOME/.kube/config" ]; then
+if [ -z "$kubecfg" ] && [ -f "$HOME/.kube/config" ]; then
   kubecfg=$HOME/.kube/config
 fi
 
