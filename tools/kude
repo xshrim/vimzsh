@@ -99,7 +99,7 @@ kude -n xshrim -u root -p 22 -s admin123 -m netshoot xos
 
 function dockerpush() {
   # lrepo=${1%/*}
-  limg=${1#*/}
+  limg=${1##*/}
   rrepo=${2%/*}
   rlib=${2#*/}
 
