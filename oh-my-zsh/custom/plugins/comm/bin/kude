@@ -32,6 +32,8 @@ function usage() {
   di,dimg                  查看镜像列表
   dn,dnet                  查看容器网络列表
   dv,dvol                  查看容器卷列表
+  dd,drm                   删除容器
+  do,drmi                  删除镜像
   dh,dhist                 查看镜像构建历史
   du,dpush                 推送镜像
   df,dpull                 拉取镜像
@@ -420,6 +422,26 @@ else
     fi
   elif [ $subcmd == "df" ] || [ $subcmd == "dpull" ]; then
     cmd="docker pull ${mandatory[0]}"
+    if [ ${#mandatory[@]} -eq 1 ]; then
+      require docker
+      execmd "$cmd"
+    else
+      for ip in ${mandatory[@]:1}; do
+        execmd "$cmd" $ip
+      done
+    fi
+  elif [ $subcmd == "dd" ] || [ $subcmd == "drm" ]; then
+    cmd="docker rm -f ${mandatory[0]}"
+    if [ ${#mandatory[@]} -eq 1 ]; then
+      require docker
+      execmd "$cmd"
+    else
+      for ip in ${mandatory[@]:1}; do
+        execmd "$cmd" $ip
+      done
+    fi
+  elif [ $subcmd == "do" ] || [ $subcmd == "drmi" ]; then
+    cmd="docker rmi -f ${mandatory[0]}"
     if [ ${#mandatory[@]} -eq 1 ]; then
       require docker
       execmd "$cmd"
