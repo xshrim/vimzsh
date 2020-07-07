@@ -416,7 +416,9 @@ else
 
       docker tag ${mandatory[0]} $rrepo/$rlib/$limg
       docker push $rrepo/$rlib/$limg
-      docker rmi -f $rrepo/$rlib/$limg
+      if [ "$rrepo" != "docker.io" ]; then
+        docker rmi -f $rrepo/$rlib/$limg
+      fi
     else
       echo "need arguments"
     fi
