@@ -94,7 +94,6 @@ function usage() {
 # Kubectl: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
 
 **EXAMPLES**:
-
 # 直接执行docker或kubectl命令
 kude d ps -a     #相当于docker ps -a
 kude k get pod   #相当于kubectl get pod
@@ -109,8 +108,8 @@ kude dc nginx
 kude dh xshrim/xo
 
 # 远程到目标主机执行命令
-kude cmd 'ls /etc' 127.0.0.1
-kude cmd -p 22 -w admin 'ls /etc' 127.0.0.1
+kude cmd 'ls /etc' 127.0.0.1 10.20.0.12-18
+kude cmd -p 22 -s admin 'ls /etc' 127.0.0.1
 
 # 执行本机命令
 kude cmd 'scp test root@10.0.0.10:/root/test'
