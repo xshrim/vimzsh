@@ -214,18 +214,34 @@ function execmd() {
   if [ "$ipaddr" == "" ]; then
     lexecmd $ecmd
   else
-    if [ -n "$user" ]; then
+    if [ -z "$user" ]; then
       user="root"
     fi
-    if [ -n "$passwd" ]; then
+    if [ -z "$passwd" ]; then
       passwd="root"
     fi
+    
+    ipd=${ipaddr%.*}
+    ipr=${ipaddr##*.}
 
-    if [ -n "$passwd" ] && type sshpass &>/dev/null; then
-      sshpass -p $passwd ssh -t -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout $user@$ipaddr "$ecmd"
-    else
-      ssh -t -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout $user@$ipaddr "$ecmd"
+    ipstart=$ipr
+    ipend=$ipr
+
+    if [[ "$ipr" =~ "-" ]]; then
+    ipstart=${ipr%-*}
+    ipend=${ipr##*-}
     fi
+
+    for ((i=$ipstart;i<=$ipend;i++))
+    do
+      cip=$ipd.$i
+      echo "[*] $cip"
+      if [ -n "$passwd" ] && type sshpass &>/dev/null; then
+        sshpass -p $passwd ssh -t -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout $user@$cip "$ecmd"
+      else
+        ssh -t -p $port -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout $user@$cip "$ecmd"
+      fi
+    done
   fi
 }
 
