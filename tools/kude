@@ -26,6 +26,8 @@ function usage() {
   d,docker                 运行docker命令
   k,kube,kubectl           运行kubectl命令
   c,cmd                    运行linux命令
+  scp                      分发本机文件
+  git                      git一键提交并上传
   dr,drun                  运行容器
   dt,dtmp                  运行临时容器
   dq,dquery                查看容器列表
@@ -422,6 +424,15 @@ else
       echo "need arguments"
       exit 1
     fi
+  elif [ $subcmd == "git" ]; then
+    require git
+    cmsg="update"
+    if [ ${#mandatory[@]} -gt 0 ]; then
+      cmsg=${mandatory[*]}
+    fi
+    git add -A .
+    git commit -m "$cmsg"
+    git push
   elif [ $subcmd == "dq" ] || [ $subcmd == "dquery" ]; then
     cmd="docker ps -a"
     if [ ${#mandatory[@]} -eq 0 ]; then
