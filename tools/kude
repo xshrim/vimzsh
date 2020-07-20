@@ -114,6 +114,9 @@ kude cmd -p 22 -s admin 'ls /etc' 127.0.0.1
 # 执行本机命令
 kude cmd 'scp test root@10.0.0.10:/root/test'
 
+# 将本地文件分发到远程主机
+./kude scp './foo:/root/bar' 10.20.0.12-18
+
 # 获取Kubernetes RBAC结构图
 kude b u demouser
 kude rbac -n kube-system rolebinding
@@ -244,6 +247,47 @@ function execmd() {
   fi
 }
 
+function remotecp() {
+  paths=$1
+  ipaddr=$2
+
+  if [ "$paths" == "" ] || [ "$ipaddr" == "" ]; then
+    return
+  else
+    if [ -z "$user" ]; then
+      user="root"
+    fi
+    if [ -z "$passwd" ]; then
+      passwd="root"
+    fi
+    
+    lpath=${paths%:*}
+    rpath=${paths##*:}
+    
+    ipd=${ipaddr%.*}
+    ipr=${ipaddr##*.}
+
+    ipstart=$ipr
+    ipend=$ipr
+
+    if [[ "$ipr" =~ "-" ]]; then
+    ipstart=${ipr%-*}
+    ipend=${ipr##*-}
+    fi
+
+    for ((i=$ipstart;i<=$ipend;i++))
+    do
+      cip=$ipd.$i
+      echo "[*] $cip"
+      if [ -n "$passwd" ] && type sshpass &>/dev/null; then
+        sshpass -p $passwd scp -P $port -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout -r $lpath $user@$cip:$rpath
+      else
+        scp -t -P $port -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout -r$lpath $user@$cip:$rpath
+      fi
+    done
+  fi
+}
+
 if ! [[ "$1" =~ ^- ]]; then
   subcmd=$1
   shift
@@ -358,6 +402,20 @@ else
       else
         for ip in ${mandatory[@]:1}; do
           execmd "$cmd" $ip
+        done
+      fi
+    else
+      echo "need arguments"
+      exit 1
+    fi
+  elif [ $subcmd == "scp" ]; then
+    if [ ${#mandatory[@]} -gt 0 ]; then
+      cppaths=${mandatory[0]}
+      if [ ${#mandatory[@]} -eq 1 ]; then
+        remotecp "$cppaths"
+      else
+        for ip in ${mandatory[@]:1}; do
+          remotecp "$cppaths" $ip
         done
       fi
     else
