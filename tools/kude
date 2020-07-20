@@ -430,7 +430,6 @@ else
     if [ ${#mandatory[@]} -gt 0 ]; then
       cmsg=${mandatory[*]}
     fi
-    echo $cmsg
     git add -A .
     git commit -m "$cmsg"
     git push
