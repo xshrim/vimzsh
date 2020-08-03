@@ -386,6 +386,10 @@ PROMPT='%n@%M %/
 fi
 }
 
+if [ -e /usr/share/terminfo/x/xterm-256color ]; then
+  export TERM='xterm-256color'
+fi
+
 #}}}
 
 #清空历史记录
@@ -1190,6 +1194,7 @@ function kubectl() {
   fi
   command kubectl "$@"
 }
+alias k="kubectl"
 
 #########################################################################
 # nvm加载较慢, 启用延迟加载
