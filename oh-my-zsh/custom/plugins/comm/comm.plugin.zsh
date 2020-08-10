@@ -386,6 +386,7 @@ PROMPT='%n@%M %/
 fi
 }
 
+# 终端开启256色支持
 if [ -e /usr/share/terminfo/x/xterm-256color ]; then
   export TERM='xterm-256color'
 fi
@@ -904,8 +905,66 @@ alias pan='web_search pan115'
 alias zzl='web_search zhongzilou'
 # add your own !bang searches here
 
+# 打印256色输出效果
+format_number() {
+  local c=$'\u254F'
+  if [ $1 -lt 10 ]; then
+    printf "$c %d" $1
+  else
+    printf "$c%02d" $(($1%100))
+  fi
+}
+
+somecolors() {
+  local from="$1"
+  local to="$2"
+  local prefix="$3"
+  local line
+
+  for line in \
+      "\e[2mdim      " \
+      "normal   " \
+      "\e[1mbold     " \
+      "\e[1;2mbold+dim "; do
+    echo -ne "$line"
+    i=$from
+    while [ $i -le $to ]; do
+      echo -ne "\e[$prefix${i}m"
+      format_number $i
+      i=$((i+1))
+    done
+    echo $'\e[0m\e[K'
+  done
+}
+
+allcolors() {
+  echo "-- 8 standard colors: SGR ${1}0..${1}7 --"
+  somecolors 0 7 "$1"
+  echo
+  echo "-- 8 bright colors: SGR ${2}0..${2}7 --"
+  somecolors 0 7 "$2"
+  echo
+  echo "-- 256 colors: SGR ${1}8;5;0..255 --"
+  somecolors 0 15 "${1}8;5;"
+  echo
+  somecolors  16  51 "${1}8;5;"
+  somecolors  52  87 "${1}8;5;"
+  somecolors  88 123 "${1}8;5;"
+  somecolors 124 159 "${1}8;5;"
+  somecolors 160 195 "${1}8;5;"
+  somecolors 196 231 "${1}8;5;"
+  echo
+  somecolors 232 255 "${1}8;5;"
+}
+
+function printcolor() {
+  allcolors 3 9
+  echo
+  allcolors 4 10
+}
+
 # zshrc重载
-src() {
+function src() {
 	local cache="$ZSH_CACHE_DIR"
 	autoload -U compinit zrecompile
 	compinit -i -d "$cache/zcomp-$HOST"
@@ -919,7 +978,7 @@ src() {
 }
 
 #extract自动解压，同样适用于bash
-function extract {
+function extract() {
  if [ -z "$1" ]; then
     # display usage if no parameters given
     echo "Usage: extract <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
@@ -1130,14 +1189,32 @@ autoload -U add-zsh-hook
 autoload -U zcalc
 
 #########################################################################
+# 端口开放
+#########################################################################
+
+function portopen() {
+for port in $*;
+do
+  sudo /sbin/iptables -I INPUT -p tcp --dport $port -j ACCEPT
+done
+}
+
+function portclose() {
+for port in $*;
+do
+  sudo /sbin/iptables -I INPUT -p tcp --dport $port -j DROP
+done
+}
+
+#########################################################################
 # 计算器
 #########################################################################
 
-calc() {
+function calc() {
     zcalc -e "$*"
 }
 
-c () 
+function c() 
 { 
     local in="$(echo " $*" | sed -e 's/\[/(/g' -e 's/\]/)/g')";
     awk "BEGIN {printf $in}"
@@ -1147,15 +1224,15 @@ c ()
 # 大小写转换
 #########################################################################
 
-upper() {
+function upper() {
     echo "$*" | tr '[:lower:]' '[:upper:]'
 }
 
-lower() {
+function lower() {
     echo "$*" | tr '[:upper:]' '[:lower:]'
 }
 
-capitalize() {
+function capitalize() {
     echo "$*" | tr '[:upper:]' '[:lower:]' | sed 's/^\w\|\s\w/\U&/g'
 }
 
