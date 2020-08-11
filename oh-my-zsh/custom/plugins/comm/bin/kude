@@ -27,7 +27,7 @@ function usage() {
   kude <command> [<options>] [<object>]
 
 **COMMANDS**:
-  hp,help                   打印命令帮助
+  hp,help                  打印命令帮助
   git                      git运行git命令
   g,go                     运行go命令
   lg,lgo                   Linux环境下禁用CGO的go命令
