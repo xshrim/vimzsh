@@ -264,7 +264,43 @@ kude debug -n xshrim -u root -p 22 -s admin123 -m netshoot nginx
   fi
 }
 
+function promqhelp() {
+  echo "
+**USAGE**:
+  kude pq <options> [<arguments>]
+
+**COMMANDS**:
+  h,hp,help                打印pq命令帮助
+  i,m,md,info,metadata     打印指标元数据信息
+  s,inst,series,instance   打印series信息
+  l,v,lv,label,value       打印label及其value数据
+  t,tg,target              打印target数据
+  r,rl,rule                打印rule数据
+  a,al,alert               打印alert数据
+  am,alertmanager          打印alertmanager配置
+  v,status                 打印prometheus状态信息
+  q,query                  使用promql进行查询
+  qr,rq,query_range        使用promql进行范围查询
+  "
+}
+
 function sslhelp() {
+  echo "
+**USAGE**:
+  kude ssl <options> [<arguments>]
+
+**COMMANDS**:
+  h,hp,help                打印ssl命令帮助
+  gen,generate             生成整套openssl-x509凭证
+  out,show                 打印openssl-x509证书或密钥信息
+  mat,match                检查证书与密钥是否匹配
+  ver,verify               检查证书与签发者证书是否匹配
+  get,fetch                获取url的证书
+  sver,sverify             检查url证书与域名是否匹配
+  "
+}
+
+function gensslhelp() {
   echo ' ================================================================ '
   echo ' --ssl-domain: 生成ssl证书需要的主域名，如不指定则默认为localhost，如果是ip访问服务，则可忽略；'
   echo ' --ssl-trusted-ip: 一般ssl证书只信任域名的访问请求，有时候需要使用ip去访问server，那么需要给ssl证书添加扩展IP，多个IP用逗号隔开；'
@@ -639,6 +675,10 @@ function main() {
       subcmd="$1"
       shift
       case "$subcmd" in
+      "h" | "hp" | "help")
+        sslhelp
+        exit 0
+        ;;
       "gen" | "generate")
         genssl "$*"
         ;;
@@ -898,7 +938,6 @@ function main() {
       git commit -m "$cmsg"
       git push
     elif [ "$subcmd" == "pq" ] || [ "$subcmd" == "promq" ]; then
-      require curl jq
       if [ ${#mandatory[@]} -gt 0 ]; then
         sscmd="${mandatory[0]}"
         mandatory=("${mandatory[@]:1}")
@@ -919,7 +958,12 @@ function main() {
       if [ -n "$port" ]; then
         url=$url:$port
       fi
+      require curl jq
       case "$sscmd" in
+      "h" | "hp" | "help")
+        promqhelp
+        exit 0
+        ;;
       "i" | "m" | "md" | "info" | "metadata")
         if [ ${#mandatory[@]} -eq 0 ]; then
           curl -Gks http://$url/api/v1/metadata
@@ -1026,7 +1070,7 @@ function main() {
         fi
         curl -Gks http://$url/api/v1/query --data-urlencode "$query" $ptime $ptimeout | jq
         ;;
-      "qr" | "query_range")
+      "qr" | "rq" | "query_range")
         if [ ${#mandatory[@]} -eq 0 ]; then
           echo "error: need arguments"
           exit 1
@@ -1048,6 +1092,9 @@ function main() {
           fi
         fi
         curl -Gks http://$url/api/v1/query_range --data-urlencode "$query" $stime $etime $step $ptimeout | jq
+        ;;
+      default)
+        curl -Gks ${mandatory[*]} | jq
         ;;
       esac
     elif [ "$subcmd" == "dps" ] || [ "$subcmd" == "dlist" ]; then
@@ -2968,13 +3015,13 @@ function remotecp() {
 function genssl() {
   case "$1" in
   -h | --help)
-    sslhelp
+    gensslhelp
     exit
     ;;
   esac
 
   if [[ $1 == '' ]]; then
-    sslhelp
+    gensslhelp
     exit
   fi
 
