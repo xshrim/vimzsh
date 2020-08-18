@@ -46,6 +46,8 @@ function usage() {
   nm,nmap                  运行nmap命令
   ps,portstat,portstatus   运行端口检测命令
   pc,portctl,portcontrol   运行端口开放关闭命令
+  py,py3,python            执行python3命令
+  px,goproxy               运行goproxy代理服务器
   n,net                    运行网络相关命令          
   ct,ssl,cred              加密凭证操作
   sp,sample                输出模板示例
@@ -208,6 +210,9 @@ kude net ips 192.168
 # 查看端口状态
 kude ps 10.0.0.10 80
 
+# 开启http(s)代理服务器
+kude px http
+
 # 查看prometheus指标信息
 kude pq metadata 127.0.0.1:9090 process_open_fds
 kude pq md 127.0.0.1:9090 open instance=node-exporter
@@ -308,6 +313,7 @@ echo '
   it                       执行iptables命令
   ps                       查看端口状态
   pc                       设置端口开放关闭
+  px                       运行goproxy代理服务器
 '
 }
 
@@ -956,6 +962,13 @@ function main() {
     require etcdctl
     shift
     etcdctl $*
+  elif [ $1 == "py" ] || [ $1 == "py3" ] || [ $1 == "python" ] || [ $1 == "python3" ]; then
+    shift
+    if type python3 &>/dev/null; then
+      python3 $*
+    else
+      python $*
+    fi
   elif [ $1 == "td" ] || [ $1 == "tdp" ] || [ $1 == "tcpdump" ]; then
     shift
     if [ $1 == "h" ] || [ $1 == "hp" ]; then
@@ -1030,6 +1043,44 @@ function main() {
       curl -ksvIL http://${nhost}:${nport} > /dev/null
     else
       wget -qS -O- http://${nhost}:${nport} > /dev/null
+    fi
+  elif [ $1 == "px" ] || [ $1 == "goproxy" ]; then
+    shift
+    require proxy
+    if [ $# -gt 4 ];then
+      proxy $*
+    else
+      ptype="http"
+      proto="tcp"
+      pport="38080"
+      pargs="$*"
+      if [ $# -gt 0 ]; then
+        ptype=$1
+        shift
+        if [ $# -gt 0 ]; then
+          pport=$1
+          shift
+          if [ $# -gt 0 ]; then
+            proto=$1
+            shift
+            if [ $# -gt 0 ]; then
+              ptar=$1
+              shift
+            fi
+          fi
+        fi
+      fi
+      if [ "$ptype" == "h" ] || [ "$ptype" == "hp" ] || [ "$ptype" == "help" ]; then
+        proxy --help
+      elif [ "$ptype" == "http" ] || [ "$ptype" == "https" ]; then
+        proxy http -t $proto -p "0.0.0.0:$pport"
+      elif [ "$ptype" == "sock" ] || [ "$ptype" == "socks" ] || [ "$ptype" == "socks5" ]; then
+        proxy socks -t $proto -p "0.0.0.0:$pport"
+      elif [ "$ptype" == "tcp" ] || [ "$ptype" == "udp" ]; then
+        proxy $ptype -p ":$pport" -T $proto -P "$ptar"
+      else
+        proxy $pargs
+      fi
     fi
   elif [ $1 == "it" ] || [ $1 == "iptable" ] || [ $1 == "iptables" ]; then
     shift
@@ -1251,6 +1302,7 @@ function main() {
       ;;
     "pc")
       shift
+      require iptables
       if [ $# -lt 1 ]; then
         echo "error: need arguments"
       fi
@@ -1265,6 +1317,45 @@ function main() {
       for pport in $*; do
         sudo /sbin/iptables -I INPUT -p tcp --dport $pport -j $paction
       done
+      ;;
+    "px")
+      shift
+      require proxy
+      if [ $# -gt 4 ];then
+        proxy $*
+      else
+        ptype="http"
+        proto="tcp"
+        pport="38080"
+        pargs="$*"
+        if [ $# -gt 0 ]; then
+          ptype=$1
+          shift
+          if [ $# -gt 0 ]; then
+            pport=$1
+            shift
+            if [ $# -gt 0 ]; then
+              proto=$1
+              shift
+              if [ $# -gt 0 ]; then
+                ptar=$1
+                shift
+              fi
+            fi
+          fi
+        fi
+        if [ "$ptype" == "h" ] || [ "$ptype" == "hp" ] || [ "$ptype" == "help" ]; then
+          proxy --help
+        elif [ "$ptype" == "http" ] || [ "$ptype" == "https" ]; then
+          proxy http -t $proto -p "0.0.0.0:$pport"
+        elif [ "$ptype" == "sock" ] || [ "$ptype" == "socks" ] || [ "$ptype" == "socks5" ]; then
+          proxy socks -t $proto -p "0.0.0.0:$pport"
+        elif [ "$ptype" == "tcp" ] || [ "$ptype" == "udp" ]; then
+          proxy $ptype -p ":$pport" -T $proto -P "$ptar"
+        else
+          proxy $pargs
+        fi
+      fi
       ;;
     esac
   elif [ $1 == "ct" ] || [ $1 == "ssl" ] || [ $1 == "cred" ]; then
