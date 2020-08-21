@@ -3236,11 +3236,9 @@ function main() {
     else
       require kubectl
       if [ -z $kind ]; then
-        if [ ${#mandatory[@]} -gt 0 ]; then
-          if [ "$subcmd" != "l" ] && [ "$subcmd" != "log" ] && [ "$subcmd" != "lf" ] && [ "$subcmd" != "logf" ] && [ "$subcmd" != "i" ] && [ "$subcmd" != "insp" ] && [ "$subcmd" != "inspect" ] && [ "$subcmd" != "e" ] && [ "$subcmd" != "exe" ] && [ "$subcmd" != "exec" ] && [ "$subcmd" != "ie" ] && [ "$subcmd" != "iexe" ] && [ "$subcmd" != "iexec" ] && [ "$subcmd" != "at" ] && [ "$subcmd" != "attach" ] && [ "$subcmd" != "cp" ] && [ "$subcmd" != "copy" ] && [ "$subcmd" != "pf" ] && [ "$subcmd" != "forward" ] && [ "$subcmd" != "port-forward" ] && [ "$subcmd" != "x" ] && [ "$subcmd" != "dbg" ] && [ "$subcmd" != "debug" ]; then
+        if [ ${#mandatory[@]} -gt 0 ] && [ "$subcmd" != "l" ] && [ "$subcmd" != "log" ] && [ "$subcmd" != "lf" ] && [ "$subcmd" != "logf" ] && [ "$subcmd" != "i" ] && [ "$subcmd" != "insp" ] && [ "$subcmd" != "inspect" ] && [ "$subcmd" != "e" ] && [ "$subcmd" != "exe" ] && [ "$subcmd" != "exec" ] && [ "$subcmd" != "ie" ] && [ "$subcmd" != "iexe" ] && [ "$subcmd" != "iexec" ] && [ "$subcmd" != "at" ] && [ "$subcmd" != "attach" ] && [ "$subcmd" != "cp" ] && [ "$subcmd" != "copy" ] && [ "$subcmd" != "pf" ] && [ "$subcmd" != "forward" ] && [ "$subcmd" != "port-forward" ] && [ "$subcmd" != "x" ] && [ "$subcmd" != "dbg" ] && [ "$subcmd" != "debug" ]; then
             kind=${mandatory[0]}
             mandatory=("${mandatory[@]:1}")
-          fi
         else
           kind="pod"
         fi
