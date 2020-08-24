@@ -362,7 +362,12 @@ function timehelp() {
 
 **COMMANDS**:
   h,hp,help                打印time命令帮助
-  l,local                  以本地格式打印当前时间
+  l,local                  打印当地时间
+  e,en                     以英文打印当地时间
+  u,utc                    打印utc时间
+  d,date                   仅显示日期
+  t,time                   仅显示时间
+  w,week                   仅显示星期
   std,standard             以标准格式打印当前时间
   fmt,format               以格式化格式打印当前时间
   ts,timestamp             打印当前时间戳
@@ -1905,6 +1910,18 @@ function main() {
       timehelp
     elif [ "$1" == "l" ] || [ "$1" == "local" ]; then
       date
+      date +"%Y-%m-%d %H:%M:%S"
+    elif [ "$1" == "u" ] || [ "$1" == "utc" ]; then
+      date -u
+      date -u +"%Y-%m-%d %H:%M:%S"
+    elif [ "$1" == "e" ] || [ "$1" == "en" ]; then
+      env LANG=en_US.UTF-8 date
+    elif [ "$1" == "d" ] || [ "$1" == "date" ]; then
+      date +"%Y-%m-%d"
+    elif [ "$1" == "t" ] || [ "$1" == "time" ]; then
+      date +"%H:%M:%S"
+    elif [ "$1" == "w" ] || [ "$1" == "week" ]; then
+      env LANG=en_US.UTF-8 date +%A
     elif [ "$1" == "std" ] || [ "$1" == "standard" ]; then
       date +%Y%m%d%H%M%S
     elif [ "$1" == "fmt" ] || [ "$1" == "format" ]; then
