@@ -2161,7 +2161,7 @@ function main() {
             fi
             if [ ${#mandatory[@]} -eq 0 ]; then
               tgl="instance"
-              insts=$(curl -Gks http://$url/api/v1/series --data-urlencode "match[]=$metric" | jq -r ".data[]|.instance")
+              insts=$(curl -Gks http://$url/api/v1/series --data-urlencode "match[]=$metric" | jq -r ".data[]|.instance" | sort | uniq)
               insts=($insts)
               if [ ${#insts[@]} -eq 0 ]; then
                 exit 0
