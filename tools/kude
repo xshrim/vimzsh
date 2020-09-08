@@ -1488,9 +1488,17 @@ function main() {
     elif type nmap &>/dev/null; then
       nmap -p $nport $nhost
     elif type curl &>/dev/null; then
-      curl -ksvIL http://${nhost}:${nport} > /dev/null
+      if [ $nport -eq 443 ]; then
+        curl -ksvIL https://${nhost}:${nport} > /dev/null
+      else
+        curl -ksvIL http://${nhost}:${nport} > /dev/null
+      fi
     else
-      wget -qS -O- http://${nhost}:${nport} > /dev/null
+      if [ $nport -eq 443 ]; then
+        wget --no-check-certificate -qS -O- https://${nhost}:${nport} > /dev/null
+      else
+        wget --no-check-certificate -qS -O- http://${nhost}:${nport} > /dev/null
+      fi
     fi
   elif [ "$1" == "px" ] || [ "$1" == "goproxy" ]; then
     shift
@@ -1796,9 +1804,17 @@ function main() {
       elif type nmap &>/dev/null; then
         nmap -p $nport $nhost
       elif type curl &>/dev/null; then
-        curl -ksvIL http://${nhost}:${nport} > /dev/null
+        if [ $nport -eq 443 ]; then
+          curl -ksvIL https://${nhost}:${nport} > /dev/null
+        else
+          curl -ksvIL http://${nhost}:${nport} > /dev/null
+        fi
       else
-        wget -qS -O- http://${nhost}:${nport} > /dev/null
+        if [ $nport -eq 443 ]; then
+          wget --no-check-certificate -qS -O- https://${nhost}:${nport} > /dev/null
+        else
+          wget --no-check-certificate -qS -O- https://${nhost}:${nport} > /dev/null
+        fi
       fi
       ;;
     "pc")
@@ -4585,7 +4601,7 @@ function lexecmd() {
       else
         cip=$ipd.$i
       fi
-      echo "[*] $cip"
+      echo "============================== $cip =============================="
       if [ -n "$passwd" ] && type sshpass &>/dev/null; then
         sshpass $ipasswd $ecmd $iuser$cip
       else
@@ -4632,7 +4648,7 @@ function execmd() {
       else
         cip=$ipd.$i
       fi
-      echo "[*] $cip"
+      echo "============================== $cip =============================="
       if [ -n "$passwd" ] && type sshpass &>/dev/null; then
         sshpass $ipasswd ssh -t $iport -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout $iuser$cip "$ecmd"
       else
@@ -4689,7 +4705,7 @@ function remotecp() {
       else
         cip=$ipd.$i
       fi
-      echo "[*] $cip"
+      echo "============================== $cip =============================="
       if [ -n "$passwd" ] && type sshpass &>/dev/null; then
         sshpass $ipasswd scp $iport -o StrictHostKeyChecking=no -o ConnectTimeout=$timeout -r $lpath $iuser$cip:$rpath
       else
@@ -5050,6 +5066,103 @@ function javadump() {
     fi
     echo "OK!"
 }
+
+function formatOutput() {
+sep="#"
+function append_cell(){
+    #对表格追加单元格
+    #append_cell col0 "col 1" ""
+    #append_cell col3
+    local i
+    for i in "$@"
+    do
+        line+="|$i${sep}"
+    done
+}
+function check_line(){
+if [ -n "$line" ] 
+then
+    c_c=$(echo $line|tr -cd "${sep}"|wc -c)
+    difference=$((${column_count}-${c_c}))
+    if [ $difference -gt 0 ]
+    then
+        line+=$(seq -s " " $difference|sed -r s/[0-9]\+/\|${sep}/g|sed -r  s/${sep}\ /${sep}/g)
+    fi
+    content+="${line}|\n"
+fi
+
+}
+function append_line(){
+    check_line
+    line=""
+    local i
+    for i in "$@"
+    do
+        line+="|$i${sep}"
+    done
+    check_line
+    line=""
+}
+function segmentation(){
+    local seg=""
+    local i
+    for i in $(seq $column_count)
+    do 
+        seg+="+${sep}"
+    done
+    seg+="${sep}+\n"
+    echo $seg
+}
+function set_title(){
+    #表格标头，以空格分割，包含空格的字符串用引号，如
+    #set_title Column_0 "Column 1" "" Column3
+    [ -n "$title" ] && echo "Warring:表头已经定义过,重写表头和内容"
+    column_count=0
+    title=""
+    local i
+    for i in "$@"
+    do
+        title+="|${i}${sep}"
+        let column_count++
+    done
+    title+="|\n"
+    seg=`segmentation`
+    title="${seg}${title}${seg}"
+    content=""
+}
+function output_table(){
+    if [ ! -n "${title}" ] 
+    then
+        echo "未设置表头，退出" && return 1
+    fi
+    append_line
+    table="${title}${content}$(segmentation)"
+    echo -e $table|column -s "${sep}" -t|awk '{if($0 ~ /^+/){gsub(" ","-",$0);print $0}else{gsub("\\(\\*\\)","\033[31m(*)\033[0m",$0);print $0}}'
+
+}
+
+lines=("$@")
+for ((i = 0; i < ${#lines[@]}; i++)); do
+  line="${lines[$i]}"
+  declare -a arr
+  IFS=';' read -ra ADDR <<< "$line"
+  for k in "${ADDR[@]}"; do
+    arr+="$k"
+  done
+  if [ $i -eq 0 ]; then
+    set_title "容器名称" "主机名称" "启动命令" "网络地址" "端口映射" "运行状态"
+  else
+    append_line "a" "b" "c" "d" "e" "f"
+  fi
+done
+output_table
+}
+
+regions=("G Z;2" "SH;a b" "BJ;22")
+# regions[0]="abc"
+# regions[1]="aa dd"
+# regions[2]="ddsd"
+formatOutput "${regions[@]}"
 
 function printSample() {
   local dockerSample="
