@@ -36,7 +36,6 @@ function usage() {
   g,go                     运行go命令
   lg,lgo                   Linux环境下禁用CGO的go命令
   h,helm                   运行helm命令
-  ht                       运行helm template命令
   d,docker                 运行docker命令
   dc,dkc,docker-compose    运行docker-compose命令
   k,kube,kubectl           运行kubectl命令
@@ -57,6 +56,7 @@ function usage() {
   st                       查看系统各项stat信息
   n,net                    运行网络相关命令
   ym,yum                   运行yum相关命令
+  ac,autocomplete          开启命令自动补全
   cu,au,createuser,adduser 创建用户
   opt,optimize             对操作系统进行k8s环境优化
   ct,ssl,cred              加密凭证操作
@@ -167,11 +167,11 @@ function usage() {
   -b [100] log显示条数
   -c [context] kubernetes连接上下文(可选)
   -d [savedir] rbac结构图保存目录(可选)
-  -e [selector] k8s资源标签选择器
   -f [./kube/config] kubeonfig文件路径(可选)
   -h [host] 指定目标主机ip
   -i [0] 匹配pod内容器index(可选)
   -k [kind] k8s资源类型
+  -l [selector] k8s资源标签选择器
   -m [xo] 自定义调试工具容器(可选)
   -n [default] 查询的k8s命名空间(可选)
   -o [yaml] 输出格式
@@ -180,8 +180,8 @@ function usage() {
   -t [60] 目标主机ssh连接超时时间(可选)
   -u [root] 目标主机ssh账号(可选)
   -w [kwd] 过滤关键字
+  -g 列出满足条件的所有资源
   -j 配合cmd本机执行命令
-  -l 列出满足条件的所有资源
   -r 调试容器中是否需要chroot到目标容器的文件系统
   -v 调试容器中是否需要挂载目标主机的docker.sock文件
   -y 模拟运行命令
@@ -483,6 +483,30 @@ function yumhelp() {
   l.list                   列出软件包
   i,inst                   安装软件包
   r,del                    删除软件包
+  '
+}
+
+function helmhelp() {
+  echo '
+**USAGE**:
+  kude helm <commands> [<arguments>]
+
+**COMMANDS**:
+  h,hp                     打印helm命令帮助
+  help                     打印原helm命令帮助
+  t,temp,template          执行helm template命令
+  s,search                 执行helm search命令
+  sh,shub,searchhub        执行helm search hub命令
+  p,pkg,package            执行helm package命令
+  i,inst,install           执行helm install命令
+  u,upd,upgrade            执行helm upgrade命令
+  d,del,delete             执行helm delete命令
+  c,crt,create             执行helm create命令
+  f,pull,fetch             执行helm fetch命令
+  l,lst,list               执行helm list命令
+  v,vfy,verify             执行helm verify命令
+  r,rp,repo                执行helm repo命令
+  a,sts,status             执行helm status命令
   '
 }
 
@@ -1289,10 +1313,56 @@ function main() {
     require git
     shift
     git $*
-  elif [ "$1" == "h" ] || [ "$1" == "helm" ]; then
+  elif [ "$1" == "h" ] || [ "$1" == "hm" ] || [ "$1" == "helm" ]; then
     require helm
     shift
-    helm $*
+    if [ "$1" == "h" ] || [ "$1" == "hp" ]; then
+      helmhelp
+    elif [ "$1" == "help" ]; then
+      require helm
+      helm --help
+    elif [ "$1" == "t" ] || [ "$1" == "temp" ] || [ "$1" == "template" ]; then
+      shift
+      helm template $*
+    elif [ "$1" == "s" ] || [ "$1" == "search" ]; then
+      shift
+      helm search $*
+    elif [ "$1" == "sh" ] || [ "$1" == "shub" ] || [ "$1" == "searchhub" ]; then
+      shift
+      helm search hub $*
+    elif [ "$1" == "p" ] || [ "$1" == "pkg" ] || [ "$1" == "package" ]; then
+      shift
+      helm package $*
+    elif [ "$1" == "i" ] || [ "$1" == "inst" ] || [ "$1" == "install" ]; then
+      shift
+      helm install $*
+    elif [ "$1" == "u" ] || [ "$1" == "upd" ] || [ "$1" == "upgrade" ]; then
+      shift
+      helm upgrade $*
+    elif [ "$1" == "d" ] || [ "$1" == "del" ] || [ "$1" == "delete" ]; then
+      shift
+      helm delete $*
+    elif [ "$1" == "c" ] || [ "$1" == "crt" ] || [ "$1" == "create" ]; then
+      shift
+      helm create $*
+    elif [ "$1" == "f" ] || [ "$1" == "pull" ] || [ "$1" == "fetch" ]; then
+      shift
+      helm fetch $*
+    elif [ "$1" == "l" ] || [ "$1" == "lst" ] || [ "$1" == "list" ]; then
+      shift
+      helm list $*
+    elif [ "$1" == "v" ] || [ "$1" == "vfy" ] || [ "$1" == "verify" ]; then
+      shift
+      helm verify $*
+    elif [ "$1" == "r" ] || [ "$1" == "rp" ] || [ "$1" == "repo" ]; then
+      shift
+      helm repo $*
+    elif [ "$1" == "a" ] || [ "$1" == "sts" ] || [ "$1" == "status" ]; then
+      shift
+      helm status $*
+    else
+      helm $*
+    fi
   elif [ "$1" == "ht" ]; then
     require helm
     shift
@@ -1577,6 +1647,16 @@ function main() {
     else
       require iptables
       iptables $*
+    fi
+  elif [ "$1" == "ac" ] || [ "$1" == "autocomplete" ]; then
+    shift
+    if [ "$1" == "b" ] || [ "$1" == "bash" ]; then
+      source <(kubectl completion bash)
+      echo "source <(kubectl completion bash)" >> ~/.bashrc
+    elif [ "$1" == "z" ] || [ "$1" == "zsh" ]; then
+      source <(kubectl completion zsh)
+      echo "source <(kubectl completion zsh)" >> ~/.zshrc
+      # echo "if [ $commands[kubectl] ]; then source <(kubectl completion zsh); fi" >> ~/.zshrc
     fi
   elif [ "$1" == "ym" ] || [ "$1" == "yum" ]; then
     require yum
@@ -2177,7 +2257,7 @@ function main() {
     fi
   else
     while [ $# -gt 0 ] && [[ "$1" != "--" ]]; do
-      while getopts "a:b:c:d:e:f:i:k:m:n:o:p:s:t:u:w:hjlrvy" opt; do
+      while getopts "a:b:c:d:f:i:k:l:m:n:o:p:s:t:u:w:hgjrvy" opt; do
         case $opt in
         a)
           since="--since $OPTARG"
@@ -2191,11 +2271,11 @@ function main() {
         d)
           savedir="$OPTARG"
           ;;
-        e)
-          selector="--selector=$OPTARG"
-          ;;
         f)
           kc="--kubeconfig $OPTARG"
+          ;;
+        g)
+          list=1
           ;;
         h)
           host="$OPTARG"
@@ -2210,7 +2290,7 @@ function main() {
           kind=$OPTARG
           ;;
         l)
-          list=1
+          selector="--selector=$OPTARG"
           ;;
         m)
           image=$OPTARG
@@ -4100,6 +4180,26 @@ function main() {
             kubectl $kc $context get $kind $selector $ns --watch | grep "$kwd"
           else
             kubectl $kc $context get $kind $selector $ns --watch
+          fi
+          ;;
+        "l" | "log")
+          if [ "$ns" == "--all-namespaces" ]; then
+            ns="default"
+          fi
+          if [ "$kind" == "pod" ]; then
+            kubectl $kc $context logs $selector $since $amount $ns --all-containers --max-log-requests 100
+          else
+            echo "subcmd log not fit for $kind"
+          fi
+          ;;
+        "lf" | "logf")
+          if [ "$ns" == "--all-namespaces" ]; then
+            ns="default"
+          fi
+          if [ "$kind" == "pod" ]; then
+            kubectl $kc $context logs -f $selector $since $amount $ns --all-containers --max-log-requests 100
+          else
+            echo "subcmd logf not fit for $kind"
           fi
           ;;
         "lb" | "lba" | "lbo" | "lbao" | "label" | "labela" | "labelo" | "labelao")
