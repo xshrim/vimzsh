@@ -1586,7 +1586,7 @@ function main() {
       echo "error: need arguments"
     fi
     if type nc &>/dev/null; then
-      nc $nhost $nport -zv
+      nc -zv $nhost $nport
     elif type telnet &>/dev/null; then
       echo -e '\035\nquit' | telnet $nhost $nport
     elif type nmap &>/dev/null; then
@@ -1990,7 +1990,7 @@ function main() {
         echo "error: need arguments"
       fi
       if type nc &>/dev/null; then
-        nc $nhost $nport -zv
+        nc -zv $nhost $nport
       elif type telnet &>/dev/null; then
         echo -e '\035\nquit' | telnet $nhost $nport
       elif type nmap &>/dev/null; then
