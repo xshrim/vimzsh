@@ -1,0 +1,503 @@
+{
+  "sync.gist": "fff1ad8ce97a012daa13dbf509a0b9d4",
+  "sync.token": "vscode://vscode.github-authentication/did-authenticate?windowid=1&code=bcecb3e340c2fcec794c&state=e10a6a76-c7e0-44b4-b106-77a5187c2380",
+  "workbench.colorTheme": "One Dark Pro",
+  "workbench.activityBar.visible": false,
+  "workbench.colorCustomizations": {
+    "editor.foreground": "#a8a1eb",
+    "tree.indentGuidesStroke": "#008070",
+  },
+  "workbench.tree.renderIndentGuides": "always",
+  "workbench.tree.indent": 16,
+  "window.menuBarVisibility": "default",
+  "window.titleBarStyle": "custom",
+  "window.zoomLevel": 0,
+  "editor.renderWhitespace": "boundary",
+  "editor.formatOnSave": true,
+  "editor.renameOnType": true,
+  "editor.suggestSelection": "first",
+  "editor.fontFamily": "'YaHei Consolas Hybrid', 'microsoft YaHei Mono New', 'microsoft YaHei Mono', Consolas, 'Courier New', monospace",
+  "editor.fontSize": 16,
+  "editor.fontWeight": "bold",
+  "editor.detectIndentation": false,
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 150,
+  "editor.tabSize": 2,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true,
+    "source.fixAll.eslint": true,
+  },
+  "editor.rulers": [
+    130
+  ],
+  "files.eol": "\n",
+  "files.autoGuessEncoding": true,
+  "files.autoSave": "onFocusChange",
+  "files.defaultLanguage": "txt",
+  "files.associations": {
+    "Untitled-*": "txt",
+    "txt-*": "txt",
+  },
+  "browser-preview.startUrl": "https://www.baidu.com",
+  "browser-preview.format": "png",
+  "terminal.external.linuxExec": "konsole",
+  "terminal.integrated.rendererType": "dom",
+  "terminal.integrated.shell.linux": "/bin/zsh",
+  "terminal.integrated.fontFamily": "'YaHei Consolas Hybrid', 'microsoft YaHei Mono New', 'microsoft YaHei Mono', Consolas, 'Courier New', monospace",
+  "search.followSymlinks": false,
+  "explorer.confirmDragAndDrop": false,
+  "extensions.ignoreRecommendations": false,
+  "vsicons.dontShowNewVersionMessage": true,
+  // "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+  "vim.sneak": true,
+  "vim.useCtrlKeys": false,
+  "vim.useSystemClipboard": true,
+  "vim.autoSwitchInputMethod.enable": true,
+  "vim.autoSwitchInputMethod.defaultIM": "1",
+  "vim.autoSwitchInputMethod.obtainIMCmd": "/usr/bin/fcitx-remote",
+  "vim.autoSwitchInputMethod.switchIMCmd": "/usr/bin/fcitx-remote -t {im}",
+  "liveServer.settings.donotShowInfoMsg": true,
+  "liveServer.settings.useBrowserPreview": true,
+  "rest-client.fontSize": 13,
+  "rest-client.previewColumn": "current",
+  "rest-client.previewOption": "full",
+  "explorer.confirmDelete": false,
+  "leetcode.defaultLanguage": "golang",
+  "leetcode.endpoint": "leetcode-cn",
+  "powermode.enableShake": false,
+  "powermode.enableExplosions": false,
+  "highlightLine.borderColor": "yellow",
+  "highlightLine.borderWidth": "1px",
+  "highlightLine.borderStyle": "dashed",
+  "todo-tree.highlights.defaultHighlight": {
+    "foreground": "green"
+  },
+  "todo-tree.tree.showScanModeButton": false,
+  // "spellright.notificationClass": "warning",
+  "sqltools.useNodeRuntime": true,
+  "cSpell.showStatus": false,
+  "iTranslate.translateServes": "baidu",
+  "iTranslate.verbose": true,
+  "wordcounter.text.paragraph": "P",
+  "wordcounter.text.paragraphs": "P",
+  "wordcounter.text.lines": "L",
+  "wordcounter.text.line": "L",
+  "wordcounter.text.chars": "C",
+  "wordcounter.text.char": "C",
+  "wordcounter.text.word": "W",
+  "wordcounter.text.words": "W",
+  "wordcounter.text.delimiter": "/",
+  "sync.autoDownload": false,
+  "sync.autoUpload": false,
+  "sync.forceDownload": false,
+  "sync.quietSync": false,
+  "sync.removeExtensions": true,
+  "sync.syncExtensions": true,
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "gitlens.views.fileHistory.enabled": true,
+  "gitlens.views.lineHistory.enabled": true,
+  // "git-graph.showStatusBarItem": false,
+  "gitlens.keymap": "none",
+  "gitlens.advanced.messages": {
+    "suppressCommitHasNoPreviousCommitWarning": false,
+    "suppressCommitNotFoundWarning": false,
+    "suppressFileNotUnderSourceControlWarning": false,
+    "suppressGitVersionWarning": false,
+    "suppressLineUncommittedWarning": false,
+    "suppressNoRepositoryWarning": false,
+    "suppressResultsExplorerNotice": false,
+    "suppressShowKeyBindingsNotice": true,
+    "suppressUpdateNotice": false,
+    "suppressWelcomeNotice": true
+  },
+  "evermonkey.noteStoreUrl": "https://app.yinxiang.com/shard/s71/notestore",
+  "evermonkey.token": "S=s71:U=101b414:E=169a49f75a3:C=1698092ef38:P=1cd:A=en-devtoken:V=2:H=0de6d925017ef7206e952628d33c0198",
+  "code-runner.saveFileBeforeRun": true,
+  "code-runner.runInTerminal": false,
+  "code-runner.clearPreviousOutput": true,
+  "code-runner.executorMap": {
+    "javascript": "node",
+    "java": "cd $dir && javac $fileName && java $fileNameWithoutExt",
+    "c": "cd $dir && gcc $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "cpp": "cd $dir && g++ $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "objective-c": "cd $dir && gcc -framework Cocoa $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "php": "php",
+    "python": "python3",
+    "perl": "perl",
+    "perl6": "perl6",
+    "ruby": "ruby",
+    "go": "go run",
+    "lua": "lua",
+    "groovy": "groovy",
+    "powershell": "powershell -ExecutionPolicy ByPass -File",
+    "bat": "cmd /c",
+    "shellscript": "bash",
+    "fsharp": "fsi",
+    "csharp": "scriptcs",
+    "vbscript": "cscript //Nologo",
+    "typescript": "ts-node",
+    "coffeescript": "coffee",
+    "scala": "scala",
+    "swift": "swift",
+    "julia": "julia",
+    "crystal": "crystal",
+    "ocaml": "ocaml",
+    "r": "Rscript",
+    "applescript": "osascript",
+    "clojure": "lein exec",
+    "haxe": "haxe --cwd $dirWithoutTrailingSlash --run $fileNameWithoutExt",
+    "rust": "cd $dir && rustc $fileName && $dir$fileNameWithoutExt",
+    "racket": "racket",
+    "ahk": "autohotkey",
+    "autoit": "autoit3",
+    "dart": "dart",
+    "pascal": "cd $dir && fpc $fileName && $dir$fileNameWithoutExt",
+    "d": "cd $dir && dmd $fileName && $dir$fileNameWithoutExt",
+    "haskell": "runhaskell",
+    "nim": "nim compile --verbosity:0 --hints:off --run"
+  },
+  "markdown.preview.breaks": true,
+  "markdown.marp.enableHtml": true,
+  "markdown.marp.themes": [
+    "/home/xshrim/.marp/theme"
+  ],
+  "[markdown]": {
+    "editor.quickSuggestions": true
+  },
+  "[makefile]": {
+    "editor.insertSpaces": false
+  },
+  "html.format.enable": true,
+  "html.autoClosingTags": true,
+  "html.format.indentHandlebars": true,
+  "javascript.format.insertSpaceBeforeFunctionParenthesis": false, //让函数(名)和后面的括号之间不加空格
+  "vetur.format.defaultFormatter.html": "js-beautify-html",
+  // 需在.eslintrc.js文件的rules字段中加入"'prettier/prettier': 0,"以防止对代码进行多次格式化(prettier与js-beautify-html)
+  "vetur.format.defaultFormatter.js": "prettier",
+  "vetur.format.defaultFormatter.ts": "prettier",
+  "vetur.format.defaultFormatter.css": "prettier",
+  "vetur.format.defaultFormatter.scss": "prettier",
+  "vetur.format.defaultFormatterOptions": {
+    "js-beautify-html": {
+      "wrap_line_length": 150,
+      "wrap_attributes": "auto",
+      "end_with_newline": false
+    },
+    "prettier": {
+      "printWidth": 150
+    }
+  },
+  "python.pythonPath": "/usr/bin/python3",
+  "python.linting.pylamaEnabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.pylamaArgs": [
+    "-i",
+    "E501,E401,E800"
+  ],
+  "python.formatting.provider": "yapf",
+  "python.formatting.yapfArgs": [
+    "--style",
+    "{COLUMN_LIMIT: 130}"
+  ],
+  "C_Cpp.clang_format_style": "{ BasedOnStyle: Chromium, IndentWidth: 2, ColumnLimit: 130}",
+  "go.testFlags": [
+    "-v"
+  ],
+  "go.languageServerFlags": [
+    "-rpc.trace"
+  ],
+  "[go]": {
+    "editor.insertSpaces": true,
+    "editor.snippetSuggestions": "none",
+  },
+  "go.buildOnSave": "package",
+  "go.gocodePackageLookupMode": "go",
+  "go.useLanguageServer": true,
+  "go.useCodeSnippetsOnFunctionSuggest": true,
+  "go.useCodeSnippetsOnFunctionSuggestWithoutType": true,
+  "go.inferGopath": true,
+  //"go.gopath": "${workspaceRoot}",
+  "go.autocompleteUnimportedPackages": true,
+  "go.gocodeAutoBuild": true,
+  //"go.docsTool": "gogetdoc",
+  "go.formatTool": "goimports",
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": [
+    "--fast",
+  ],
+  // "go.lintTool": "gometalinter",
+  // "go.lintFlags": [
+  //     "--fast",
+  //     //"--debug",
+  //     "-Dgotype",
+  //     "-Dgas",
+  //     "-Dgosec",
+  //     // "-Dvet",
+  //     "--exclude=should be",
+  //     "--exclude=declaration of \"err",
+  //     "--exclude=should have comment"
+  // ],
+  "go.liveErrors": {
+    "enabled": true,
+    "delay": 500
+  },
+  "go.addTags": {
+    "tags": "json",
+    "options": "",
+    "promptForTags": true,
+    "transform": "snakecase"
+  },
+  "go.editorContextMenuCommands": {
+    "toggleTestFile": true,
+    "addTags": true,
+    "removeTags": true,
+    "testAtCursor": true,
+    "testFile": false,
+    "testPackage": false,
+    "generateTestForFunction": true,
+    "generateTestForFile": true,
+    "generateTestForPackage": false,
+    "addImport": true,
+    "testCoverage": false,
+    "playground": false,
+  },
+  "go.languageServerExperimentalFeatures": {
+    "format": true,
+    "autoComplete": true,
+    "rename": true,
+    "goToDefinition": true,
+    "hover": true,
+    "signatureHelp": true,
+    "goToTypeDefinition": true,
+    "goToImplementation": true,
+    "documentSymbols": true,
+    "workspaceSymbols": true,
+    "findReferences": true,
+    "diagnostics": true,
+    "documentLink": true
+  },
+  "java.home": "/usr/share/jdk1.8.0",
+  "java.errors.incompleteClasspath.severity": "ignore",
+  "java.configuration.checkProjectSettingsExclusions": false,
+  "java.jdt.ls.vmargs": "-noverify -Xmx1G -XX:+UseG1GC -XX:+UseStringDeduplication -javaagent:\"/home/xshrim/.vscode/extensions/gabrielbb.vscode-lombok-1.0.1/server/lombok.jar\"",
+  "java.format.comments.enabled": false,
+  "java.codeGeneration.generateComments": true,
+  "java.requirements.JDK11Warning": false,
+  "java.semanticHighlighting.enabled": true,
+  "solidity.enabledAsYouTypeCompilationErrorCheck": true,
+  "solidity.validationDelay": 1500,
+  "solidity.linter": "solium",
+  "solidity.soliumRules": {
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "indentation": [
+      "error",
+      2
+    ]
+  },
+  "hediet.vscode-drawio.local-storage": "eyIuZHJhd2lvLWNvbmZpZyI6IntcImxhbmd1YWdlXCI6XCJcIixcImN1c3RvbUZvbnRzXCI6W10sXCJsaWJyYXJpZXNcIjpcImdlbmVyYWw7YmFzaWM7YXJyb3dzMjtmbG93Y2hhcnQ7ZXI7dW1sO2F6dXJlO21zY2FlO2t1YmVybmV0ZXM7YnBtblwiLFwiY3VzdG9tTGlicmFyaWVzXCI6W1wiTC5zY3JhdGNocGFkXCJdLFwicGx1Z2luc1wiOltdLFwicmVjZW50Q29sb3JzXCI6W1wiQ0NGRjk5XCIsXCI5OUNDRkZcIixcIkZGRkY2NlwiLFwiNEQ5OTAwXCIsXCJGRkI1NzBcIixcIjk5OTkwMFwiLFwiQ0MwMDY2XCIsXCI5OTk5OTlcIixcIkIzQjNCM1wiLFwiMDAwMDAwXCIsXCIzMzMzMzNcIl0sXCJmb3JtYXRXaWR0aFwiOjI0MCxcImNyZWF0ZVRhcmdldFwiOmZhbHNlLFwicGFnZUZvcm1hdFwiOntcInhcIjowLFwieVwiOjAsXCJ3aWR0aFwiOjgyNyxcImhlaWdodFwiOjExNjl9LFwic2VhcmNoXCI6dHJ1ZSxcInNob3dTdGFydFNjcmVlblwiOnRydWUsXCJncmlkQ29sb3JcIjpcIiNkMGQwZDBcIixcImRhcmtHcmlkQ29sb3JcIjpcIiM2ZTZlNmVcIixcImF1dG9zYXZlXCI6dHJ1ZSxcInJlc2l6ZUltYWdlc1wiOm51bGwsXCJvcGVuQ291bnRlclwiOjAsXCJ2ZXJzaW9uXCI6MTgsXCJ1bml0XCI6MSxcImlzUnVsZXJPblwiOmZhbHNlLFwidWlcIjpcIlwifSJ9",
+  "vs-external-tools.externalCommand1.command": "flameshot",
+  "vs-external-tools.externalCommand1.args": [
+    "gui"
+  ],
+  "vs-external-tools.externalCommand1.cwd": "$(ItemDir)",
+  "vs-external-tools.externalCommand2.command": "cmd.exe",
+  "vs-external-tools.externalCommand2.args": [
+    "/c",
+    "start",
+    "/wait",
+    "python",
+    "$(ItemPath)"
+  ],
+  "vs-external-tools.externalCommand2.cwd": "$(ItemDir)",
+  "commands.commands": [
+    {
+      "alignment": "left",
+      "priority": 99,
+      "text": "$(book)",
+      "command": "workbench.view.explorer",
+      "tooltip": "Explorer(Ctrl+Shift+E)"
+    },
+    {
+      "alignment": "left",
+      "priority": 98,
+      "text": "$(search)",
+      "command": "workbench.view.search",
+      "tooltip": "Search(Ctrl+Shift+F)"
+    },
+    {
+      "alignment": "left",
+      "priority": 97,
+      "text": "$(remote)",
+      "command": "workbench.view.remote",
+      "tooltip": "Remote(Ctrl+Shift+R)"
+    },
+    {
+      "alignment": "left",
+      "priority": 96,
+      "text": "$(git-branch)",
+      "command": "workbench.view.scm",
+      "tooltip": "Git(Ctrl+Shift+G)"
+    },
+    // {
+    //   "alignment": "left",
+    //   "priority": 95,
+    //   "text": "$(git-commit)",
+    //   "command": "git-graph.view",
+    //   "tooltip": "GitGraph"
+    // },
+    {
+      "alignment": "left",
+      "priority": 94,
+      "text": "$(git-pull-request)",
+      "command": "workbench.view.extension.gitlens",
+      "tooltip": "GitLens"
+    },
+    {
+      "alignment": "left",
+      "priority": 93,
+      "text": "$(bug)",
+      "command": "workbench.view.debug",
+      "tooltip": "Debug(Ctrl+Shift+D)"
+    },
+    {
+      "alignment": "left",
+      "priority": 92,
+      "text": "$(database)",
+      "command": "workbench.view.extension.SQLToolsExplorer",
+      "tooltip": "Database"
+    },
+    {
+      "alignment": "left",
+      "priority": 91,
+      "text": "$(beaker)",
+      "command": "workbench.view.extension.test",
+      "tooltip": "Test"
+    },
+    {
+      "alignment": "left",
+      "priority": 90,
+      "text": "$(package)",
+      "command": "workbench.view.extensions",
+      "tooltip": "Extensions(Ctrl+Shift+X)"
+    },
+    {
+      "alignment": "left",
+      "priority": 89,
+      "text": "$(inbox)",
+      "command": "workbench.view.extension.dockerView",
+      "tooltip": "Docker"
+    },
+    {
+      "alignment": "left",
+      "priority": 88,
+      "text": "$(globe)",
+      "command": "workbench.view.extension.kubernetesView",
+      "tooltip": "Kubernetes"
+    },
+    {
+      "alignment": "left",
+      "priority": 87,
+      "text": "$(squirrel)",
+      "command": "workbench.view.extension.leetcode",
+      "tooltip": "LeetCode"
+    },
+    {
+      "alignment": "left",
+      "priority": 86,
+      "text": "$(gear)",
+      "command": "workbench.action.openGlobalSettings",
+      "tooltip": "Settings"
+    },
+    {
+      "alignment": "left",
+      "priority": 85,
+      "text": "$(flame)",
+      "command": "workbench.action.showCommands",
+      "tooltip": "Show Commands"
+    },
+    {
+      "alignment": "left",
+      "priority": 84,
+      "text": "$(zap)",
+      "command": "workbench.action.debug.start",
+      "tooltip": "Run"
+    },
+    {
+      "alignment": "left",
+      "priority": 83,
+      "text": "$(rocket)",
+      "command": "python.execInTerminal",
+      "tooltip": "Python Run"
+    },
+    /*
+        {
+            "alignment": "left",
+            "priority": 87,
+            "text": "$(file-symlink-file)",
+            "command": "workbench.action.terminal.runActiveFile",
+            "tooltip": "Run File"
+        },
+        {
+            "alignment": "left",
+            "priority": 86,
+            "text": "$(diff-renamed)",
+            "command": "workbench.action.terminal.runSelectedText",
+            "tooltip": "Run Selected Text"
+        },
+        {
+            "alignment": "left",
+            "priority": 86,
+            "text": "$(link-external)",
+            "command": "code-runner.runByLanguage",
+            "tooltip": "Run By Language"
+        },
+        */
+    {
+      "alignment": "left",
+      "priority": 82,
+      "text": "$(eye)",
+      "command": "browser-preview.openActiveFile",
+      "tooltip": "Preview"
+    },
+    {
+      "alignment": "left",
+      "priority": 81,
+      "text": "$(keyboard)",
+      "command": "editor.action.formatDocument",
+      "tooltip": "Format"
+    },
+    {
+      "alignment": "left",
+      "priority": 80,
+      "text": "$(device-camera)",
+      "command": "vs-external-tools.externalCommand1",
+      "tooltip": "Snapshot"
+    },
+    {
+      "alignment": "left",
+      "priority": 79,
+      "text": "$(terminal)",
+      "command": "workbench.action.terminal.openNativeConsole",
+      "tooltip": "Terminal"
+    },
+    {
+      "alignment": "left",
+      "priority": 78,
+      "text": "$(arrow-left)",
+      "command": "workbench.action.navigateBack",
+      "tooltip": "GoBack"
+    },
+    {
+      "alignment": "left",
+      "priority": 77,
+      "text": "$(arrow-right)",
+      "command": "workbench.action.navigateForward",
+      "tooltip": "GoForward"
+    },
+  ],
+}
