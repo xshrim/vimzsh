@@ -1218,7 +1218,7 @@ function calc() {
 
 function c() 
 { 
-    local in="$(echo " $*" | sed -e 's/\[/(/g' -e 's/\]/)/g')";
+    local in="$(echo " $*" | sed -e 's/\[/(/g' | sed -e 's/\]/)/g')";
     awk "BEGIN {printf $in}"
 }
 
