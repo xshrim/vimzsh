@@ -1,0 +1,124 @@
+{
+    "root": {
+        "data": {
+            "id": "c6akxmezyqo0",
+            "created": 1602472053325,
+            "text": "技能",
+            "note": null
+        },
+        "children": [
+            {
+                "data": {
+                    "id": "c6al0ykdan40",
+                    "created": 1602472314864,
+                    "text": "语言基础"
+                },
+                "children": [
+                    {
+                        "data": {
+                            "id": "c6al12vto680",
+                            "created": 1602472324264,
+                            "text": "数据结构"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "c6al14x7ers0",
+                            "created": 1602472328701,
+                            "text": "golang深入",
+                            "hyperlink": "https://draveness.me/golang/",
+                            "hyperlinkTitle": "Go语言设计与实现"
+                        },
+                        "children": []
+                    },
+                    {
+                        "data": {
+                            "id": "c6al1vw0tqw0",
+                            "created": 1602472387403,
+                            "text": "知识点"
+                        },
+                        "children": [
+                            {
+                                "data": {
+                                    "id": "c6al23dipxc0",
+                                    "created": 1602472403698,
+                                    "text": "Map",
+                                    "layout_right_offset": {
+                                        "x": 1,
+                                        "y": -1
+                                    }
+                                },
+                                "children": [
+                                    {
+                                        "data": {
+                                            "id": "c6al6va51y00",
+                                            "created": 1602472777900,
+                                            "text": "hash函数与冲突解决, hash桶列表是数组, 根据key计算桶数组下标, 桶内数据各有实现"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "c6al2z8spcw0",
+                                            "created": 1602472473070,
+                                            "text": "Java: HashMap, 链表长度大于8转红黑树"
+                                        },
+                                        "children": []
+                                    },
+                                    {
+                                        "data": {
+                                            "id": "c6al46tgasw0",
+                                            "created": 1602472567920,
+                                            "text": "Go: Map, 数组(桶和溢出桶), 桶重建"
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "data": {
+                    "id": "c6akzezqo740",
+                    "created": 1602472193894,
+                    "text": "缓存",
+                    "layout_right_offset": {
+                        "x": 14,
+                        "y": -86
+                    }
+                },
+                "children": []
+            },
+            {
+                "data": {
+                    "id": "c6akzovfcf40",
+                    "created": 1602472215401,
+                    "text": "消息队列",
+                    "layout_right_offset": {
+                        "x": 0,
+                        "y": -44
+                    }
+                },
+                "children": []
+            },
+            {
+                "data": {
+                    "id": "c6akzsb10f40",
+                    "created": 1602472222875,
+                    "text": "Kubernetes",
+                    "layout_right_offset": {
+                        "x": -31,
+                        "y": -1
+                    }
+                },
+                "children": []
+            }
+        ]
+    },
+    "template": "right",
+    "theme": "fresh-blue",
+    "version": "1.4.43"
+}
