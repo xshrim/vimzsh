@@ -662,6 +662,7 @@ alias glog='git log --oneline --graph --decorate'
 alias glg='git log --graph --pretty=format:"%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset" --abbrev-commit --date=relative'
 alias rs='rsync -ahr --info=progress2 --no-i-r'
 alias gm='gomacro'
+alias py='python3'
 # docker alias
 alias dkc='docker-compose'
 alias dps='docker container ls'
