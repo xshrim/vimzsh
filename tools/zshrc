@@ -160,4 +160,8 @@ zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
 autoload -U +X bashcompinit && bashcompinit
+
+# zstyle -e ':completion:*:default' list-colors 'reply=("${PREFIX:+=(#bi)($PREFIX:t)*==34=34}:${(s.:.)LS_COLORS}")'
+
 complete -o nospace -C /usr/bin/mc mc
+
