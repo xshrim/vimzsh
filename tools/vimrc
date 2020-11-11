@@ -489,6 +489,10 @@ Plug 'tpope/vim-fugitive'
 " 字符串标记处理
 Plug 'tpope/vim-surround'
 
+"""""""""""""""""""""""""""""""""""indentLine"""""""""""""""""""""""""""""""
+" 代码段自动选择
+Plug 'gcmt/wildfire.vim'
+
 """""""""""""""""""""""""""""""""vim-autoformat"""""""""""""""""""""""""""
 " 自动格式化
 Plug 'Chiel92/vim-autoformat'
