@@ -397,6 +397,29 @@ if has('autocmd')
     augroup END
 endif
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""解决输入法问题
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:input_toggle = 1
+function! Fcitx2en()
+   let s:input_status = system("fcitx-remote")
+   if s:input_status == 2
+      let g:input_toggle = 1
+      let l:a = system("fcitx-remote -c")
+   endif
+endfunction
+
+function! Fcitx2zh()
+   let s:input_status = system("fcitx-remote")
+   if s:input_status != 2 && g:input_toggle == 1
+      let l:a = system("fcitx-remote -o")
+      let g:input_toggle = 0
+   endif
+endfunction
+
+set timeoutlen=150
+autocmd InsertLeave * call Fcitx2en()    "" 退出Insert模式时关闭中文输入法
+"autocmd InsertEnter * call Fcitx2zh()   "" 进入Insert模式时开启中文输入法
 
 " 为C程序提供自动缩进
 " 自动补全
@@ -592,7 +615,7 @@ Plug 'skywind3000/vimmake'
 
 """"""""""""""""""""""""""""""""""vim-fcitx"""""""""""""""""""""""""""""""""
 " fcitx状态切换
-Plug 'h-youhei/vim-fcitx'
+"Plug 'h-youhei/vim-fcitx'
 
 """"""""""""""""""""""""""""""""""vim-alias"""""""""""""""""""""""""""""""""
 " 命令别名
