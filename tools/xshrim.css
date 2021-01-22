@@ -136,8 +136,8 @@ body {
   font-family: "Open Sans","Clear Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size: 16px;
   line-height: 1.6;
-  color: #817fbb;
-  /* background-color: #FCF5ED;*/
+  color: #7775b6;
+  /* 817fbb background-color: #663366;*/
   padding: 20px;
   max-width: 960px;
   margin: 0 auto;
@@ -207,7 +207,7 @@ h6 code {
 } */
 h1 {
   text-align: center;
-  color: #7637db;
+  color: #6666ff;
   padding-bottom: 0.3em;
   font-size: 2em;
   line-height: 1.2;
@@ -227,19 +227,20 @@ h1:after {
 h2 {
   font-size: 28px;
   border-bottom: 1px solid #dde6c5;
-  color: #a963e2;
+  /*color: #9933cc;*/
+  color: #009999;
   font-weight: 400;
 }
 
 h2:before {
   content: '∮';
-  color: #7bcca4;
+  color: #66cc00;
   margin-right: 3px;
 }
 
 h3 {
   font-size: 24px;
-  color: #ec34ec;
+  color: #cc66cc;
   /* padding-left: 12px;
   border-left: 5px solid #ec34ec; */
   font-weight: 400;
@@ -247,38 +248,39 @@ h3 {
 
 h3:before {
   content: '§';
-  color: #7bcca4;
+  color: #66cc00;
   margin-right: 3px;
 }
 
 h4 {
   font-size: 22px;
-  color: #f85787;
+  /*color: #f85787;*/
+  color: #ff3366;
   font-weight: 400;
 }
 
 /*--- 四级标题左边的小短线 ---*/
 h4:before {
   content: 'Ɛ';
-  color: #7bcca4;
+  color: #66cc00;
   margin-right: 3px;
 }
 
 h5 {
   font-size: 20px;
-  color: #d86e27;
+  color: #ff6600;
   font-weight: 400;
 }
 
 h5:before {
   /* background-color: #d86e27; */
   content: 'δ';
-  color: #7bcca4;
+  color: #66cc00;
   margin-right: 3px;
 }
 
 h6 {
-  color: #d6b314;
+  color: #cc9900;
   font-size: 18px;
   font-weight: 400;
 }
@@ -287,7 +289,7 @@ h6:before {
   /* background-color: #d86e27; */
   /* content: 'ひん∂ζ◊⌭⟡'; */
   content: 'φ';
-  color: #7bcca4;
+  color: #66cc00;
   margin-right: 3px;
 }
 
@@ -325,7 +327,7 @@ h6+p {
 =============================================================================*/
 
 a {
-  color: #7b990f;
+  color: #8fb92c;
   text-decoration: none;
 }
 
@@ -337,7 +339,7 @@ b,
 dt,
 strong {
   padding: 0 1px;
-  color: #9a9af7;
+  color: #66ccff;
 }
 
 em {
@@ -347,7 +349,7 @@ em {
 
 del {
   padding: 0 5px 0 2px;
-  color: #dd2e2e;
+  color: #ceb2b2;
 }
 
 i {
@@ -355,7 +357,7 @@ i {
 }
 
 mark {
-  background: #ace056;
+  background: #96c944;
 }
 
 .btn,
@@ -413,7 +415,7 @@ ul li ol:first-of-type,
 ol li ul:first-of-type {
   margin-top: 0px;
   /* color: #00868B; */
-  color: #58ad58;
+  color: #00cc66;
 }
 
 ul ul,
@@ -544,7 +546,7 @@ tt {
   border-radius: 3px;
   font-family: Roboto Mono, Source Sans Pro, 'Microsoft YaHei', '微软雅黑' !important;
   font-size: 0.92rem;
-  color: #e26dae;
+  color: #ff66ff;
   background-color: #e2e2f8;
 }
 
@@ -712,10 +714,12 @@ table tr:nth-child(2n) {
 img {
   max-width: 100%
 }
-
-.cm-s-inner .cm-variable,
+#1a89e4;
 .cm-s-inner .cm-property {
-    color: #1a89e4;
+  color: #1a89e4;
+}
+.cm-s-inner .cm-variable {
+    color: #19b9ac;
 }
 
 .cm-s-inner .cm-operator {
@@ -790,7 +794,7 @@ img {
 
 .cm-s-inner .cm-atom,
 .cm-s-inner.cm-atom {
-    color: #7d2fb1;
+    color: #c2379f;
 }
 
 .cm-s-inner .cm-number {
@@ -798,11 +802,11 @@ img {
 }
 
 .cm-s-inner .cm-variable {
-    color: #3c93eb;
+    color: #19b9ac;
 }
 
 .cm-s-inner .cm-variable-2 {
-    color: #1e73c9;
+    color: #139287;
 }
 
 .cm-s-inner .cm-variable-3 {
