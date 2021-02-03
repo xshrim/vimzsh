@@ -65,6 +65,8 @@ function usage() {
   st                       查看系统各项stat信息
   n,net                    运行网络相关命令
   ym,yum                   运行yum相关命令
+  jy,j2y                   json数据转换为yaml格式
+  yj,y2j                   yaml数据转换为json格式
   ac,autocomplete          开启命令自动补全
   cu,au,createuser,adduser 创建用户
   opt,optimize             对操作系统进行k8s环境优化
@@ -1877,6 +1879,12 @@ EOF
       echo "source <(kubectl completion zsh)" >>~/.zshrc
       # echo "if [ $commands[kubectl] ]; then source <(kubectl completion zsh); fi" >> ~/.zshrc
     fi
+  elif [ "$1" == "jy" ] || [ "$1" == "j2y" ]; then
+    require yq
+    cat $2 | yq r -P -
+  elif [ "$1" == "yj" ] || [ "$1" == "y2j" ]; then
+    require yq
+    cat $2 | yq r -jP -
   elif [ "$1" == "ym" ] || [ "$1" == "yum" ]; then
     require yum
     shift
