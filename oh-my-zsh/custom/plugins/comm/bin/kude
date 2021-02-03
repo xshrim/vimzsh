@@ -1773,8 +1773,7 @@ EOF
     done
   elif [ "$1" == "pt" ] || [ "$1" == "pst" ] || [ "$1" == "pstree" ]; then
    require ps
-   shift
-   ps -alfx | grep -- " $(ps -o ppid= $1) \| $1 " | grep -v "grep" 
+   ps -alfx | grep -- " $(ps -o ppid= $2) \| $2 " | grep -v "grep" 
   elif [ "$1" == "ps" ] || [ "$1" == "portstat" ] || [ "$1" == "portstatus" ]; then
     shift
     if [ $# -eq 1 ]; then
