@@ -396,6 +396,23 @@ function idhelp() {
   '
 }
 
+function kindhelp() {
+  echo '
+**USAGE**:
+  kude kd [<commands>]
+
+**COMMANDS**:
+  h,hp                    打印命令帮助
+  help                    打印kind命令帮助
+  cl,ls,list              打印集群列表
+  ac,completion           kind命令自动补全
+  ld,load                 向kind节点中加载镜像
+  d,dc                    在kind节点中执行docker命令
+  exec                    交互式进入kind节点中的容器内
+  rm,del,delete           删除集群
+  '
+}
+
 function timehelp() {
   echo '
 **USAGE**:
@@ -1426,7 +1443,9 @@ function main() {
   elif [ "$1" == "kd" ]; then
     require kind
     shift
-    if [ "$1" == "h" ] || [ "$1" == "hp" ] || [ "$1" == "help" ]; then
+    if [ "$1" == "h" ] || [ "$1" == "hp" ]; then
+      kindhelp
+    elif [ "$1" == "help" ]; then
       kind help
     elif [ "$1" == "cl" ] || [ "$1" == "ls" ] || [ "$1" == "list" ]; then
       kind get clusters

@@ -52,7 +52,7 @@
 BLK                   38;5;68
 CAPABILITY            38;5;17
 CHR                   38;5;5;1
-DIR                   38;5;4
+DIR                   38;5;4;1
 DOOR                  38;5;127
 EXEC                  38;5;129;1
 FIFO                  38;5;13
