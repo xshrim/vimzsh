@@ -763,40 +763,49 @@ function hl() {
 function h() {
   #local cmds="*ls* *echo* *cat* *ps* *who* *pwd* *arch* *lspci* *lsusb* *time* *date* *cal* *tree* *iconv* *env* *set* *df* *dfc* *tree* *free* *alias* *rpm* *yum* *dnf* *apt* *apt-get* *pacman* *sar* *lsattr* *h* *tar* *sort* *grep* *egrep* *recode* *pvs* *pvdisplay* *pvscan* *vgscan* *lvs* *lvdisplay* *vgs* *vgdisplay* *pvcreate* *pvremove* *lvcreate* *lvremove* *lvextend* *lvresize* *lvreduce* *lvrename* *lvconvert* *lvscan* *lvchange* *vgchange* *vgcreate* *vgreduce* *vgextend**vgrename* *ip* *ping* *ifconfig* *route* *hostname* *iwlist* *host* *npm* *nslookup* *whois* *dig* *dmesg* *rsync* *cp* *mv* *glog* *git* *mtr* *ss* *fd* *ag* *bat* *pycp* *pymv* *highlight* *xargs* *more* *less* *wd* *dict* *exa* *sysctl* *nmap* *convert* *ethtool* *smbclient* *mount* *umount* *tar* *zip* *unzip* *firewall-cmd* *iptables* *gs* *systemctl* *journalctl* *hostnamectl* *dmidecode* *hdparm* *which* *whereis* *locate* *jobs* *uname* *head* *tail* *cut* *tr* *sed* *awk* *file* *lsof* *netstat* *vmstat* *iostat* *docker* *docker-compose* *kubectl* *helm* *redis-cli* *mc* *mysql* *pgsql* *node* *python* *python3* *java* *go* *pip* *pip3* *make* *gcc* *tsc* *perl* *lua* *ruby* *rust* *scala* *julia* "
 
+
   if [ ! -t 1 ]
   then
     \cat $@
-  elif [ $# -eq 0 ]
-  then
-    #CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
-    #highlight -O xterm256 -t 4 -s $style -S $syntax
-    if type highlight &>/dev/null;then
-      highlight -O xterm256 -t 4 -s bipolar -S sh
-    elif type bat &>/dev/null;then
-      bat --paging never -p
-    elif type ccat &>/dev/null;then
-      ccat
-    else
-      \cat
-    fi
   else
-    if [[ $(file "$1" | grep -o "text" | wc -l ) -lt 1 ]];then
-      echo -en "\033[1m"
-      \cat $@
-      echo -en "\033[0m"
+    local sn=()
+    while [ $# -gt 0 ] && [[ "$1" == -* ]]
+    do
+        sn+=("$1")
+        shift
+    done
+    if [ $# -eq 0 ]
+    then
+        #CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
+        #highlight -O xterm256 -t 4 -s $style -S $syntax
+        if type highlight &>/dev/null;then
+            highlight -S sh ${sn[*]} -O xterm256 -t 4 -s bipolar
+        elif type bat &>/dev/null;then
+            bat ${sn[*]} --paging never -p
+        elif type ccat &>/dev/null;then
+            ccat $${sn[*]}
+        else
+            \cat ${sn[*]}
+        fi
     else
-      if type highlight &>/dev/null;then
-        highlight -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight -O xterm256 -t 4 -s bipolar -S sh $@ 2> /dev/null || \cat $@
-      elif type bat &>/dev/null;then
-        bat --paging never -p $@ 2> /dev/null || \cat $@
-      elif type ccat &>/dev/null;then
-        ccat $@ 2> /dev/null || \cat $@
-      else
-        echo -en "\033[1m"
-        \cat $@
-        echo -en "\033[0m"
-      fi
+        if [[ $(file "$1" | grep -o "text" | wc -l ) -lt 1 ]];then
+            echo -en "\033[1m"
+            \cat ${sn[*]} $@
+            echo -en "\033[0m"
+        else
+        if type highlight &>/dev/null;then
+            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight -S sh ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || \cat ${sn[*]} $@
+        elif type bat &>/dev/null;then
+            bat ${sn[*]} --paging never -p $@ 2> /dev/null || \cat ${sn[*]} $@
+        elif type ccat &>/dev/null;then
+            ccat ${sn[*]} $@ 2> /dev/null || \cat ${sn[*]} $@
+        else
+            echo -en "\033[1m"
+            \cat ${sn[*]} $@
+            echo -en "\033[0m"
+        fi
     fi
+  fi
 #        if [[ "$cmds" =~ "*"$1"*" ]]
 #         then
 #             #$* | highlight -O xterm256 -t 4 -s $style 2> /dev/null || $* | highlight -O xterm256 -t 4 -s $style -S sh
@@ -1315,6 +1324,110 @@ zle -N sudo-command-line
 bindkey -M emacs '^[^M' sudo-command-line
 bindkey -M vicmd '^[^M' sudo-command-line
 bindkey -M viins '^[^M' sudo-command-line
+
+#########################################################################
+# 远程主机批量执行任务(类似ansible)
+#########################################################################
+function batch() {
+  local usage='
+USAGE: \n
+COMMAND: \n
+\tbatch -u [user] -s [password] -p [port] <mode> <hosts> <args> \n
+MODES: \n
+\tping: ping hosts \n
+\tshell: run command on hosts \n
+\tscript: execute script on hosts \n
+\tcopy: copy local files to hosts \n
+\tfetch: fetch files on hosts to local \n
+\ttemplate: replace string for the file on hosts \n
+EXAMPLES: \n
+\tbatch ping "127.0.0.1 196.168.0.1" \n
+\tbatch ping "${array[*]}" \n
+\tbatch -u root -p 22 shell "${array[*]}" "ps" \n
+\tbatch -s password script "${array[*]}" "run.sh" \n
+\tbatch copy "${array[*]}" "/home/demo/run.sh /root/" \n
+\tbatch template "${array[*]}" "/home/demo/run.sh foo bar" \n
+  '
+  local user="root"
+  local pw=""
+  local port="22"
+  local args=()
+  while [ $# -gt 0 ] && [[ "$1" != "--" ]]; do
+    while getopts "u:s:p:" opt; do
+      case $opt in
+      u)
+        user="$OPTARG"
+        ;;
+      s)
+        pw="sshpass -p $OPTARG"
+        if ! type sshpass &>/dev/null; then
+          echo "sshpass required"
+          exit 1
+        fi
+        ;;
+      p)
+        port="$OPTARG"
+        ;;
+      *)
+        echo -e $usage
+        exit 0
+        ;;
+      esac
+    done
+
+    shift $((OPTIND - 1))
+
+    while [ $# -gt 0 ] && (! [[ "$1" =~ ^- ]] || [[ "$1" =~ ^-- ]]); do
+      args=("${args[@]}" "$1")
+      shift
+      OPTIND=1 # reset OPTIND
+    done
+  done
+
+  local mode=${args[1]}
+  local hosts=${args[2]}
+  local cmd=${args[3]}
+
+  setopt shwordsplit   # Compatible with bash word split
+  for host in ${hosts[*]}; do
+    case $mode in
+    ping)
+      if /bin/ping -c 1 -w 1 $host &>/dev/null; then
+        echo "$host [succ]"
+      else
+        echo "$host [fail]"
+      fi
+      ;;
+    shell)
+      $pw ssh -p $port $user@$host $cmd
+      ;;
+    script)
+      $pw ssh -p $port $user@$host "bash $cmd"
+      ;;
+    copy)
+      local src=`echo $cmd | awk '{print $1}'`
+      local dest=`echo $cmd | awk '{print $2}'`
+      $pw scp -r -P $port $src $user@$host:$dest
+      ;;
+    fetch)
+      local src=`echo $cmd | awk '{print $1}'`
+      local dest=`echo $cmd | awk '{print $2}'`
+      $pw scp -r -P $port $user@$host:$src $dest
+      ;;
+    template)
+      local src=`echo $cmd | awk '{print $1}'`
+      local old=`echo $cmd | awk '{print $2}'`
+      local new=`echo $cmd | awk '{print $3}'`
+      $pw ssh -p $port $user@$host "sed -i 's/$old/$new/g' $src"
+      ;;
+    *)
+      echo $usage
+      exit 1
+      ;;
+    esac
+  done
+  unsetopt shwordsplit
+}
 
 #########################################################################
 # kubectl自动补全加载较慢, 启用延迟加载
