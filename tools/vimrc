@@ -3,6 +3,13 @@
 " disable all pulgins
 " vim -U NONE -u
 
+" 设置.vim文件路径
+" vim -u ~/.vimrc  " 设置vim启动时使用的配置文件
+set runtimepath=~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after
+if version >=800
+  set packpath=~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after
+endif
+
 set encoding=utf-8
 scriptencoding utf-8
 " 识别文件编码
@@ -254,7 +261,7 @@ func! FormatClean()
 endfunc
 
 " 统一缩进
-nnoremap <F2> gg=G<CR>
+"nnoremap <F2> gg=G<CR>
 " 设置代码折叠
 "map <F2> :call CodeFold()<CR>
 "func! CodeFold()
@@ -647,6 +654,14 @@ Plug 'vim-scripts/txt.vim'
 " 漂亮显示txt
 let g:tlist_txt_settings = 'txt;c:content;f:figures;t:tables'
 au BufRead,BufNewFile *.txt setlocal ft=txt
+
+"""""""""""""""""""""""""""""""""vim-floaterm""""""""""""""""""""""""""""""
+if version >=800
+  Plug 'voldikss/vim-floaterm'
+  "let g:floaterm_keymap_toggle = '<F2>'
+  nnoremap   <silent>   <F2>   :FloatermToggle<CR>
+  tnoremap   <silent>   <F2>   <C-\><C-n>:FloatermToggle<CR>
+endif
 
 """""""""""""""""""""""""""""""""SingleCompile""""""""""""""""""""""""""""""
 " 运行代码

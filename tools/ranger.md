@@ -104,7 +104,9 @@ sudo apt-get install caca-utils # img2txt 图片
 sudo apt-get install highlight  # 代码高亮
 sudo apt-get install atool　    # 存档预览
 sudo apt-get install w3m        # html页面预览
+sudo apt-get install ueberzug   # 图片预览
 sudo apt-get install mediainfo  # 多媒体文件预览
+sudo apt-get install ffmpegthumbnailer   # video预览
 ```
 
 当然还有其他文件格式的预览
@@ -113,6 +115,13 @@ sudo apt-get install mediainfo  # 多媒体文件预览
 sudo apt-get install catdoc     # doc预览
 sudo apt-get install docx2txt   # docx预览
 sudo apt-get install xlsx2csv   # xlsx预览
+```
+
+此外ranger还支持图标显示:
+
+```bash
+git clone https://github.com/alexanderjeurissen/ranger_devicons ~/.config/ranger/plugins/ranger_devicons
+echo "default_linemode devicons" >> ~/.config/ranger/rc.conf
 ```
 
 具体可参见[github官方文档](https://github.com/ranger/ranger/wiki)
@@ -125,6 +134,8 @@ sudo apt-get install xlsx2csv   # xlsx预览
 如将以下代码复制到`~/.config/ranger/commands.py`文件中(没有则新建), 在`ranger`模式下就可以通过`:code`用vscode打开当前目录.
 
 ```bash
+import os
+from ranger.core.loader import CommandLoader
 from ranger.api.commands import Command
 
 class code(Command):
@@ -200,4 +211,58 @@ class fzf(Command):
                 self.fm.cd(fzf_file)
             else:
                 self.fm.select_file(fzf_file)
+                
+class x(Command):
+    def execute(self):
+        """ Compress marked files to current directory """
+        cwd = self.fm.thisdir
+        marked_files = cwd.get_selection()
+
+        if not marked_files:
+            return
+
+        def refresh(_):
+            cwd = self.fm.get_directory(original_path)
+            cwd.load_content()
+
+        original_path = cwd.path
+        parts = self.line.split()
+        au_flags = parts[1:]
+
+        descr = "compressing files in: " + os.path.basename(parts[1])
+        obj = CommandLoader(args=['apack'] + au_flags + \
+                [os.path.relpath(f.path, cwd.path) for f in marked_files], descr=descr)
+
+        obj.signal_bind('after', refresh)
+        self.fm.loader.add(obj)
+
+    def tab(self):
+        """ Complete with current folder name """
+
+        extension = ['.zip', '.tar.gz', '.rar', '.7z']
+        return ['compress ' + os.path.basename(self.fm.thisdir.path) + ext for ext in extension]
+        
+class ex(Command):
+    """:extract <paths>
+    Extract archives
+    """
+    def execute(self):
+        import os
+        fail=[]
+        for i in self.fm.thistab.get_selection():
+            ExtractProg='7z x'
+            if i.path.endswith('.zip'):
+                # zip encoding issue
+                ExtractProg='unzip -O gbk'
+            elif i.path.endswith('.tar.gz'):
+                ExtractProg='tar xvf'
+            elif i.path.endswith('.tar.xz'):
+                ExtractProg='tar xJvf'
+            elif i.path.endswith('.tar.bz2'):
+                ExtractProg='tar xjvf'
+            if os.system('{0} "{1}"'.format(ExtractProg, i.path)):
+                fail.append(i.path)
+        if len(fail) > 0:
+            self.fm.notify("Fail to extract: {0}".format(' '.join(fail)), duration=10, bad=True)
+        self.fm.redraw_window()
 ```

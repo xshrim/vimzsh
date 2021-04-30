@@ -621,6 +621,8 @@ export PATH=$cdir/bin:$PATH
 #命令别名 {{{
 if [ -f ~/.vimrc ];then
   alias vim='vim -u ~/.vimrc'
+elif [ -f ~/.virc ];then
+  alias vim='vim -u ~/.virc'
 fi
 alias vi='vim'
 
@@ -632,7 +634,6 @@ fi
 type fping &>/dev/null && alias ping='fping -Ae'
 
 # type pycp &>/dev/null && alias cp='pycp -g'
-# 
 # type pymv &>/dev/null && alias mv='pymv -g'
 
 type acp &>/dev/null && alias cp='acp -gR'
@@ -1094,6 +1095,13 @@ zmodload zsh/complist
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
 
+#lf目录图标
+if type lf &>/dev/null; then
+  LF_ICONS=$(sed $cdir/DIR_ICONS -e '/^[ \t]*#/d' -e '/^[ \t]*$/d' -e 's/[ \t]\+/=/g' -e 's/$/ /')
+  LF_ICONS=${LF_ICONS//$'\n'/:}
+  export LF_ICONS
+fi
+
 #强制启用颜色高亮
 force_color_prompt=yes
 
@@ -1351,9 +1359,10 @@ EXAMPLES: \n
   local user="root"
   local pw=""
   local port="22"
+  local cfile=""
   local args=()
   while [ $# -gt 0 ] && [[ "$1" != "--" ]]; do
-    while getopts "u:s:p:" opt; do
+    while getopts "u:s:p:f:" opt; do
       case $opt in
       u)
         user="$OPTARG"
@@ -1367,6 +1376,9 @@ EXAMPLES: \n
         ;;
       p)
         port="$OPTARG"
+        ;;
+      f)
+        cfile="$OPTARG"
         ;;
       *)
         echo -e $usage
@@ -1385,8 +1397,15 @@ EXAMPLES: \n
   done
 
   local mode=${args[1]}
-  local hosts=${args[2]}
-  local cmd=${args[3]}
+  local hosts
+  local cmd
+  if [ -f "$cfile" ]; then
+    IFS=$'\r\n' read -d '' -r -a hosts < $cfile
+    cmd= ${args[2]}
+  else
+    hosts=${args[2]}
+    cmd=${args[3]}
+  fi
 
   setopt shwordsplit   # Compatible with bash word split
   for host in ${hosts[*]}; do
@@ -1427,6 +1446,63 @@ EXAMPLES: \n
     esac
   done
   unsetopt shwordsplit
+}
+
+#########################################################################
+# lf终端文件管理器(类ranger)
+#########################################################################
+# lfcleanup() {
+#   exec 3>&-
+#   rm -rf "$FIFO_UEBERZUG"
+# }
+    
+function ff() {
+  if [ -n "$1" ]; then
+    cd "$1"
+  fi
+  
+  if type lf &>/dev/null &&  type ueberzug &>/dev/null; then
+    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+      lf "$@"
+    else
+      rm -rf "$HOME/.cache/lf"
+      [ ! -d "$HOME/.cache/lf" ] && mkdir --parents "$HOME/.cache/lf"
+      export FIFO_UEBERZUG="$HOME/.cache/lf/ueberzug-$RANDOM"
+      mkfifo "$FIFO_UEBERZUG" &> /dev/null
+      (ueberzug layer -s <"$FIFO_UEBERZUG" -p bash &) &> /dev/null
+      exec 3>"$FIFO_UEBERZUG"
+      # trap lfcleanup EXIT
+      lf "$@" 3>&-
+    fi
+  fi
+}
+
+#########################################################################
+# ansible输出json提取
+#########################################################################
+function ans() {
+  local text
+  local host=$1
+  local offset
+  host=$(echo $host|sed 's/\./\\./g')
+  #shift
+  #read -d '' text
+  #IFS=$'\r\n' read -d '' -r -a text < $2
+  if [ $# == 1 ]; then
+    text=$(cat $2)
+  else
+    if [ -f $2 ]; then
+      text=$(cat $2)
+    else
+      offset=$2
+      text=$(cat $3)
+    fi
+  fi
+  if [ -n "$offset" ] && type jq >/dev/null 2>&1; then
+    echo "$text" | \grep -Pzo "\[?$host\]?.* => {\n(.*\n)*?}\n?"|sed "s/^\S.* => {/{/g" | jq -rsM . | jq -rM .[$offset]
+  else
+    echo "$text" | \grep -Pzo "\[?$host\]?.* => {\n(.*\n)*?}\n?"|sed "s/^\S.* => {/{/g"
+  fi
 }
 
 #########################################################################
