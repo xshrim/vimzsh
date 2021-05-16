@@ -337,44 +337,66 @@ local gitprompt=$(git_prompt_info)
 local zero='%([BSUbfksu]|([FK]|){*})'
 local gitpromptsize=${#${(S%%)gitprompt//$~zero/}}
 
-local smile="%(?,$GREEN☀%{$reset_color%},$RED☂%{$reset_color%})"
+local promptok="☀"
+local promptko="☂"
+local promptdc="♆"
+local promptsp="%(!.☢.❖)"
+local promptpt="%(!.➤.»)"
+local smile="%(?,$GREEN${promptok}%{$reset_color%},$RED${promptko}%{$reset_color%})"
 local count_db_wth_char=${#${${(%):-%/}//[[:ascii:]]/}}
-HBAR=" -"
+local HBAR=" -"
 
 local theme="default"
 
 if [[ $theme == "complex" ]]; then
-    local leftsize=${#${(%):-♆<%M %/}}+$gitpromptsize+$count_db_wth_char
-    local rightsize=${#${(%):-%D %T>♆}}
+    local leftsize=${#${(%):-${promptdc}<%M %/}}+$gitpromptsize+$count_db_wth_char
+    local rightsize=${#${(%):-%D %T>${promptdc}}}
 
     FILLBAR="\${(l.(($COLUMNS - ($leftsize + $rightsize +2)))..${HBAR}.)}"
 
     #RPROMPT=$(echo "%(?..$RED%?$FINISH)")
-    PROMPT=$(echo "$_BLUE♆<$_CYAN%M $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} $_MAGENTA%D %T$_BLUE>♆$FINISH
-$fg_bold[yellow][ $MAGENTA%n $BLUE%h ${smile}$fg_bold[yellow] ] $_RED%(!.➤.⨠) $FINISH")
+    PROMPT=$(echo "$_BLUE${promptdc}<$_CYAN%M $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} $_MAGENTA%D %T$_BLUE>${promptdc}$FINISH
+$fg_bold[yellow][ $MAGENTA%n $BLUE%h ${smile}$fg_bold[yellow] ] $_RED${promptpt}$FINISH")
 elif [[ $theme == "simple" ]]; then
-    local leftsize=${#${(%):-♆<%M✦%n %/}}+$gitpromptsize+$count_db_wth_char
-    local rightsize=${#${(%):-%D %T %h>♆}}+2
+    promptsp="✦"
+    local leftsize=${#${(%):-${promptdc}<%M${promptsp}%n %/}}+$gitpromptsize+$count_db_wth_char
+    local rightsize=${#${(%):-%D %T %h>${promptdc}}}+2
 
     FILLBAR="\${(l.(($COLUMNS - ($leftsize + $rightsize +2)))..${HBAR}.)}"
 
     #RPROMPT=$(echo "%(?..$RED%?$FINISH)")
-    PROMPT=$(echo "$_BLUE♆<$_CYAN%M$YELLOW✦$MAGENTA%n $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} ${smile} $_MAGENTA%D %T %h$_BLUE>♆$FINISH
-$_RED%(!.➤.⨠) $FINISH")
+    PROMPT=$(echo "$_BLUE${promptdc}<$_CYAN%M$YELLOW${promptsp}$MAGENTA%n $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} ${smile} $_MAGENTA%D %T %h$_BLUE>${promptdc}$FINISH
+$_RED${promptpt}$FINISH")
 elif [[ $theme == "classic" ]]; then
-    PROMPT="%{${fg_bold[blue]}%}✿ %{${fg_bold[red]}%}%m%(!.☢.❖)%n %{${fg_bold[magenta]}%}:: %{${fg_bold[yellow]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) %(?,%{${fg_bold[green]}%}☀%{$reset_color%},%{${fg_bold[red]}%}☂%{$reset_color%}) %{${fg_bold[blue]}%}»%{${reset_color}%} "
+    promptdc="✿"
+    #promptpt="»"
+    PROMPT="%{${fg_bold[blue]}%}${promptdc} %{${fg_bold[red]}%}%m${promptsp}%n %{${fg_bold[magenta]}%}:: %{${fg_bold[yellow]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) ${smile} %{${fg_bold[blue]}%}${promptpt}%{${reset_color}%} "
 elif [[ $theme == "power" ]]; then
-    PROMPT='%{%f%b%k%}$(build_prompt) '
+    PROMPT="%{%f%b%k%}$(build_prompt) "
     #RPROMPT='%{%F{yellow}%}[%*]'
-    RPROMPT='%{%f%b%k%}$(build_rprompt) '
+    RPROMPT="%{%f%b%k%}$(build_rprompt) "
     #echo $(build_prompt)
     #echo $(build_rprompt)
     # TODO 继续完善
 elif [[ $theme == "minimal" ]]; then
-    PROMPT='%(?,%{${fg_bold[green]}%}☀%{$reset_color%},%{${fg_bold[red]}%}☂%{$reset_color%}) %{$fg_bold[yellow]%}%~%{$reset_color%}$(git_prompt_info) %{${fg_bold[magenta]}%}%(!.➤.⨠)%{${reset_color}%} '
+    PROMPT="${smile} %{$fg_bold[yellow]%}%~%{$reset_color%}$(git_prompt_info) %{${fg_bold[magenta]}%}${promptpt}%{${reset_color}%} "
+elif [[ $theme == "compat" ]]; then
+    promptok="*"
+    promptko="*"
+    promptdc="$"
+    promptsp="@"
+    promptpt="»"
+    smile="%(?,$GREEN${promptok}%{$reset_color%},$RED${promptko}%{$reset_color%})"
+
+    PROMPT="%{${fg_bold[blue]}%}${promptdc} %{${fg_bold[red]}%}%m${promptsp}%n %{${fg_bold[magenta]}%}:: %{${fg_bold[cyan]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) ${smile} %{${fg_bold[blue]}%}${promptpt}%{${reset_color}%} "
+    RPROMPT="%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
+
+    #PROMPT='${smile} %{$fg_bold[yellow]%}%~%{$reset_color%}$(git_prompt_info) %{${fg_bold[magenta]}%}${promptpt}%{${reset_color}%} '
 else
-    PROMPT="%{${fg_bold[blue]}%}✿ %{${fg_bold[red]}%}%m%(!.☢.❖)%n %{${fg_bold[magenta]}%}:: %{${fg_bold[cyan]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) %(?,%{${fg_bold[green]}%}☀%{$reset_color%},%{${fg_bold[red]}%}☂%{$reset_color%}) %{${fg_bold[blue]}%}»%{${reset_color}%} "
-    RPROMPT='%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}✿%{${reset_color}%}'
+    promptdc="✿"
+    #promptpt="»"
+    PROMPT="%{${fg_bold[blue]}%}${promptdc} %{${fg_bold[red]}%}%m${promptsp}%n %{${fg_bold[magenta]}%}:: %{${fg_bold[cyan]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) ${smile} %{${fg_bold[blue]}%}${promptpt}%{${reset_color}%} "
+    RPROMPT="%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
     # TODO 继续完善
 fi
 
@@ -769,7 +791,8 @@ function h() {
   then
     \cat $@
   else
-    local sn=()
+    #local sn=()
+    declare -a sn
     while [ $# -gt 0 ] && [[ "$1" == -* ]]
     do
         sn+=("$1")
@@ -1115,7 +1138,8 @@ export LESS_TERMCAP_ue=$'\E[0m'
 export LESS_TERMCAP_us=$'\E[01;32m'
 
 # syntax color definition
-ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
+#ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
 
 typeset -A ZSH_HIGHLIGHT_STYLES
 

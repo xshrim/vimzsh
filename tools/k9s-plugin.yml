@@ -1,0 +1,83 @@
+# $HOME/.k9s/plugin.yml
+plugin:
+
+  # Defines a plugin to provide a `ctrl-l` shortcut to tail the logs while in pod view.
+  fred:
+    # Define a mnemonic to invoke the plugin
+    shortCut: Ctrl-L
+    # What will be shown on the K9s menu
+    description: Pod logs
+    # Collections of views that support this shortcut. (You can use `all`)
+    scopes:
+    - po
+    # The command to run upon invocation. Can use Krew plugins here too!
+    command: kubectl
+    # if need confirm
+    confirm: false
+    # Whether or not to run the command in background mode
+    background: false
+    # Defines the command arguments
+    args:
+    - logs
+    - -f
+    - $Name
+    - -n
+    - $NAMESPACE
+    - --context
+    - $CONTEXT
+  show-all-images:
+    shortCut: m
+    confirm: false
+    description: All Images
+    scopes:
+    - all
+    command: sh
+    background: false
+    args:
+    - -c
+    - kubectl get pod --all-namespaces -o jsonpath="{range .items[*]}{'\n'}{.metadata.name}{':\t'}{range .spec.containers[*]}{.image}{', '}{end}{end}"|less
+  pods-on-node:
+    shortCut: n
+    confirm: false
+    description: Pods on node
+    scopes:
+    - node
+    command: kubectl
+    background: false
+    args:
+    - get
+    - pod
+    - --all-namespaces
+    - --field-selector
+    - spec.nodeName=$NAME
+    - -w
+  # Suspends/Resumes a cronjob
+  toggleCronjob:
+    shortCut: Ctrl-S
+    confirm: true
+    scopes:
+      - cj
+    description: Toggle to suspend or resume a running cronjob
+    command: kubectl
+    background: true
+    args:
+      - patch
+      - cronjobs
+      - $NAME
+      - -n
+      - $NAMESPACE
+      - --context
+      - $CONTEXT
+      - -p
+      - '{"spec" : {"suspend" : $!COL-SUSPEND }}'
+  get-all:
+    shortCut: g
+    confirm: false
+    description: Get All
+    scopes:
+    - all
+    command: sh
+    background: false
+    args:
+    - -c
+    - "kubectl get all -n $NAMESPACE | less"

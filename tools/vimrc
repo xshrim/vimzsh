@@ -271,7 +271,7 @@ endfunc
 "endfunc
 
 " 去空行
-nnoremap <F10> :g/^\s*$/d<CR>
+nnoremap <F7> :g/^\s*$/d<CR>
 
 "taglist
 ":nmap <silent> <F4> <ESC>:Tlist<RETURN>
@@ -368,7 +368,10 @@ func! Rungdb()
     exec '!gdb ./%<'
 endfunc
 
-map <F4> :call FormatSrc()<CR><CR>
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""""""代码格式化
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"map <F4> :call FormatSrc()<CR>
 
 " 定义FormartSrc()
 func! FormatSrc()
@@ -403,6 +406,31 @@ if has('autocmd')
         autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal g`\"" | endif
     augroup END
 endif
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""切换行号显示
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+nmap <F3> :call ToggleLineNumber()<CR>
+func! ToggleLineNumber()
+  if !exists("b:togglenum")
+    let b:togglenum=1
+  endif
+  if b:togglenum==0
+    execute "set number"
+    execute "set norelativenumber"
+    let b:togglenum=1
+  else
+    if b:togglenum==1
+      execute "set number"
+      execute "set relativenumber"
+      let b:togglenum=2
+    else
+      execute "set nonumber"
+      execute "set norelativenumber"
+      let b:togglenum=0
+    endif
+  endif
+endfunc
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 ""解决输入法问题
@@ -532,7 +560,7 @@ Plug 'Chiel92/vim-autoformat'
 " autocmd FileType vim,tex let b:autoformat_autoindent=0
 " au BufWrite * :Autoformat
 
-map <F3> :call Format()<CR><CR>
+map <F4> :call Format()<CR>
 func! Format()
     exec 'w'
     exec 'Autoformat'
@@ -658,9 +686,9 @@ au BufRead,BufNewFile *.txt setlocal ft=txt
 """""""""""""""""""""""""""""""""vim-floaterm""""""""""""""""""""""""""""""
 if version >=800
   Plug 'voldikss/vim-floaterm'
-  "let g:floaterm_keymap_toggle = '<F2>'
-  nnoremap   <silent>   <F2>   :FloatermToggle<CR>
-  tnoremap   <silent>   <F2>   <C-\><C-n>:FloatermToggle<CR>
+  let g:floaterm_keymap_toggle = '<F2>'
+  "nnoremap   <silent>   <F2>   :FloatermToggle<CR>
+  "tnoremap   <silent>   <F2>   <C-\><C-n>:FloatermToggle<CR>
 endif
 
 """""""""""""""""""""""""""""""""SingleCompile""""""""""""""""""""""""""""""
@@ -834,7 +862,7 @@ nmap <Leader>d :ALEDetail<CR>
 """"""""""""""""""""""""""""""""""""""tagbar""""""""""""""""""""""""""""""""""""
 " 标记显示
 Plug 'majutsushi/tagbar'
-nmap <F7> :TagbarToggle<CR>
+nmap <F10> :TagbarToggle<CR>
 
 """""""""""""""""""""""""""""""""simpleterm.vim"""""""""""""""""""""""""""""""""
 " vim8
