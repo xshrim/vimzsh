@@ -688,7 +688,6 @@ alias grep='grep -P --color=auto'
 alias sim='sudo -E vim'
 alias glog='git log --oneline --graph --decorate'
 alias glg='git log --graph --pretty=format:"%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset" --abbrev-commit --date=relative'
-alias rs='rsync -ahr --info=progress2 --no-i-r'
 alias gm='gomacro'
 alias py='python3'
 # docker alias
@@ -716,6 +715,13 @@ alias dpush='docker push'
 #alias ping='fping -e'
 #alias sudo='sudo env PATH=$PATH'
 #alias history='history -fi'
+# rsync alias
+alias rs='rsync -ahr --info=progress2 --no-i-r'
+alias rcp="rs"
+function rmv() {
+  rsync -ahr --info=progress2 --no-i-r --remove-source-files "$@" && rm -rf "${@:1:${#}-1}"
+}
+
 
 #[Esc][h] man 当前命令时，显示简短说明
 alias run-help >&/dev/null && unalias run-help

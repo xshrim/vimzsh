@@ -5710,7 +5710,8 @@ function batch() {
       $pw ssh -p $port $user@$cip $cmd
       ;;
     script)
-      $pw ssh -p $port $user@$cip "bash $cmd"
+      #$pw ssh -p $port $user@$cip "bash $cmd"
+      $pw ssh -p $port $user@$cip 'bash -s' < $cmd
       ;;
     copy)
       local src=`echo $cmd | awk '{print $1}'`
