@@ -1,26 +1,43 @@
 kind: Cluster
-apiVersion: kind.sigs.k8s.io/v1alpha3
-kubeadmConfigPatches:
-- |
-  apiVersion: kubeadm.k8s.io/v1beta1
-  kind: ClusterConfiguration
-  metadata:
-    name: config
-  networking:
-    serviceSubnet: 10.0.0.0/16
-  imageRepository: gcr.mirrors.ustc.edu.cn/google_containers
-  nodeRegistration:
-    kubeletExtraArgs:
-      pod-infra-container-image: gcr.mirrors.ustc.edu.cn/google_containers/pause:3.1
-- |
-  apiVersion: kubeadm.k8s.io/v1beta1
-  kind: InitConfiguration
-  metadata:
-    name: config
-  networking:
-    serviceSubnet: 10.0.0.0/16
-  imageRepository: gcr.mirrors.ustc.edu.cn/google_containers
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."ustc"]
+    endpoint = ["https://docker.mirrors.ustc.edu.cn/", "https://registry.docker-cn.com/", "https://hub-mirror.c.163.com/", "https://mirror.ccs.tencentyun.com/", "http://f1361db2.m.daocloud.io/"]
+networking:
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
+  kubeProxyMode: "ipvs"
 nodes:
 - role: control-plane
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+  extraMounts:
+  - hostPath: /tmp/
+    containerPath: /temp/
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 8080
+    # optional: set the bind address on the host
+    # 0.0.0.0 is the current default
+    # listenAddress: "127.0.0.1"
+    # optional: set the protocol to one of TCP, UDP, SCTP.
+    # TCP is the default
+    protocol: TCP
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "node=init"
+- role: worker
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+  kubeadmConfigPatches:
+  - |
+    kind: JoinConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "node=join"
 
+# https://kind.sigs.k8s.io/docs/user/quick-start/
 # kind create cluster --name love --config kind.yaml
