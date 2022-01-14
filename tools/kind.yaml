@@ -3,8 +3,8 @@ apiVersion: kind.x-k8s.io/v1alpha4
 name: kind
 containerdConfigPatches:
 - |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."ustc"]
-    endpoint = ["https://docker.mirrors.ustc.edu.cn/", "https://registry.docker-cn.com/", "https://hub-mirror.c.163.com/", "https://mirror.ccs.tencentyun.com/", "http://f1361db2.m.daocloud.io/"]
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."hub"]
+    endpoint = ["https://8g8uw1kk.mirror.aliyuncs.com", "https://docker.mirrors.ustc.edu.cn/"]
 networking:
   podSubnet: "10.244.0.0/16"
   serviceSubnet: "10.96.0.0/12"
@@ -40,4 +40,20 @@ nodes:
         node-labels: "node=join"
 
 # https://kind.sigs.k8s.io/docs/user/quick-start/
-# kind create cluster --name love --config kind.yaml
+# kind create cluster --config kind.yaml
+# k run test --image=busybox --image-pull-policy=IfNotPresent -- tail -f /dev/null
+
+#docker run -d --name proxy --restart=always --net=kind \
+  #-e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io registry:2
+#docker run -d --name registry --restart=always --net=kind \
+  #-p 5000:5000 registry:2
+#kind create cluster --config /dev/stdin <<EOF
+#kind: Cluster
+#apiVersion: kind.x-k8s.io/v1alpha4
+#containerdConfigPatches:
+  #- |-
+    #[plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+      #endpoint = ["http://proxy:5000"]
+    #[plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
+      #endpoint = ["http://registry:5000"]
+#EOF
