@@ -4,6 +4,15 @@
 - zshrc和vimrc是为zsh和vim配置集成定制的配置文件.
 - zsh推荐启用插件: `comm zsh-syntax-highlighting zsh-autosuggestions zsh-completions colorize npm pip redis-cli fabric docker docker-compose kubectl heroku helm`
 
+## 使用说明
+
+```sh
+cp tools/zshrc ~/.zshrc
+cp tools/vimrc ~/.vimrc
+cp -r oh-my-zsh ~/.oh-my-zsh
+cp -r vim ~/.vim
+```
+
 ## 文件说明
 
 ### oh-my-zsh
