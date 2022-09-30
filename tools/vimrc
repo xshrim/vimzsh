@@ -170,10 +170,10 @@ set selectmode=mouse,key
 :let g:vimim_cloud=-1
 
 " 编辑模式下映射方向键使hjkl能移动光标
-inoremap <silent><C-H> <Left>
-inoremap <silent><C-L> <Right>
-inoremap <silent><C-J> <Down>
-inoremap <silent><C-K> <Up>
+"inoremap <silent><C-H> <Left>
+"inoremap <silent><C-L> <Right>
+"inoremap <silent><C-J> <Down>
+"inoremap <silent><C-K> <Up>
 
 " 大于小于号缩进
 xnoremap < <gv
@@ -541,7 +541,9 @@ endif
 
 """""""""""""""""""""""""""""""""vim-fugitive"""""""""""""""""""""""""""""
 " Git包装
-Plug 'tpope/vim-fugitive'
+if executable('git')
+  Plug 'tpope/vim-fugitive'
+endif
 
 """""""""""""""""""""""""""""""""vim-surround"""""""""""""""""""""""""""""
 " 字符串标记处理
@@ -593,7 +595,9 @@ Plug 'sheerun/vim-polyglot'
 
 """""""""""""""""""""""""""""""""""vim-gitgutter"""""""""""""""""""""""""""""
 " 代码变更记录
-Plug 'airblade/vim-gitgutter'
+if executable('git')
+  Plug 'airblade/vim-gitgutter'
+endif
 
 """""""""""""""""""""""""""""""""""vim-closetag"""""""""""""""""""""""""""""
 " tag自动配对
