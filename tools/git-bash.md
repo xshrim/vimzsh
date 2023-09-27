@@ -130,6 +130,8 @@ else
 fi
 
 MSYS2_PS1="$PS1"
+
+export MSYS_NO_PATHCONV=1    # 禁用路径自动转换
 复制代码
 ```
 
