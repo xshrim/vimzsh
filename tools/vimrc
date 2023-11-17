@@ -549,7 +549,7 @@ endif
 " 字符串标记处理
 Plug 'tpope/vim-surround'
 
-"""""""""""""""""""""""""""""""""""indentLine"""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""wildfire"""""""""""""""""""""""""""""""
 " 代码段自动选择
 Plug 'gcmt/wildfire.vim'
 
@@ -732,7 +732,8 @@ Plug 'Yggdroot/indentLine'
 " let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 " let g:indentLine_concealcursor = 'inc'
 " let g:indentLine_conceallevel = 2
-" let g:indentLine_enabled = 0
+let g:indentLine_enabled = 0
+"nnoremap   <silent>   <F3>   :IndentLineToggle<CR>
 
 """"""""""""""""""""""""""""""""""nerdcommenter""""""""""""""""""""""""""""""
 " 代码注释
