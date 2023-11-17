@@ -75,7 +75,7 @@ set expandtab
 " 在行和段开始处使用制表符
 set smarttab
 " 显示行号
-set number
+set nonumber
 " set nu
 " 显示相对行号
 " set relativenumber
@@ -408,26 +408,35 @@ if has('autocmd')
 endif
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-""切换行号显示
+""切换行号显示和缩进线显示
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 nmap <F3> :call ToggleLineNumber()<CR>
 func! ToggleLineNumber()
   if !exists("b:togglenum")
-    let b:togglenum=1
+    let b:togglenum=0
   endif
   if b:togglenum==0
     execute "set number"
     execute "set norelativenumber"
     let b:togglenum=1
+    if exists("g:indentLine_enabled")
+      execute "IndentLinesEnable"
+    endif
   else
     if b:togglenum==1
       execute "set number"
       execute "set relativenumber"
       let b:togglenum=2
+      if exists("g:indentLine_enabled")
+        execute "IndentLinesEnable"
+      endif
     else
       execute "set nonumber"
       execute "set norelativenumber"
       let b:togglenum=0
+      if exists("g:indentLine_enabled")
+        execute "IndentLinesDisable"
+      endif
     endif
   endif
 endfunc
