@@ -758,6 +758,15 @@ bindkey "^[[11~" arith-eval-echo
 
 # }}}
 
+# 定义sch命令代替ssh命令实现自动免密配置并登录
+function sch(){
+	if [ ! -f ~/.ssh/id_rsa ]; then
+		\ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q
+    fi
+	\ssh-copy-id $* 2>/dev/null
+	\ssh $*
+}
+
 # pygments 高亮显示输出
 function pat() {
     local style="monokai"
