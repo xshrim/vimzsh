@@ -356,8 +356,27 @@ $ winpty wsl
 
 ![img](https://user-gold-cdn.xitu.io/2018/12/26/167ea118e5886945?imageslim)
 
+- 在 WindTerm 中使用
 
+  在 `.wind/profiles/default.v10/terminal/user.sessions` 中添加如下配置，其中 `bash.exe` 的路径 要改成自己的。
 
+  ```
+    {
+        "process.arguments" : "--login -i",
+        "process.workingDirectory" : "$(HomeDir)",
+        "session.group" : "Shell sessions",
+        "session.icon" : "session::gitbash",
+        "session.label" : "gitbash",
+        "session.protocol" : "Shell",
+        "session.system" : "linux",
+        "session.target" : "C:/develop/git/bin/bash.exe",
+        "session.uuid" : "a4a74c07-3f44-41d3-91e3-4f971cc317b5",
+        "window.caretStyle" : "blinking line"
+    },
+  ```
+
+  在首选项设置页面, 指定启动会话为gitbash即可
+  
 - 如果你用的是 JetBrain 家的软件，那也很简单，在设置里把 shell 的路径改一下就可以了。
 
 
