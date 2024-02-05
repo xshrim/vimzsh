@@ -13,6 +13,8 @@ cp -r oh-my-zsh ~/.oh-my-zsh
 cp -r vim ~/.vim
 ```
 
+> 如果启动zsh或vim失败, 可通过`dos2unix`命令对`~/.vimrc`和`~/.zshrc`文件进行格式转换.
+
 ## 文件说明
 
 ### oh-my-zsh
