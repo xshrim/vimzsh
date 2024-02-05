@@ -15,12 +15,12 @@ cp -r vim ~/.vim
 
 > 如果启动zsh或vim失败, 可通过`dos2unix`命令进行格式转换:
 > ```sh
-> dos2unix ~/.vimrc
-> dos2unix ~/.zshrc
-> find ~/.vim -name "*.vim" | xargs dos2unix
-> find ~/.oh-my-zsh -name "*.sh" | xargs dos2unix
-> find ~/.oh-my-zsh -name "*.zsh" | xargs dos2unix
-> ```对`~/.vimrc`和`~/.zshrc`文件进行格式转换.
+> dos2unix -f ~/.vimrc
+> dos2unix -f ~/.zshrc
+> find ~/.vim -name "*.vim" | xargs dos2unix -f
+> find ~/.oh-my-zsh -name "*.sh" | xargs dos2unix -f
+> find ~/.oh-my-zsh -name "*.zsh" | xargs dos2unix -f
+> ```
 
 ## 文件说明
 
