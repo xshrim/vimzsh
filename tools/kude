@@ -1904,7 +1904,7 @@ EOF
       echo "error: need arguments"
     fi
     if type nc &>/dev/null; then
-      nc -zv $nhost $nport
+      nc -v $nhost $nport < /dev/null
     elif type telnet &>/dev/null; then
       echo -e '\035\nquit' | telnet $nhost $nport
     elif type nmap &>/dev/null; then
@@ -2563,7 +2563,7 @@ EOF
         echo "error: need arguments"
       fi
       if type nc &>/dev/null; then
-        nc -zv $nhost $nport
+        nc -v $nhost $nport < /dev/null
       elif type telnet &>/dev/null; then
         echo -e '\035\nquit' | telnet $nhost $nport
       elif type nmap &>/dev/null; then
