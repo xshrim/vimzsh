@@ -44,7 +44,7 @@ endfunction
 
 function! s:on_text_change()
   let pos = getcurpos()
-  if !s:key_ignore(pos) && !s:skip()
+  if !s:skip() && (completor#support_popup() || !s:key_ignore(pos))
     call completor#do('complete')
   endif
   let s:prev = pos
@@ -88,9 +88,26 @@ function! completor#disable_autocomplete()
 endfunction
 
 
+func! completor#disable_text_change()
+  if completor#support_popup()
+    call completor#popup#disable_popup_hide()
+  endif
+endfunc
+
+
+func! completor#enable_text_change()
+  if completor#support_popup()
+    call completor#popup#enable_popup_hide()
+  endif
+endfunc
+
+
 function! completor#enable_autocomplete()
   if &diff
     return
+  endif
+  if completor#support_popup()
+    call completor#popup#init()
   endif
   call s:set_events()
 endfunction
@@ -119,6 +136,14 @@ function! completor#do(action, ...) range
   let args = a:000
   let s:timer = timer_start(g:completor_completion_delay, {t->s:do_action(a:action, meta, status, args)})
   return ''
+endfunction
+
+
+function! completor#support_popup()
+  return g:completor_use_popup_window
+        \ && exists('*popup_create')
+        \ && has('conceal')
+        \ && has('textprop')
 endfunction
 
 

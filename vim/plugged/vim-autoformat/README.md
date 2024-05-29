@@ -9,18 +9,32 @@ You can easily customize existing formatprogram definitions or add your own form
 When no formatprogram exists (or no formatprogram is installed) for a certain filetype,
 vim-autoformat falls back by default to indenting, (using vim's auto indent functionality), retabbing and removing trailing whitespace.
 
-## How to install
+## Requirement
+vim-autoformat requires vim to have python support (python 2 or python 3). You can check your vim has python support by running `:echo has("python3")` and `:echo has("python2")`.
 
-This plugin is supported by Vim 7.4+.
-It is required that your vim has builtin python support. You can check whether this is the case
-by running `vim --version` and check that `+python` or `+python3` is listed among features.
+#### Neovim
+Neovim does not come with python support by default, and additional setup is required.
+
+First install [pynvim](https://github.com/neovim/pynvim)
+```
+python3 -m pip install pynvim
+```
+
+And add the following configuration in your `.vimrc`
+
+```
+let g:python3_host_prog="/path/to/python/executable/"
+```
+
+
+## How to install
 
 #### Vundle
 
 Put this in your `.vimrc`.
 
 ```vim
-Plugin 'Chiel92/vim-autoformat'
+Plugin 'vim-autoformat/vim-autoformat'
 ```
 
 Then restart vim and run `:PluginInstall`. Alternatively, you could run `:source $MYVIMRC`
@@ -76,6 +90,8 @@ Or to have your code be formatted upon saving your file, you could use something
 au BufWrite * :Autoformat
 ```
 
+You can also format the current line only (without having to make a visual selection) by executing `:AutoformatLine`.
+
 To disable the fallback to vim's indent file, retabbing and removing trailing whitespace, set the following variables to 0.
 
 ```vim
@@ -113,17 +129,29 @@ vim-autoformat first tries to detect and use formatters for the exact original f
 then tries the same for all supertypes occurring from left to right in the original filetype
 separated by dots (`.`).
 
+### Using multiple formatters for the same file
+
+It is possible to apply multiple formatters for single file, for example, html can use special formatters for js/css etc.
+Support can be enabled via the `g:run_all_formatters_<identifier>` option.
+
+In this case, formatters from `g:formatdef_<identifier>` will be applied to the file one by one. Fallback (vim) formatting
+isn't used if at least one formatter has finished sucessfully.
+
+Sample config:
+```vim
+let g:formatters_vue = ['eslint_local', 'stylelint']
+let g:run_all_formatters_vue = 1
+```
+
 ## Default formatprograms
 
 Here is a list of formatprograms that are supported by default, and thus will be detected and used by vim when they are installed properly.
+They are defined in https://github.com/Chiel92/vim-autoformat/blob/master/plugin/defaults.vim.
+They are simply tried in the order they are listed until one succeeds.
 
-* `clang-format` for __C__, __C++__, __Objective-C__, __Protobuf__ (supports formatting ranges).
-  Clang-format is a product of LLVM source builds.
-  If you `brew install llvm`, clang-format can be found in /usr/local/Cellar/llvm/bin/.
-  Vim-autoformat checks whether there exists a `.clang-format` or a `_clang-format` file up in
-  the current directory's ancestry. Based on that it either uses that file or tries to match
-  vim options as much as possible.
-  Details: http://clang.llvm.org/docs/ClangFormat.html.
+
+* `asmfmt` for __Assembly__.
+  An assembly formatter. Can be installed with `go get -u github.com/klauspost/asmfmt/cmd/asmfmt`. See https://github.com/klauspost/asmfmt for more info.
 
 * `astyle` for __C#__, __C++__, __C__ and __Java__.
   Download it here: http://astyle.sourceforge.net/.
@@ -134,6 +162,178 @@ Here is a list of formatprograms that are supported by default, and thus will be
   For Ubuntu type `sudo apt-get install python-autopep8` in a terminal.
   Here is the link to the repository: https://github.com/hhatto/autopep8.
   And here the link to its page on the python website: http://pypi.python.org/pypi/autopep8/0.5.2.
+
+* `black` for __Python__.
+  Most users can install with the terminal command `sudo pip install black` or `pip install --user black`.
+  Here is the link to the repository: https://github.com/ambv/black
+
+* `buildifier` for __bazel__ build files. (https://github.com/bazelbuild/buildtools/tree/master/buildifier)
+
+* `clang-format` for __C__, __C++__, __Objective-C__, __Protobuf__ (supports formatting ranges).
+  Clang-format is a product of LLVM source builds.
+  If you `brew install llvm`, clang-format can be found in /usr/local/Cellar/llvm/bin/.
+  Vim-autoformat checks whether there exists a `.clang-format` or a `_clang-format` file up in
+  the current directory's ancestry. Based on that it either uses that file or tries to match
+  vim options as much as possible.
+  Details: http://clang.llvm.org/docs/ClangFormat.html.
+
+* `cmake-format` for __CMake__.
+  Install `cmake_format` with `pip`. See https://github.com/cheshirekow/cmake_format for more info.
+
+* `css-beautify` for __CSS__.
+  It is shipped with `js-beautify`, which can be installed by running `npm install -g js-beautify`.
+  Note that `nodejs` is needed for this to work.
+  Here is the link to the repository: https://github.com/einars/js-beautify.
+
+* `dartfmt` for __Dart__.
+  Part of the Dart SDK (make sure it is on your PATH). See https://www.dartlang.org/tools/dartfmt/ for more info.
+
+* `dfmt` for __D__.
+  It can be built or downloaded from https://github.com/dlang-community/dfmt.
+  Arch Linux users can install it from the `community` repository with `pacman -S dfmt`.
+  If `dfmt` is not found in `PATH`, Vim-autoformat will try to use `dub run dfmt` command
+  to automatically download and run `dfmt`.
+
+* `dhall format` for __Dhall__.
+  The standard formatter, bundled with the interpreter. See https://github.com/dhall-lang/dhall-lang for more info.
+
+* `ESlint` for __Javascript__. http://eslint.org/
+  It can be installed by running `npm install eslint` for a local project or by running `npm install -g eslint` for global use. The linter is then installed locally at `$YOUR_PROJECT/node_modules/.bin/eslint` or globally at `~/.npm-global/bin/eslint`.
+  When running the formatter, vim will walk up from the current file to search for such local installation and a ESLint configuration file (either `.eslintrc.js` or `eslintrc.json`). When the local version is missing it will fallback to the global version in your home directory. When both requirements are found eslint is executed with the `--fix` argument.
+  Note that the formatter's name is still `eslint_local` for legacy reasons even though it already supports global `eslint`.
+  Currently only working on \*nix like OS (Linux, MacOS etc.) as it requires the OS to provide sh like shell syntax.
+
+* `fish_indent` for __Fish-shell__.
+  Fish shell builtin fish_indent formatter for fish shell script.
+
+* `fixjson` for JSON.
+  It is a JSON file fixer/formatter for humans using (relaxed) JSON5. It fixes various failures while humans writing JSON and formats JSON codes.
+  It can be installed with `npm install -g fixjson`. More info is available at https://github.com/rhysd/fixjson.
+
+* `fprettify` for modern __Fortran__.
+  Download from [official repository](https://github.com/pseewald/fprettify). Install with `./setup.py install` or `./setup.py install --user`.
+
+* `gnatpp` for __Ada__. http://gcc.gnu.org/onlinedocs/gcc-3.4.6/gnat_ugn_unw/The-GNAT-Pretty_002dPrinter-gnatpp.html
+
+* `gofmt` for __Golang__.
+  The default golang formatting program is shipped with the golang distribution. Make sure `gofmt` is in your PATH (if golang is installed properly, it should be).
+  Here is the link to the installation: https://golang.org/doc/install
+  An alternative formatter is [gofumpt](https://github.com/mvdan/gofumpt), which enforces a stricter format than `gofmt`. To enable `gofumpt` support, you should install it by running `go install mvdan.cc/gofumpt
+latest`, and then change the default golang formatter by configuring `let g:formatters_go = ['gofumpt']`.
+
+* `haxe-formatter` for __Haxe__.
+  `haxe-formatter` is a thin wrapper around the haxelib formatter library.
+  It can be installed by running `haxelib install formatter`.
+  Here is the link to the repository: https://github.com/HaxeCheckstyle/haxe-formatter
+
+* `html-beautify` for __HTML__.
+  It is shipped with `js-beautify`, which can be installed by running `npm install -g js-beautify`.
+  Note that `nodejs` is needed for this to work.
+  Here is the link to the repository: https://github.com/einars/js-beautify.
+
+* `js-beautify` for __Javascript__ and __JSON__.
+  It can be installed by running `npm install -g js-beautify`.
+  Note that `nodejs` is needed for this to work.
+  The python version version is also supported by default, which does not need `nodejs` to run.
+  Here is the link to the repository: https://github.com/einars/js-beautify.
+
+* `JSCS` for __Javascript__. https://jscs-dev.github.io/
+
+* `JuliaFormatter.jl` for __Julia__.
+  It can be installed by running `julia -e 'import Pkg; Pkg.add("JuliaFormatter")'`. You will need to install Julia and have the `julia` binary in your `PATH`.
+  See https://github.com/domluna/JuliaFormatter.jl for more information on how to configure `JuliaFormatter.jl`.
+  Note that since `vim-autoformat` works by running a subprocess, a new instance of Julia is instantiated every time it is invoked.
+  And since Julia needs to precompile the code to run `format_text`, this may block the vim instance while the subprocess is running.
+  Once Julia finishes executing, control will be handled back to the user and the formatted text will replaces the current buffer.
+  You can consider precompiling `JuliaFormatter.jl` to make this process faster (See [`PackageCompiler.jl`](https://github.com/JuliaLang/PackageCompiler.jl) for more information on that),
+  or consider using [a dedicated `JuliaFormatter.vim` plugin](https://github.com/kdheepak/JuliaFormatter.vim) that works asynchronously.
+
+* `latexindent.pl` for __LaTeX__.
+  Installation instructions at https://github.com/cmhughes/latexindent.pl. On mac you can install it with `brew install latexindent`, then you have to add `let g:formatdef_latexindent = '"latexindent -"'` to `.vimrc`.
+
+* `luafmt` for __Lua__.
+  Install `luafmt` with `npm`. See https://github.com/trixnz/lua-fmt for more info.
+  
+* `stylua` for __Lua__.
+  Install `stylua` with `cargo`. See https://github.com/JohnnyMorganz/StyLua for more info.
+
+* `mix format` for __Elixir__.
+  `mix format` is included with Elixir 1.6+.
+
+* `nginxfmt.py` for __NGINX__.
+  See https://github.com/slomkowski/nginx-config-formatter for more info.
+
+* `nixfmt` for __Nix__.
+  It can be installed from nixpkgs with `nix-env -iA nixpkgs.nixfmt`. See https://github.com/serokell/nixfmt for more.
+
+* `ocamlformat` for __OCaml__.
+  OCamlFormat can be installed with opam: `opam install ocamlformat`.
+  Details: https://github.com/ocaml-ppx/ocamlformat.
+  We also provide `ocp-indent` as reserve formatter.
+
+* `packer fmt` for __Packer__.
+  The standard formatter included with Packer. See https://www.packer.io/docs/commands/fmt for more info.
+
+* `perltidy` for __Perl__.
+  It can be installed from CPAN `cpanm Perl::Tidy` . See https://metacpan.org/pod/Perl::Tidy and http://perltidy.sourceforge.net/ for more info.
+
+* `purty` for __Purescript__
+  It can be installed using `npm install purty`. Further instructions available at https://gitlab.com/joneshf/purty
+
+* `rbeautify` for __Ruby__.
+  It is shipped with `ruby-beautify`, which can be installed by running `gem install ruby-beautify`.
+  Note that compatible `ruby-beautify-0.94.0` or higher version.
+  Here is the link to the repository: https://github.com/erniebrodeur/ruby-beautify.
+  This beautifier developed and tested with ruby `2.0+`, so you can have weird results with earlier ruby versions.
+
+* `remark` for __Markdown__.
+  A Javascript based markdown processor that can be installed with `npm install -g remark-cli`. More info is available at https://github.com/wooorm/remark.
+
+* `rubocop` for __Ruby__.
+  It can be installed by running `gem install rubocop`.
+  Here is the link to the repository: https://github.com/bbatsov/rubocop
+
+* `rustfmt` for __Rust__.
+  It can be installed using `cargo`, the Rust package manager. Up-to-date installation instructions are on the project page: https://github.com/rust-lang/rustfmt#quick-start.
+
+* `sass-convert` for __SCSS__.
+  It is shipped with `sass`, a CSS preprocessor written in Ruby, which can be installed by running `gem install sass`.
+  Here is the link to the SASS homepage: http://sass-lang.com/.
+
+* `shfmt` for __Shell__.
+  A shell formatter written in Go supporting POSIX Shell, Bash and mksh that can be installed with `go get -u mvdan.cc/sh/cmd/shfmt`. See https://github.com/mvdan/sh for more info.
+
+* `sqlformat` for __SQL__.
+  Install `sqlparse` with `pip`.
+
+* `standard` for __Javascript__.
+  It can be installed by running `npm install -g standard` (`nodejs` is required). No more configuration needed.
+  More information about the style guide can be found here: http://standardjs.com/.
+
+* `stylelint` for __CSS__. https://stylelint.io/
+  It can be installed by running `npm install stylelint stylelint-config-standard` for a local project or by running `npm install -g stylelint stylelint-config-standard` for global use. The linter is then installed locally at `$YOUR_PROJECT/node_modules/.bin/stylelint` or globally at `~/.npm-global/bin/stylelint`.
+  When running the formatter, vim will walk up from the current file to search for such local installation. When the local version is missing it will fallback to the global version in your home directory. When both requirements are found styelint is executed with the `--fix` argument.
+  Currently only working on \*nix like OS (Linux, MacOS etc.) as it requires the OS to provide sh like shell syntax.
+
+* `stylish-haskell` for __Haskell__
+  It can be installed using [`cabal`](https://www.haskell.org/cabal/) build tool. Installation instructions are available at https://github.com/jaspervdj/stylish-haskell#installation
+
+* `terraform fmt` for __Terraform__.
+  The standard formatter included with Terraform. See https://www.terraform.io/docs/cli/commands/fmt.html for more info.
+
+* `tidy` for __HTML__, __XHTML__ and __XML__.
+  It's probably in your distro's repository, so you can download it as a regular package.
+  For Ubuntu type `sudo apt-get install tidy` in a terminal.
+
+* `typescript-formatter` for __Typescript__.
+  `typescript-formatter` is a thin wrapper around the TypeScript compiler services.
+  It can be installed by running `npm install -g typescript-formatter`.
+  Note that `nodejs` is needed for this to work.
+  Here is the link to the repository: https://github.com/vvakame/typescript-formatter.
+
+* `xo` for __Javascript__.
+  It can be installed by running `npm install -g xo` (`nodejs` is required).
+  Here is the link to the repository: https://github.com/sindresorhus/xo.
 
 * `yapf` for __Python__ (supports formatting ranges).
   Vim-autoformat checks whether there exists a `.style.yapf` or a `setup.cfg` file up in the current directory's ancestry.
@@ -147,115 +347,18 @@ Here is a list of formatprograms that are supported by default, and thus will be
    ```
 
   `pep8` is the default value, or you can choose: `google`, `facebook`, `chromium`.
-
   Here is the link to the repository: https://github.com/google/yapf
 
-* `black` for __Python__.
-  Most users can install with the terminal command `sudo pip install black` or `pip install --user black`.
-  Here is the link to the repository: https://github.com/ambv/black
-
-* `js-beautify` for __Javascript__ and __JSON__.
-  It can be installed by running `npm install -g js-beautify`.
-  Note that `nodejs` is needed for this to work.
-  The python version version is also supported by default, which does not need `nodejs` to run.
-  Here is the link to the repository: https://github.com/einars/js-beautify.
-
-* `JSCS` for __Javascript__. https://jscs-dev.github.io/
-
-* `standard` for __Javascript__.
-  It can be installed by running `npm install -g standard` (`nodejs` is required). No more configuration needed.
-  More information about the style guide can be found here: http://standardjs.com/.
-
-* `ESlint` for __Javascript__. http://eslint.org/
-  It can be installed by running `npm install eslint` for a local project or by running `npm install -g eslint` for global use. The linter is then installed locally at `$YOUR_PROJECT/node_modules/.bin/eslint` or globally at `~/.npm-global/bin/eslint`.
-  When running the formatter, vim will walk up from the current file to search for such local installation and a ESLint configuration file (either `.eslintrc.js` or `eslintrc.json`). When the local version is missing it will fallback to the global version in your home directory. When both requirements are found eslint is executed with the `--fix` argument.
-  Note that the formatter's name is still `eslint_local` for legacy reasons even though it already supports global `eslint`.
-  Currently only working on \*nix like OS (Linux, MacOS etc.) as it requires the OS to provide sh like shell syntax.
-
-* `xo` for __Javascript__.
-  It can be installed by running `npm install -g xo` (`nodejs` is required).
-  Here is the link to the repository: https://github.com/sindresorhus/xo.
-
-* `html-beautify` for __HTML__.
-  It is shipped with `js-beautify`, which can be installed by running `npm install -g js-beautify`.
-  Note that `nodejs` is needed for this to work.
-  Here is the link to the repository: https://github.com/einars/js-beautify.
-
-* `css-beautify` for __CSS__.
-  It is shipped with `js-beautify`, which can be installed by running `npm install -g js-beautify`.
-  Note that `nodejs` is needed for this to work.
-  Here is the link to the repository: https://github.com/einars/js-beautify.
-
-* `typescript-formatter` for __Typescript__.
-  `typescript-formatter` is a thin wrapper around the TypeScript compiler services.
-  It can be installed by running `npm install -g typescript-formatter`.
-  Note that `nodejs` is needed for this to work.
-  Here is the link to the repository: https://github.com/vvakame/typescript-formatter.
-
-* `sass-convert` for __SCSS__.
-  It is shipped with `sass`, a CSS preprocessor written in Ruby, which can be installed by running `gem install sass`.
-  Here is the link to the SASS homepage: http://sass-lang.com/.
-
-* `tidy` for __HTML__, __XHTML__ and __XML__.
-  It's probably in your distro's repository, so you can download it as a regular package.
-  For Ubuntu type `sudo apt-get install tidy` in a terminal.
-
-* `rbeautify` for __Ruby__.
-  It is shipped with `ruby-beautify`, which can be installed by running `gem install ruby-beautify`.
-  Note that compatible `ruby-beautify-0.94.0` or higher version.
-  Here is the link to the repository: https://github.com/erniebrodeur/ruby-beautify.
-  This beautifier developed and tested with ruby `2.0+`, so you can have weird results with earlier ruby versions.
-
-* `rubocop` for __Ruby__.
-  It can be installed by running `gem install rubocop`.
-  Here is the link to the repository: https://github.com/bbatsov/rubocop
-
-* `gofmt` for __Golang__.
-  The default golang formatting program is shipped with the golang distribution. Make sure `gofmt` is in your PATH (if golang is installed properly, it should be).
-  Here is the link to the installation: https://golang.org/doc/install
-
-* `rustfmt` for __Rust__.
-  It can be installed using `cargo`, the Rust package manager. Up-to-date installation instructions are on the project page: https://github.com/nrc/rustfmt/#installation.
-
-* `dartfmt` for __Dart__.
-  Part of the Dart SDK (make sure it is on your PATH). See https://www.dartlang.org/tools/dartfmt/ for more info.
-
-* `perltidy` for __Perl__.
-  It can be installed from CPAN `cpanm Perl::Tidy` . See https://metacpan.org/pod/Perl::Tidy and http://perltidy.sourceforge.net/ for more info.
-
-* `stylish-haskell` for __Haskell__
-  It can be installed using [`cabal`](https://www.haskell.org/cabal/) build tool. Installation instructions are available at https://github.com/jaspervdj/stylish-haskell#installation
-
-* `purty` for __Purescript__
-  It can be installed using `npm install purty`. Further instructions available at https://gitlab.com/joneshf/purty
-
-* `remark` for __Markdown__.
-  A Javascript based markdown processor that can be installed with `npm install -g remark-cli`. More info is available at https://github.com/wooorm/remark.
-
-* `fprettify` for modern __Fortran__.
-  Download from [official repository](https://github.com/pseewald/fprettify). Install with `./setup.py install` or `./setup.py install --user`.
-
-* `mix format` for __Elixir__.
-  `mix format` is included with Elixir 1.6+.
-
-* `fixjson` for JSON.
-  It is a JSON file fixer/formatter for humans using (relaxed) JSON5. It fixes various failures while humans writing JSON and formats JSON codes.
-  It can be installed with `npm install -g fixjson`. More info is available at https://github.com/rhysd/fixjson.
-
-* `shfmt` for __Shell__.
-  A shell formatter written in Go supporting POSIX Shell, Bash and mksh that can be installed with `go get -u mvdan.cc/sh/cmd/shfmt`. See https://github.com/mvdan/sh for more info.
-
-* `sqlformat` for __SQL__.
-  Install `sqlparse` with `pip`.
-
-* `cmake-format` for __CMake__.
-  Install `cmake_format` with `pip`. See https://github.com/cheshirekow/cmake_format for more info.
+* `zigformat` for __Zig__.
+  It is an unofficial binary. You can find the installation instructions from the repo: [zigformat](https://github.com/Himujjal/zigformat)
 
 
 ## Help, the formatter doesn't work as expected!
 
 If you're struggling with getting a formatter to work, it may help to set vim-autoformat in
 verbose-mode. Vim-autoformat will then output errors on formatters that failed.
+The value of g:autoformat_verbosemode could set as 0, 1 or 2. which means:
+0: no message output. 1: only error message output. 2: all message output.
 
 ```vim
 let g:autoformat_verbosemode=1
@@ -346,14 +449,15 @@ let g:formatters_python = ['autopep8']
 This would allow the user to select a part of the file and execute `:Autoformat`, which
 would then only format the selected part.
 
-
 ## Contributing
 
-Pull requests are welcome.
-Any feedback is welcome.
-If you have any suggestions on this plugin or on this readme, if you have some nice default
+This project is community driven. I don't actively do development on vim-autoformat myself,
+as its current state fulfills my personal needs.
+However, I will review pull requests and keep an eye on the general sanity of the code.
+
+If you have any improvements on this plugin or on this readme, if you have some
 formatter definition that can be added to the defaults, or if you experience problems, please
-contact me by creating an issue in this repository.
+open a pull request or an issue in this repository.
 
 ## Major Change Log
 
@@ -370,7 +474,7 @@ contact me by creating an issue in this repository.
 * Multiple formatters per filetype are now supported.
 * Configuration variable names changed.
 * Using `gq` as alias for `:Autoformat` is no longer supported.
-* `:Autoformat` now suppports ranges.
+* `:Autoformat` now supports ranges.
 * Composite filetypes are fully supported.
 
 ### December 20 2013

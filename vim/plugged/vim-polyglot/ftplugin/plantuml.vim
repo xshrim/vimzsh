@@ -1,9 +1,9 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'plantuml') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'plantuml', 'ftplugin/plantuml.vim')
+  finish
+endif
 
-scriptencoding utf-8
 " Vim filetype plugin file
 " Language:     PlantUML
-" Maintainer:   Anders Thøgersen <first name at bladre dot dk>
 " License:      VIM LICENSE
 
 if exists('b:loaded_plantuml_plugin')
@@ -44,5 +44,3 @@ let b:endwise_syngroups = 'plantumlKeyword,plantumlPreProc'
 
 let &cpoptions = s:cpo_save
 unlet s:cpo_save
-
-endif

@@ -1,8 +1,27 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'lilypond') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'lilypond', 'indent/lilypond.vim')
+  finish
+endif
 
 " LilyPond indent file
 " Language:     LilyPond
 " Maintainer:   Heikki Junes <hjunes@cc.hut.fi>
+" License:      This file is part of LilyPond, the GNU music typesetter.
+"
+"               Copyright (C) 2004, 2010 Heikki Junes <hjunes@cc.hut.fi>
+"
+"               LilyPond is free software: you can redistribute it and/or modify
+"               it under the terms of the GNU General Public License as published by
+"               the Free Software Foundation, either version 3 of the License, or
+"               (at your option) any later version.
+"
+"               LilyPond is distributed in the hope that it will be useful,
+"               but WITHOUT ANY WARRANTY; without even the implied warranty of
+"               MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+"               GNU General Public License for more details.
+"
+"               You should have received a copy of the GNU General Public License
+"               along with LilyPond.  If not, see <http://www.gnu.org/licenses/>.
+"
 " Last Change:  2010 Jul 26
 "
 " Installed As:	vim/indent/lilypond.vim
@@ -60,5 +79,3 @@ endfunction
 "
 "
 "
-
-endif

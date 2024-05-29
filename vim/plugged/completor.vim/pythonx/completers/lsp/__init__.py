@@ -10,8 +10,10 @@ from completor import Completor, vim, import_completer, get
 from completor.compat import to_unicode
 
 from .models import Initialize, DidOpen, Completion, DidChange, DidSave, \
-    Definition, Format, Rename, Hover
-from .action import gen_definition, get_completion_word
+    Definition, Format, Rename, Hover, Initialized, Implementation, \
+    References, DidChangeConfiguration
+from .action import gen_jump_list, get_completion_word, gen_hover_doc, \
+    filter_items
 from .utils import gen_uri
 
 logger = logging.getLogger('completor')
@@ -28,6 +30,9 @@ class Lsp(Completor):
         self.current_id = None
         self.open_file_map = {}
         self.buf = io.BytesIO()
+
+        self.initialize_id = None
+        self._pending = None
 
     def get_version(self, f):
         args = self.open_file_map.get(f)
@@ -46,7 +51,12 @@ class Lsp(Completor):
             'uri': gen_uri(project_path),
             'name': project_name
         }])
-        _, req = i.to_request()
+        req_id, req = i.to_request()
+        self.initialize_id = req_id
+        return req
+
+    def initialized_request(self):
+        _, req = Initialized().to_request()
         return req
 
     @property
@@ -99,32 +109,54 @@ class Lsp(Completor):
         self.current_id = req_id
         return req
 
+    def _gen_action_args(self, action, args):
+        if action == b'complete':
+            return self.position_request(Completion)
+
+        if action == b'definition':
+            return self.position_request(Definition)
+
+        if action == b'format':
+            return self.format_request()
+
+        if action == b'implementation':
+            return self.position_request(Implementation)
+
+        if action == b'references':
+            return self.position_request(References)
+
+        if action == b'rename':
+            if not args:
+                return ''
+            return self.rename_request(args[0])
+
+        if action == b'hover':
+            return self.position_request(Hover)
+
+        return ''
+
     def gen_request(self, action, args):
         try:
             pwd = os.getcwd()
             project_name = os.path.basename(pwd)
             items = []
-            if not self.initialized:
-                items.append(self.initialize_request(project_name, pwd))
-                self.initialized = True
+
             req = self.open_request()
             if req:
                 items.append(req)
             items.append(self.change_request())
-            if action == b'complete':
-                items.append(self.position_request(Completion))
-            elif action == b'definition':
-                items.append(self.position_request(Definition))
-            elif action == b'format':
-                items.append(self.format_request())
-            elif action == b'rename':
-                if not args:
-                    return ''
-                items.append(self.rename_request(args[0]))
-            elif action == b'hover':
-                items.append(self.position_request(Hover))
-            else:
-                return ''
+
+            action_args = self._gen_action_args(action, args)
+            if action_args:
+                items.append(action_args)
+
+            if not self.initialized:
+                self._pending = ''.join(items)
+
+                items = []
+                items.append(self.initialize_request(project_name, pwd))
+                self.initialized = True
+
             logger.info('data: %r', items)
             return ''.join(items)
         except Exception as e:
@@ -145,7 +177,7 @@ class Lsp(Completor):
             return c.get_cmd_info(action)
         return vim.Dictionary(cmd=lsp_cmd.split(),
                               is_daemon=True,
-                              ftype=self.filetype + '_' + ft,
+                              ftype=self.filetype + ':' + ft,
                               is_sync=False)
 
     def reset(self):
@@ -185,47 +217,106 @@ class Lsp(Completor):
         if not data:
             return []
         res = []
-        candidates = data[0]
+        candidates = data[0] or []
         items = []
         if isinstance(candidates, list):
             items = candidates
         elif 'items' in candidates:
             items = candidates['items']
+
+        completions = []
+
         for item in items:
             label = item['label'].strip()
-            word = get_completion_word(item)
-            d = vim.Dictionary(abbr=label, word=word)
-            if 'detail' in item:
-                d['menu'] = item['detail']
+            word, offset = get_completion_word(
+                item, self.ft_args.get(b'insertText'))
+            completions.append((label, word, offset, item.get('detail')))
+
+        completions = filter_items(completions, self.input_data)
+
+        for label, word, offset, detail in completions:
+            d = vim.Dictionary(abbr=label, word=word, category='lsp')
+            if detail:
+                d['menu'] = detail
+            if offset != -1:
+                d['offset'] = offset
             res.append(d)
+
         return vim.List(res)
 
     def on_definition(self, data):
-        return gen_definition(self.ft_orig, data)
+        return gen_jump_list(self.ft_orig, self.cursor_word, data)
 
     def on_rename(self, data):
         logger.info("rename -> %r", data)
         return []
+
+    def on_implementation(self, data):
+        logger.info("implementation -> %r", data)
+        return gen_jump_list(self.ft_orig, self.cursor_word, data)
+
+    def on_references(self, data):
+        logger.info("references -> %r", data)
+        return gen_jump_list(self.ft_orig, self.cursor_word, data)
 
     def on_hover(self, data):
         logger.info("hover -> %r", data)
         if not data:
             return []
         item = data[0]
-        value = item.get('contents', {}).get('value')
-        if not value:
+
+        contents = item.get('contents')
+        if not contents:
             return []
-        return [value]
+
+        values = []
+
+        if isinstance(contents, list):
+            for content in contents:
+                if isinstance(content, dict):
+                    values.append(content.get('value', ''))
+                else:
+                    values.append(content)
+        else:
+            values.append(contents.get('value', ''))
+
+        if not values:
+            return []
+
+        return [gen_hover_doc(self.ft_orig, '\n\n'.join(values))]
 
     def on_stream(self, action, data):
         logger.info('received %r', data)
         self.buf.write(data)
         res = []
         for item in self.parse_data():
-            if item.get('id') == self.current_id:
+            req_id = item.get('id')
+            if not req_id:
+                continue
+
+            if req_id == self.initialize_id:
+                if self._pending:
+                    p = self._pending
+                    self._pending = None
+                    logger.info("send pending data -> %r", p)
+                    self.daemon_send(self.initialized_request())
+                    self.send_config()
+                    self.daemon_send(p)
+
+            if req_id == self.current_id:
                 res.append(item.get('result', {}))
+
         if res:
             return self.on_data(action, res)
+
+    def send_config(self):
+        conf = self.ft_args.get(b'config')
+        if not conf:
+            return
+
+        a = DidChangeConfiguration(conf)
+        _, req = a.to_request()
+        self.daemon_send(req)
 
 
 def content_length(header):

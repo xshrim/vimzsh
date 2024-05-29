@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'typescript') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'typescript', 'syntax/basic/literal.vim')
+  finish
+endif
 
 "Syntax in the JavaScript code
 
@@ -7,31 +9,44 @@ syntax match   typescriptASCII                 contained /\\\d\d\d/
 
 syntax region  typescriptTemplateSubstitution matchgroup=typescriptTemplateSB
   \ start=/\${/ end=/}/
-  \ contains=@typescriptValue
+  \ contains=@typescriptValue,typescriptCastKeyword
   \ contained
 
 
-syntax region  typescriptString 
+syntax region  typescriptString
   \ start=+\z(["']\)+  skip=+\\\%(\z1\|$\)+  end=+\z1+ end=+$+
   \ contains=typescriptSpecial,@Spell
+  \ nextgroup=@typescriptSymbols
+  \ skipwhite skipempty
   \ extend
 
-syntax match   typescriptSpecial            contained "\v\\%(x\x\x|u%(\x{4}|\{\x{4,5}})|c\u|.)"
+syntax match   typescriptSpecial            contained "\v\\%(x\x\x|u%(\x{4}|\{\x{1,6}})|c\u|.)"
 
-" From vim runtime
-" <https://github.com/vim/vim/blob/master/runtime/syntax/javascript.vim#L48>
-syntax region  typescriptRegexpString          start=+/[^/*]+me=e-1 skip=+\\\\\|\\/+ end=+/[gimuy]\{0,5\}\s*$+ end=+/[gimuy]\{0,5\}\s*[;.,)\]}]+me=e-1 nextgroup=typescriptDotNotation oneline
+" From pangloss/vim-javascript
+" <https://github.com/pangloss/vim-javascript/blob/d6e137563c47fb59f26ed25d044c0c7532304f18/syntax/javascript.vim#L64-L72>
+syntax region  typescriptRegexpCharClass    contained start=+\[+ skip=+\\.+ end=+\]+ contains=typescriptSpecial extend
+syntax match   typescriptRegexpBoundary     contained "\v\c[$^]|\\b"
+syntax match   typescriptRegexpBackRef      contained "\v\\[1-9]\d*"
+syntax match   typescriptRegexpQuantifier   contained "\v[^\\]%([?*+]|\{\d+%(,\d*)?})\??"lc=1
+syntax match   typescriptRegexpOr           contained "|"
+syntax match   typescriptRegexpMod          contained "\v\(\?[:=!>]"lc=1
+syntax region  typescriptRegexpGroup        contained start="[^\\]("lc=1 skip="\\.\|\[\(\\.\|[^]]\+\)\]" end=")" contains=typescriptRegexpCharClass,@typescriptRegexpSpecial keepend
+syntax region  typescriptRegexpString
+  \ start=+\%(\%(\<return\|\<typeof\|\_[^)\]'"[:blank:][:alnum:]_$]\)\s*\)\@<=/\ze[^*/]+ skip=+\\.\|\[[^]]\{1,}\]+ end=+/[gimyus]\{,6}+
+  \ contains=typescriptRegexpCharClass,typescriptRegexpGroup,@typescriptRegexpSpecial
+  \ oneline keepend extend
+syntax cluster typescriptRegexpSpecial    contains=typescriptSpecial,typescriptRegexpBoundary,typescriptRegexpBackRef,typescriptRegexpQuantifier,typescriptRegexpOr,typescriptRegexpMod
 
 syntax region  typescriptTemplate
   \ start=/`/  skip=/\\\\\|\\`\|\n/  end=/`\|$/
-  \ contains=typescriptTemplateSubstitution
+  \ contains=typescriptTemplateSubstitution,typescriptSpecial,@Spell
   \ nextgroup=@typescriptSymbols
   \ skipwhite skipempty
 
 "Array
 syntax region  typescriptArray matchgroup=typescriptBraces
   \ start=/\[/ end=/]/
-  \ contains=@typescriptValue,@typescriptComments
+  \ contains=@typescriptValue,@typescriptComments,typescriptCastKeyword
   \ nextgroup=@typescriptSymbols,typescriptDotNotation
   \ skipwhite skipempty fold
 
@@ -39,9 +54,5 @@ syntax region  typescriptArray matchgroup=typescriptBraces
 syntax match typescriptNumber /\<0[bB][01][01_]*\>/        nextgroup=@typescriptSymbols skipwhite skipempty
 syntax match typescriptNumber /\<0[oO][0-7][0-7_]*\>/       nextgroup=@typescriptSymbols skipwhite skipempty
 syntax match typescriptNumber /\<0[xX][0-9a-fA-F][0-9a-fA-F_]*\>/ nextgroup=@typescriptSymbols skipwhite skipempty
-syntax match typescriptNumber /\d[0-9_]*\.\d[0-9_]*\|\d[0-9_]*\|\.\d[0-9]*/
-  \ nextgroup=typescriptExponent,@typescriptSymbols skipwhite skipempty
-syntax match typescriptExponent /[eE][+-]\=\d[0-9]*\>/
-  \ nextgroup=@typescriptSymbols skipwhite skipempty contained
-
-endif
+syntax match typescriptNumber /\<\%(\d[0-9_]*\%(\.\d[0-9_]*\)\=\|\.\d[0-9_]*\)\%([eE][+-]\=\d[0-9_]*\)\=\>/
+  \ nextgroup=@typescriptSymbols skipwhite skipempty

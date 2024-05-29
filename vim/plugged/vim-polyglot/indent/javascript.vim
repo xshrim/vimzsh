@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'javascript') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'javascript', 'indent/javascript.vim')
+  finish
+endif
 
 " Vim indent file
 " Language: Javascript
@@ -21,7 +23,7 @@ setlocal indentkeys+=0],0)
 "       "+norm! gg=G" '+%print' '+:q!' testfile.js \
 "       | diff -uBZ testfile.js -
 
-let b:undo_indent = 'setlocal indentexpr< smartindent< autoindent< indentkeys<'
+let b:undo_indent = 'setlocal indentexpr< smartindent< autoindent< indentkeys< lisp<'
 
 " Only define the function once.
 if exists('*GetJavascriptIndent')
@@ -477,5 +479,3 @@ endfunction
 
 let &cpo = s:cpo_save
 unlet s:cpo_save
-
-endif

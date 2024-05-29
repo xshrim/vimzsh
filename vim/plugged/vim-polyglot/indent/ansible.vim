@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'ansible') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'ansible', 'indent/ansible.vim')
+  finish
+endif
 
 let s:save_cpo = &cpo
 set cpo&vim
@@ -20,6 +22,7 @@ let s:named_module_entry = '\v^\s*-\s*(name|hosts|role):\s*\S' " - name: 'do stu
 let s:dictionary_entry = '\v^\s*[^:-]+:\s*$' " with_items:
 let s:key_value = '\v^\s*[^:-]+:\s*\S' " apt: name=package
 let s:scalar_value = '\v:\s*[>|\|]\s*$' " shell: >
+let s:blank = '\v^\s*$' " line with only spaces
 
 if exists('*GetAnsibleIndent')
   finish
@@ -35,29 +38,30 @@ function GetAnsibleIndent(lnum)
     endif
   endif
   let prevlnum = prevnonblank(a:lnum - 1)
-  let maintain = indent(prevlnum)
-  let increase = maintain + &sw
+  let default = GetYAMLIndent(a:lnum)
+  let increase = indent(prevlnum) + &sw
 
-  let line = getline(prevlnum)
-  if line =~ s:array_entry
-    if line =~ s:named_module_entry
+  let prevline = getline(prevlnum)
+  let line = getline(a:lnum)
+  if line !~ s:blank
+    return default  " we only special case blank lines
+  elseif prevline =~ s:array_entry
+    if prevline =~ s:named_module_entry
       return increase
     else
-      return maintain
+      return default
     endif
-  elseif line =~ s:dictionary_entry
+  elseif prevline =~ s:dictionary_entry
     return increase
-  elseif line =~ s:key_value
-    if line =~ s:scalar_value
+  elseif prevline =~ s:key_value
+    if prevline =~ s:scalar_value
       return increase
     else
-      return maintain
+      return default
     endif
   else
-    return maintain
+    return default
   endif
 endfunction
 
 let &cpo = s:save_cpo
-
-endif

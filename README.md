@@ -7,10 +7,12 @@
 ## 使用说明
 
 ```sh
+sudo dnf install zsh tmux
 cp tools/zshrc ~/.zshrc
 cp tools/vimrc ~/.vimrc
 cp -r oh-my-zsh ~/.oh-my-zsh
 cp -r vim ~/.vim
+cp -r tools/tmux.conf ~/.tmux.conf
 ```
 
 > 如果启动zsh或vim失败, 可通过`dos2unix`命令进行格式转换:
@@ -20,6 +22,11 @@ cp -r vim ~/.vim
 > find ~/.vim -name "*.vim" | xargs dos2unix -f
 > find ~/.oh-my-zsh -name "*.sh" | xargs dos2unix -f
 > find ~/.oh-my-zsh -name "*.zsh" | xargs dos2unix -f
+> ```
+
+> tmux自定义命令
+> ```sh
+> tmux -c zsh -f ~/.tmux.conf
 > ```
 
 ## 文件说明

@@ -1,9 +1,10 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'rust') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'rust', 'ftplugin/rust.vim')
+  finish
+endif
 
 " Language:     Rust
 " Description:  Vim ftplugin for Rust
 " Maintainer:   Chris Morgan <me@chrismorgan.info>
-" Maintainer:   Kevin Ballard <kevin@sb.org>
 " Last Change:  June 08, 2016
 " For bugs, patches and license go to https://github.com/rust-lang/rust.vim
 
@@ -50,7 +51,7 @@ setlocal smartindent nocindent
 
 if get(g:, 'rust_recommended_style', 1)
     let b:rust_set_style = 1
-    setlocal tabstop=8 shiftwidth=4 softtabstop=4 expandtab
+    setlocal shiftwidth=4 softtabstop=4 expandtab
     setlocal textwidth=99
 endif
 
@@ -124,7 +125,7 @@ command! -nargs=* -buffer RustEmitAsm call rust#Emit("asm", <q-args>)
 command! -range=% RustPlay :call rust#Play(<count>, <line1>, <line2>, <f-args>)
 
 " See |:RustFmt| for docs
-command! -buffer RustFmt call rustfmt#Format()
+command! -bar -buffer RustFmt call rustfmt#Format()
 
 " See |:RustFmtRange| for docs
 command! -range -buffer RustFmtRange call rustfmt#FormatRange(<line1>, <line2>)
@@ -139,7 +140,7 @@ command! -bar RustInfoToClipboard call rust#debugging#InfoToClipboard()
 command! -bar -nargs=1 RustInfoToFile call rust#debugging#InfoToFile(<f-args>)
 
 " See |:RustTest| for docs
-command! -buffer -nargs=* -bang RustTest call rust#Test(<bang>0, <q-args>)
+command! -buffer -nargs=* -count -bang RustTest call rust#Test(<q-mods>, <count>, <bang>0, <q-args>)
 
 if !exists("b:rust_last_rustc_args") || !exists("b:rust_last_args")
     let b:rust_last_rustc_args = []
@@ -201,5 +202,3 @@ unlet s:save_cpo
 " vint: +ProhibitAbbreviationOption
 
 " vim: set et sw=4 sts=4 ts=8:
-
-endif

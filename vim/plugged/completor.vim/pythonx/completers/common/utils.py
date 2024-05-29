@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import re
+from completor.utils import check_subseq
 
-LIMIT = 50
 REGEX_MAP = {
     # Spec: http://www.w3.org/TR/CSS2/syndata.html#characters
     # Good summary: http://stackoverflow.com/a/449000/1672783
@@ -50,20 +50,4 @@ for k, v in list(REGEX_MAP.items()):
 
 
 def test_subseq(src, target):
-    if not src:
-        return 0
-
-    score = i = 0
-    src, target = src.lower(), target.lower()
-    src_len, target_len = len(src), len(target)
-    for index, e in enumerate(target):
-        if src_len - i > target_len - index:
-            return
-        if e != src[i]:
-            continue
-        if index == 0:
-            score = -999
-        score += index
-        i += 1
-        if i == src_len:
-            return score
+    return check_subseq(src, target)

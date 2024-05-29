@@ -1,21 +1,29 @@
 let s:daemon = {'msgs': [], 'requested': v:false, 't': 0}
 
 
-function! s:vim_daemon_handler(msg)
-  call completor#action#stream(a:msg)
+function! s:vim_daemon_handler(name, msg)
+  call completor#action#stream(a:name, a:msg)
 endfunction
 
 
-function! s:nvim_daemon_handler(job_id, data, event)
-  call completor#action#stream(join(a:data, "\n"))
+function! s:nvim_daemon_handler(name, job_id, data, event)
+  call completor#action#stream(a:name, join(a:data, "\n"))
+endfunction
+
+
+function! s:on_exit(name, job_id, status)
+  if completor#support_popup()
+    call completor#popup#hide()
+  endif
+  call completor#utils#on_exit()
 endfunction
 
 
 if has('nvim')
   " neovim
-  function! s:job_start_daemon(cmd, options)
+  function! s:job_start_daemon(name, cmd, options)
     let conf = {
-          \   'on_stdout': function('s:nvim_daemon_handler'),
+          \   'on_stdout': {id,data,ev -> s:nvim_daemon_handler(a:name, id, data, ev)},
           \ }
     call extend(conf, a:options)
     return jobstart(a:cmd, conf)
@@ -30,9 +38,10 @@ if has('nvim')
   endfunction
 else
   " vim8
-  function! s:job_start_daemon(cmd, options)
+  function! s:job_start_daemon(name, cmd, options)
     let conf = {
-          \   'out_cb': {c,m->s:vim_daemon_handler(m)},
+          \   'out_cb': {c,m -> s:vim_daemon_handler(a:name, m)},
+          \   'exit_cb': {i,s -> s:on_exit(a:name, i, s)},
           \   'err_io': 'null',
           \   'mode': 'raw',
           \ }
@@ -54,7 +63,7 @@ function! s:daemon.respawn(cmd, name, options)
   if self.status(a:name) ==# 'run'
     call completor#compat#job_stop(self.job)
   endif
-  let self.job = s:job_start_daemon(a:cmd, a:options)
+  let self.job = s:job_start_daemon(a:name, a:cmd, a:options)
   call completor#utils#reset()
   let self.type = a:name
   let self.cmd = a:cmd
@@ -100,16 +109,22 @@ function! completor#daemon#process(action, cmd, name, options, args)
   endif
 
   let req = completor#utils#gen_request(a:action, a:args)
-  if empty(req)
+
+  return completor#daemon#send(req)
+endfunction
+
+
+function! completor#daemon#send(req)
+  if empty(a:req)
     return v:false
   endif
 
-  if type(req) == v:t_list
-    for d in req
+  if type(a:req) == v:t_list
+    for d in a:req
       call s:daemon.write(d)
     endfor
   else
-    call s:daemon.write(req)
+    call s:daemon.write(a:req)
   endif
 
   let s:daemon.requested = v:true

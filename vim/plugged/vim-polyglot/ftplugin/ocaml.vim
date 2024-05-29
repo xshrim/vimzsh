@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'ocaml') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'ocaml', 'ftplugin/ocaml.vim')
+  finish
+endif
 
 " Language:    OCaml
 " Maintainer:  David Baelde        <firstname.name@ens-lyon.org>
@@ -7,7 +9,7 @@ if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'ocaml') == -1
 "              Pierre Vittet       <pierre-vittet@pvittet.com>
 "              Stefano Zacchiroli  <zack@bononia.it>
 "              Vincent Aravantinos <firstname.name@imag.fr>
-" URL:         http://www.ocaml.info/vim/ftplugin/ocaml.vim
+" URL:         https://github.com/ocaml/vim-ocaml
 " Last Change:
 "              2013 Oct 27 - Added commentstring (MM)
 "              2013 Jul 26 - load default compiler settings (MM)
@@ -40,8 +42,11 @@ let s:cposet=&cpoptions
 set cpo&vim
 
 " Comment string
-setlocal comments=
+setlocal comments=sr:(*\ ,mb:\ ,ex:*)
+setlocal comments^=sr:(**,mb:\ \ ,ex:*)
 setlocal commentstring=(*%s*)
+
+let b:undo_ftplugin = "setlocal com< cms<"
 
 " Add mappings, unless the user didn't want this.
 if !exists("no_plugin_maps") && !exists("no_ocaml_maps")
@@ -51,6 +56,11 @@ if !exists("no_plugin_maps") && !exists("no_ocaml_maps")
     xmap <buffer> <LocalLeader>c <Plug>BUncomOn
     nmap <buffer> <LocalLeader>C <Plug>LUncomOff
     xmap <buffer> <LocalLeader>C <Plug>BUncomOff
+    let b:undo_ftplugin .=
+	  \ " | silent! execute 'nunmap <buffer> <LocalLeader>c'" .
+	  \ " | silent! execute 'xunmap <buffer> <LocalLeader>c'" .
+	  \ " | silent! execute 'nunmap <buffer> <LocalLeader>C'" .
+	  \ " | silent! execute 'xunmap <buffer> <LocalLeader>C'"
   endif
 
   nnoremap <buffer> <Plug>LUncomOn gI(* <End> *)<ESC>
@@ -63,17 +73,27 @@ if !exists("no_plugin_maps") && !exists("no_ocaml_maps")
 
   nmap <buffer> <LocalLeader>t <Plug>OCamlPrintType
   xmap <buffer> <LocalLeader>t <Plug>OCamlPrintType
+
+  let b:undo_ftplugin .=
+	\ " | silent! execute 'nunmap <buffer> <LocalLeader>s'" .
+	\ " | silent! execute 'nunmap <buffer> <LocalLeader>S'" .
+	\ " | silent! execute 'nunmap <buffer> <LocalLeader>t'" .
+	\ " | silent! execute 'xunmap <buffer> <LocalLeader>t'"
 endif
 
-" Let % jump between structure elements (due to Issac Trotts)
-let b:mw =         '\<let\>:\<and\>:\(\<in\>\|;;\)'
-let b:mw = b:mw . ',\<if\>:\<then\>:\<else\>'
-let b:mw = b:mw . ',\<\(for\|while\)\>:\<do\>:\<done\>'
-let b:mw = b:mw . ',\<\(object\|sig\|struct\|begin\)\>:\<end\>'
-let b:mw = b:mw . ',\<\(match\|try\)\>:\<with\>'
-let b:match_words = b:mw
+if exists("loaded_matchit") && !exists("b:match_words")
+  " Let % jump between structure elements (due to Issac Trotts)
+  let b:mw =         '\<let\>:\<and\>:\(\<in\>\|;;\)'
+  let b:mw = b:mw . ',\<if\>:\<then\>:\<else\>'
+  let b:mw = b:mw . ',\<\(for\|while\)\>:\<do\>:\<done\>'
+  let b:mw = b:mw . ',\<\(object\|sig\|struct\|begin\)\>:\<end\>'
+  let b:mw = b:mw . ',\<\(match\|try\)\>:\<with\>'
+  let b:match_words = b:mw
 
-let b:match_ignorecase=0
+  let b:match_ignorecase=0
+
+  let b:undo_ftplugin .= " | unlet! b:match_ignorecase b:match_words"
+endif
 
 function! s:OcpGrep(bang,args) abort
   let grepprg = &l:grepprg
@@ -151,11 +171,8 @@ endif
 if exists("g:ocaml_folding")
   setlocal foldmethod=expr
   setlocal foldexpr=OMLetFoldLevel(v:lnum)
+  let b:undo_ftplugin .= " | setlocal fdm< fde<"
 endif
-
-let b:undo_ftplugin = "setlocal efm< foldmethod< foldexpr<"
-	\ . "| unlet! b:mw b:match_words b:match_ignorecase"
-
 
 " - Only definitions below, executed once -------------------------------------
 
@@ -370,7 +387,7 @@ endfunction
               endif
             else
               let annot_file_name = ''
-              "(Pierre Vittet: I have commented 4b because this was chrashing
+              "(Pierre Vittet: I have commented 4b because this was crashing
               "my vim (it produced infinite loop))
               "
               " 4b. anarchy : the renamed _build directory may be higher in the hierarchy
@@ -393,9 +410,9 @@ endfunction
     endif
   endfun
 
-  " This variable contain a dictionnary of list. Each element of the dictionnary
-  " represent an annotation system. An annotation system is a list with :
-  " - annotation file name as it's key
+  " This variable contains a dictionary of lists. Each element of the dictionary
+  " represents an annotation system. An annotation system is a list with:
+  " - annotation file name as its key
   " - annotation file path as first element of the contained list
   " - build path as second element of the contained list
   " - annot_file_last_mod (contain the date of .annot file) as third element
@@ -461,8 +478,8 @@ endfunction
 
   "b. 'search' and 'match' work to find the type information
 
-      "In:  - lin1,col1: postion of expression first char
-      "     - lin2,col2: postion of expression last char
+      "In:  - lin1,col1: position of expression first char
+      "     - lin2,col2: position of expression last char
       "Out: - the pattern to be looked for to find the block
       " Must be called in the source buffer (use of line2byte)
     function! s:Block_pattern(lin1,lin2,col1,col2)
@@ -523,7 +540,7 @@ endfunction
   "c. link this stuff with what the user wants
   " ie. get the expression selected/under the cursor
 
-    let s:ocaml_word_char = '\w|[À-ÿ]|'''
+    let s:ocaml_word_char = '\w|[\xc0-\xff]|'''
 
       "In:  the current mode (eg. "visual", "normal", etc.)
       "Out: the borders of the expression we are looking for the type
@@ -580,7 +597,7 @@ endfunction
       let res = substitute (a:res, "\n", "", "g" )
       "remove double space
       let res =substitute(res , "  ", " ", "g")
-      "remove space at begining of string.
+      "remove space at beginning of string.
       let res = substitute(res, "^ *", "", "g")
       return res
     endfunction
@@ -640,5 +657,3 @@ let &cpoptions=s:cposet
 unlet s:cposet
 
 " vim:sw=2 fdm=indent
-
-endif

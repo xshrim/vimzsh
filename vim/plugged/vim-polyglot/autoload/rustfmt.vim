@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'rust') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'rust', 'autoload/rustfmt.vim')
+  finish
+endif
 
 " Author: Stephen Sugden <stephen@stephensugden.com>
 "
@@ -62,18 +64,19 @@ function! s:RustfmtWriteMode()
     endif
 endfunction
 
-function! s:RustfmtConfig()
+function! s:RustfmtConfigOptions()
     let l:rustfmt_toml = findfile('rustfmt.toml', expand('%:p:h') . ';')
     if l:rustfmt_toml !=# ''
-        return '--config-path '.l:rustfmt_toml
+        return '--config-path '.shellescape(fnamemodify(l:rustfmt_toml, ":p"))
     endif
 
     let l:_rustfmt_toml = findfile('.rustfmt.toml', expand('%:p:h') . ';')
     if l:_rustfmt_toml !=# ''
-        return '--config-path '.l:_rustfmt_toml
+        return '--config-path '.shellescape(fnamemodify(l:_rustfmt_toml, ":p"))
     endif
 
-    return ''
+    " Default to edition 2018 in case no rustfmt.toml was found.
+    return '--edition 2018'
 endfunction
 
 function! s:RustfmtCommandRange(filename, line1, line2)
@@ -84,7 +87,7 @@ function! s:RustfmtCommandRange(filename, line1, line2)
 
     let l:arg = {"file": shellescape(a:filename), "range": [a:line1, a:line2]}
     let l:write_mode = s:RustfmtWriteMode()
-    let l:rustfmt_config = s:RustfmtConfig()
+    let l:rustfmt_config = s:RustfmtConfigOptions()
 
     " FIXME: When --file-lines gets to be stable, add version range checking
     " accordingly.
@@ -98,14 +101,9 @@ function! s:RustfmtCommandRange(filename, line1, line2)
 endfunction
 
 function! s:RustfmtCommand()
-    if g:rustfmt_emit_files
-        let l:write_mode = "--emit=stdout"
-    else
-        let l:write_mode = "--write-mode=display"
-    endif
-    " rustfmt will pick on the right config on its own due to the
-    " current directory change.
-    return g:rustfmt_command . " ". l:write_mode . " " . g:rustfmt_options
+    let write_mode = g:rustfmt_emit_files ? '--emit=stdout' : '--write-mode=display'
+    let config = s:RustfmtConfigOptions()
+    return join([g:rustfmt_command, write_mode, config, g:rustfmt_options])
 endfunction
 
 function! s:DeleteLines(start, end) abort
@@ -113,7 +111,7 @@ function! s:DeleteLines(start, end) abort
 endfunction
 
 function! s:RunRustfmt(command, tmpname, from_writepre)
-    mkview!
+    let l:view = winsaveview()
 
     let l:stderr_tmpname = tempname()
     call writefile([], l:stderr_tmpname)
@@ -219,7 +217,7 @@ function! s:RunRustfmt(command, tmpname, from_writepre)
         lwindow
     endif
 
-    silent! loadview
+    call winrestview(l:view)
 endfunction
 
 function! rustfmt#FormatRange(line1, line2)
@@ -264,5 +262,3 @@ endfunction
 
 
 " vim: set et sw=4 sts=4 ts=8:
-
-endif

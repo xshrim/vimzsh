@@ -43,6 +43,13 @@ Use (neo)vim terminal in the floating/popup window.
 
 ## Installation
 
+- packer.nvim
+
+```lua
+use 'voldikss/vim-floaterm'
+
+```
+
 - vim-plug
 
 ```vim
@@ -79,8 +86,11 @@ external terminals.
   attributes of a specific floaterm instance. Note that in order to input
   space, you have to form it as `\` followed by space, and `\` must be typed
   as `\\`
-  - `cwd` working directory that floaterm will be opened at, accept either a
-    path or literal `<root>` which represents the project root directory
+  - `cwd` working directory that floaterm will be opened at. Accepts a
+    path, the literal `<root>` which represents the project root directory,
+    the literal `<buffer>` which specifies the directory of the active buffer,
+    or the literal `<buffer-root>` which corresponds to the project root
+    directory of the active buffer.
   - `name` name of the floaterm
   - `silent` If `--silent` is given, spawn a floaterm but not open the window,
     you may toggle it afterwards
@@ -94,6 +104,7 @@ external terminals.
   - `position` see `g:floaterm_position`
   - `autoclose` see `g:floaterm_autoclose`
   - `borderchars` see `g:floaterm_borderchars`
+  - `titleposition` see `g:floaterm_titleposition`
 - This command basically shares the consistent behaviors with the builtin `:terminal`:
   - The special characters(`:help cmdline-special`) such as `%` and `<cfile>`
     will be auto-expanded, to get standalone characters, use `\` followed by
@@ -161,7 +172,7 @@ The following command allows you to compile and run your C code in the floaterm 
 - If `floaterm_name` is given, kill the floaterm instance named `floaterm_name`.
 - If `!` is given, kill all floaterms
 
-#### `:FloatermSend [--name=floaterm_name] [cmd]` Send command to a job in floaterm.
+#### `:FloatermSend[!] [--name=floaterm_name] [cmd]` Send command to a job in floaterm.
 
 - If `--name=floaterm_name` is given, send lines to the floaterm instance
   whose `name` is `floaterm_name`. Otherwise use the current floaterm.
@@ -249,14 +260,23 @@ Default: `─│─│┌┐┘└`
 #### **`g:floaterm_rootmarkers`**
 
 Type `List` of `String`. Markers used to detect the project root directory for `--cwd=<root>`
+or `--cwd=<buffer-root>`.
 
 Default: `['.project', '.git', '.hg', '.svn', '.root']`
+
+#### **`g:floaterm_giteditor`**
+
+Type `Boolean`. Whether to override `$GIT_EDITOR` in floaterm terminals so git commands can
+open open an editor in the same neovim instance. See [git](#git) for details.
+This flag also overrides `$HGEDITOR` for Mercurial.
+
+Default: `v:true`
 
 #### **`g:floaterm_opener`**
 
 Type `String`. Command used for opening a file in the outside nvim from within `:terminal`.
 
-Available: `'edit'`, `'split'`, `'vsplit'`, `'tabe'`, `'drop'` or 
+Available: `'edit'`, `'split'`, `'vsplit'`, `'tabe'`, `'drop'` or
 [user-defined commands](https://github.com/voldikss/vim-floaterm/issues/259)
 
 Default: `'split'`
@@ -270,7 +290,7 @@ Type `Number`. Whether to close floaterm window once the job gets finished.
   like `[Process exited 101]`
 - `2`: Always close floaterm window
 
-Default: `0`.
+Default: `1`.
 
 #### **`g:floaterm_autohide`**
 
@@ -289,6 +309,14 @@ Default: `1`.
 Type `Boolean`. Whether to enter Terminal-mode after opening a floaterm.
 
 Default: `v:true`
+
+#### **`g:floaterm_titleposition`**
+
+Type `String`. The position of the floaterm title.
+
+Available: `'left'`, `'center'`, `'right'`.
+
+Default: `'left'`
 
 ### Keymaps
 
@@ -363,8 +391,8 @@ no-current-focused window(`:help NormalNC`).
 ```vim
 " Configuration example
 
-" Set floaterm window background to gray once the cursor moves out from it
-hi FloatermNC guibg=gray
+" Set floaterm window foreground to gray once the cursor moves out from it
+hi FloatermNC guifg=gray
 ```
 
 <details>
@@ -392,7 +420,7 @@ would get another nvim/vim instance running in the subprocess.
 
 [Floaterm](https://github.com/voldikss/vim-floaterm/tree/master/bin), which is
 a builtin script in this plugin, allows you to open files from within `: terminal`
-without starting a nested nvim. To archive that, just literally replace
+without starting a nested nvim. To achieve that, just literally replace
 `vim/nvim` with `floaterm`, e.g. `floaterm somefile.txt`
 
 P.S.
@@ -410,6 +438,8 @@ P.S.
 #### [git](https://git-scm.com/)
 
 Execute `git commit` in the terminal window without starting a nested vim/nvim.
+
+Refer to [g:floaterm_giteditor](#gfloaterm_giteditor) to disable this behavior.
 
 Refer to [g:floaterm_opener](#gfloaterm_opener) for configurable open action
 
@@ -436,6 +466,11 @@ command! FZF FloatermNew fzf
 
 #### [ripgrep](https://github.com/BurntSushi/ripgrep)
 
+_Requirements_:
+
+- [fzf](https://github.com/junegunn/fzf)
+- [vim-ripgrep](https://github.com/jremmen/vim-ripgrep)
+
 This plugin has implemented a [wrapper](./autoload/floaterm/wrapper/rg.vim)
 for `rg` command.
 
@@ -443,6 +478,13 @@ Try `:FloatermNew rg` or create yourself a new command like this:
 
 ```vim
 command! Rg FloatermNew --width=0.8 --height=0.8 rg
+```
+
+or map via `.vimrc`
+
+```vim
+" Hotkey: \ + rg
+nmap <leader>rg :Rg<CR>
 ```
 
 <details>
@@ -497,7 +539,6 @@ command! NNN FloatermNew nnn
 <img src="https://user-images.githubusercontent.com/20282795/91380278-322f9780-e857-11ea-8b1c-d40fc91bb07d.gif"/>
 </details>
 
-
 #### [xplr](https://github.com/sayanarijit/xplr)
 
 There is also an [xplr wrapper](./autoload/floaterm/wrapper/xplr.vim)
@@ -544,6 +585,16 @@ command! Ranger FloatermNew ranger
 <img src="https://user-images.githubusercontent.com/20282795/91380284-3360c480-e857-11ea-9966-34856592d487.gif"/>
 </details>
 
+#### [joshuto](https://github.com/kamiyaa/joshuto)
+
+This plugin can also be a handy joshuto plugin since it also has a [joshuto wrapper](./autoload/floaterm/wrapper/joshuto.vim)
+
+Try `:FloatermNew joshuto` or define a new command:
+
+```vim
+command! Joshuto FloatermNew joshuto
+```
+
 #### [vifm](https://github.com/vifm/vifm)
 
 There is also a [vifm wrapper](./autoload/floaterm/wrapper/vifm.vim)
@@ -558,6 +609,16 @@ command! Vifm FloatermNew vifm
 <summary>Demo</summary>
 <img src="https://user-images.githubusercontent.com/43941510/77137476-3c888100-6ac2-11ea-90f2-2345c881aa8f.gif"/>
 </details>
+
+#### [yazi](https://github.com/sxyazi/yazi)
+
+There is also a [yazi wrapper](./autoload/floaterm/wrapper/yazi.vim)
+
+Try `:FloatermNew yazi` or define a new command:
+
+```vim
+command! Yazi FloatermNew yazi
+```
 
 #### [lazygit](https://github.com/jesseduffield/lazygit)
 

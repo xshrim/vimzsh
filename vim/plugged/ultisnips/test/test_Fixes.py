@@ -1,7 +1,7 @@
+import unittest
+
 from test.vim_test_case import VimTestCase as _VimTest
 from test.constant import *
-
-# Test for bug 1251994  {{{#
 
 
 class Bug1251994(_VimTest):
@@ -10,9 +10,7 @@ class Bug1251994(_VimTest):
     wanted = "  world hello;blub"
 
 
-# End: 1251994  #}}}
-
-# Test for https://github.com/SirVer/ultisnips/issues/157 (virtualedit) {{{#
+# Test for https://github.com/SirVer/ultisnips/issues/157 (virtualedit)
 
 
 class VirtualEdit(_VimTest):
@@ -25,9 +23,9 @@ class VirtualEdit(_VimTest):
         vim_config.append("set noexpandtab")
 
 
-# End: 1251994  #}}}
+# End: 1251994
 
-# Test for Github Pull Request #134 - Retain unnamed register {{{#
+# Test for Github Pull Request #134 - Retain unnamed register
 
 
 class RetainsTheUnnamedRegister(_VimTest):
@@ -54,7 +52,7 @@ class RetainsTheUnnamedRegister_ButOnlyOnce(_VimTest):
     wanted = "\nblah\nhello world "
 
 
-# End: Github Pull Request # 134 #}}}
+# End: Github Pull Request # 134
 
 # Test to ensure that shiftwidth follows tabstop when it's set to zero post
 # version 7.3.693. Prior to that version a shiftwidth of zero effectively
@@ -70,7 +68,7 @@ class ShiftWidthZero(_VimTest):
     wanted = "\tfoo"
 
 
-# Test for https://github.com/SirVer/ultisnips/issues/171 {{{#
+# Test for https://github.com/SirVer/ultisnips/issues/171
 # Make sure that we don't crash when trying to save and restore the clipboard
 # when it contains data that we can't coerce into Unicode.
 
@@ -108,4 +106,45 @@ class NonUnicodeDataInUnnamedRegister(_VimTest):
         )
 
 
-# End: #171  #}}}
+# End: #171
+
+
+# Test for #1184
+# UltiSnips should pass through any mapping that it currently can't execute as
+# the trigger key
+
+
+class PassThroughNonexecutedTrigger(_VimTest):
+    snippets = ("text", "Expand me!", "", "")
+    keys = (
+        "tex"
+        + EX
+        + "more\n"  # this should be passed through
+        + "text"
+        + EX  # this should be expanded
+    )
+    wanted = "tex" + EX + "more\nExpand me!"
+
+
+# End: #1184
+
+
+# Tests for https://github.com/SirVer/ultisnips/issues/1386 (embedded null byte)
+
+
+NULL_BYTE = CTRL_V + "000"
+
+
+class NullByte_ListSnippets(_VimTest):
+    snippets = ("word", "never expanded", "", "w")
+    keys = "foobar" + NULL_BYTE + LS + "\n"
+    wanted = "foobar\x00\n"
+
+
+class NullByte_ExpandAfter(_VimTest):
+    snippets = ("test", "Expand me!", "", "w")
+    keys = "foobar " + NULL_BYTE + "test" + EX
+    wanted = "foobar \x00Expand me!"
+
+
+# End: #1386

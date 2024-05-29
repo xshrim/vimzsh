@@ -1,8 +1,6 @@
 from test.vim_test_case import VimTestCase as _VimTest
 from test.constant import *
 
-# Simple Expands  {{{#
-
 
 class _SimpleExpands(_VimTest):
     snippets = ("hallo", "Hallo Welt!")
@@ -79,4 +77,39 @@ class SimpleExpand_DoNotClobberDefaultRegister(_VimTest):
         vim_config.append('let @"=""')
 
 
-# End: Simple Expands  #}}}
+class SimpleExpand_Issue1343(_VimTest):
+    snippets = ("test", r"${1:\Safe\\}")
+    keys = "test" + EX + JF + "foo"
+    wanted = r"\Safe\foo"
+
+class SimpleExpandJumpOrExpand_Expand(_VimTest):
+    snippets = ("hallo", "Hallo Welt!")
+    keys = "hallo" + EX
+    wanted = "Hallo Welt!"
+    
+    def _extra_vim_config(self, vim_config):
+        vim_config.append('let g:UltiSnipsJumpOrExpandTrigger="<tab>"')
+
+class SimpleExpandJumpOrExpand_Ambiguity(_VimTest):
+    snippets = ("test", r"test$1 foo$0")
+    keys = "test" + EX + EX + "foo"
+    wanted = "test foofoo"
+    
+    def _extra_vim_config(self, vim_config):
+        vim_config.append('let g:UltiSnipsJumpOrExpandTrigger="<tab>"')
+
+class SimpleExpandExpandOrJump_Expand(_VimTest):
+    snippets = ("hallo", "Hallo Welt!")
+    keys = "hallo" + EX
+    wanted = "Hallo Welt!"
+    
+    def _extra_vim_config(self, vim_config):
+        vim_config.append('let g:UltiSnipsExpandOrJumpTrigger="<tab>"')
+
+class SimpleExpandExpandOrJump_Ambiguity(_VimTest):
+    snippets = ("test", r"test$1 foo$0")
+    keys = "test" + EX + EX + "foo"
+    wanted = "testfoo foo foo"
+    
+    def _extra_vim_config(self, vim_config):
+        vim_config.append('let g:UltiSnipsExpandOrJumpTrigger="<tab>"')

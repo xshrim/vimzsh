@@ -31,7 +31,11 @@ function! floaterm#cmdline#parse(argstr) abort
           let [key, value] = [pair[0][2:], pair[1]]
           if key == 'cwd'
             if value == '<root>'
-              let value = floaterm#path#get_root()
+              let value = floaterm#path#get_root(getcwd())
+            elseif value == '<buffer>'
+              let value = expand('%:p:h')
+            elseif value == '<buffer-root>'
+              let value = floaterm#path#get_root(expand('%:p:h'))
             else
               let value = fnamemodify(value, ':p')
             endif
@@ -74,6 +78,7 @@ function! floaterm#cmdline#complete(arg_lead, cmd_line, cursor_pos) abort
     \ '--position=',
     \ '--autoclose=',
     \ '--borderchars=',
+    \ '--titleposition=',
     \ '--silent',
     \ '--disposable',
     \ ]
@@ -93,6 +98,9 @@ function! floaterm#cmdline#complete(arg_lead, cmd_line, cursor_pos) abort
     let candidates = map(vals, {idx -> '--wintype=' . vals[idx]})
   elseif match(a:arg_lead, '--opener=') > -1
     let vals = ['edit', 'split', 'vsplit', 'tabe', 'drop']
+    if index(vals, g:floaterm_opener) == -1
+      call add(vals, g:floaterm_opener)
+    endif
     let candidates = map(vals, {idx -> '--opener=' . vals[idx]})
   elseif match(a:arg_lead, '--autoclose=') > -1
     let vals = [0, 1, 2]
@@ -103,7 +111,7 @@ function! floaterm#cmdline#complete(arg_lead, cmd_line, cursor_pos) abort
     let prestr = matchstr(a:arg_lead, '--cwd=\zs.*\ze')
     let dirs = getcompletion(prestr, 'dir')
     if a:arg_lead == '--cwd='
-      let dirs = ['<root>'] + dirs
+      let dirs = ['<buffer>', '<root>', '<buffer-root>'] + dirs
     endif
     return map(dirs, { k,v -> '--cwd=' . v })
   elseif match(a:arg_lead, '--name=') > -1
@@ -115,6 +123,8 @@ function! floaterm#cmdline#complete(arg_lead, cmd_line, cursor_pos) abort
   elseif match(a:arg_lead, '--title=') > -1
     return []
   elseif match(a:arg_lead, '--borderchars=') > -1
+    return []
+  elseif match(a:arg_lead, '--titleposition=') > -1
     return []
   elseif match(a:arg_lead, '--position=') > -1
     let wintype = matchstr(a:cmd_line, '--wintype=\zs\w\+\ze')

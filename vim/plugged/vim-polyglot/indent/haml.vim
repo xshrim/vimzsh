@@ -1,9 +1,11 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'haml') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'haml', 'indent/haml.vim')
+  finish
+endif
 
 " Vim indent file
 " Language:	Haml
 " Maintainer:	Tim Pope <vimNOSPAM@tpope.org>
-" Last Change:	2016 Aug 29
+" Last Change:	2022 Mar 15
 
 if exists("b:did_indent")
   finish
@@ -15,6 +17,8 @@ let b:did_indent = 1
 setlocal autoindent
 setlocal indentexpr=GetHamlIndent()
 setlocal indentkeys=o,O,*<Return>,},],0),!^F,=end,=else,=elsif,=rescue,=ensure,=when
+
+let b:undo_indent = "setl ai< inde< indk<"
 
 " Only define the function once.
 if exists("*GetHamlIndent")
@@ -39,7 +43,7 @@ function! GetHamlIndent()
   let line = substitute(line,'^\s\+','','')
   let indent = indent(lnum)
   let cindent = indent(v:lnum)
-  let sw = exists('*shiftwidth') ? shiftwidth() : &sw
+  let sw = shiftwidth()
   if cline =~# '\v^-\s*%(elsif|else|when)>'
     let indent = cindent < indent ? cindent : indent - sw
   endif
@@ -74,5 +78,3 @@ function! GetHamlIndent()
 endfunction
 
 " vim:set sw=2:
-
-endif

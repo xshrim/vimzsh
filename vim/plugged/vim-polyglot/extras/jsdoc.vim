@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'javascript') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'javascript', 'extras/jsdoc.vim')
+  finish
+endif
 
 "" syntax coloring for javadoc comments (HTML)
 syntax region jsComment    matchgroup=jsComment start="/\*\s*"  end="\*/" contains=jsDocTags,jsCommentTodo,jsCvsTag,@jsHtml,@Spell fold
@@ -20,7 +22,8 @@ syntax region jsDocTypeRecord   contained start=/{/ end=/}/ contains=jsDocTypeRe
 syntax region jsDocTypeRecord   contained start=/\[/ end=/\]/ contains=jsDocTypeRecord extend
 syntax region jsDocTypeNoParam  contained start="{" end="}" oneline
 syntax match  jsDocTypeNoParam  contained "\%(#\|\"\|\w\|\.\|:\|\/\)\+"
-syntax match  jsDocParam        contained "\%(#\|\$\|-\|'\|\"\|{.\{-}}\|\w\|\.\|:\|\/\|\[.\{-}]\|=\)\+"
+syntax match  jsDocParam        contained "\%(#\|\$\|-\|'\|\"\|{.\{-}}\|\w\|\~\|\.\|:\|\/\|\[.\{-}]\|=\)\+"
+
 syntax region jsDocSeeTag       contained matchgroup=jsDocSeeTag start="{" end="}" contains=jsDocTags
 
 if version >= 508 || !exists("did_javascript_syn_inits")
@@ -38,6 +41,4 @@ if version >= 508 || !exists("did_javascript_syn_inits")
   HiLink jsDocTypeNoParam       Type
   HiLink jsDocParam             Label
   delcommand HiLink
-endif
-
 endif

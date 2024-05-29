@@ -2,18 +2,6 @@ from test.vim_test_case import VimTestCase as _VimTest
 from test.constant import *
 
 
-def check_required_vim_version(test):
-    if test.vim_flavor == "neovim":
-        return None
-    if not test.vim.has_version(7, 4, 1):
-        return "Vim newer than 7.4.1 is required"
-    else:
-        return None
-
-
-# Undo of Snippet insertion  {{{#
-
-
 class Undo_RemoveMultilineSnippet(_VimTest):
     snippets = ("test", "Hello\naaa ${1} bbb\nWorld")
     keys = "test" + EX + ESC + "u"
@@ -84,12 +72,7 @@ class DoNotCrashOnUndoAndJumpInNestedSnippet(_VimTest):
     wanted = "if a: test"
 
 
-# End: Undo of Snippet insertion  #}}}
-
-# Normal mode editing  {{{#
 # Test for bug #927844
-
-
 class DeleteLastTwoLinesInSnippet(_VimTest):
     snippets = ("test", "$1hello\nnice\nworld")
     keys = "test" + EX + ESC + "j2dd"
@@ -114,9 +97,6 @@ class DeleteCurrentTabStop3_JumpAround(_VimTest):
     wanted = "hello\nendworld"
 
 
-# End: Normal mode editing  #}}}
-
-# Pressing BS in TabStop  {{{#
 # Test for Bug #774917
 
 
@@ -132,18 +112,13 @@ class Backspace_TabStop_NotZero(_VimTest):
     wanted = "AA BBB"
 
 
-# End: Pressing BS in TabStop  #}}}
-
-
 class UpdateModifiedSnippetWithoutCursorMove1(_VimTest):
-    skip_if = check_required_vim_version
     snippets = ("test", "${1:one}(${2:xxx})${3:three}")
     keys = "test" + EX + "aaaaa" + JF + BS + JF + "3333"
     wanted = "aaaaa()3333"
 
 
 class UpdateModifiedSnippetWithoutCursorMove2(_VimTest):
-    skip_if = check_required_vim_version
     snippets = (
         "test",
         """\

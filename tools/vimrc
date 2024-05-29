@@ -586,7 +586,7 @@ Plug 'sonph/onehalf'
 " onedark theme
 Plug 'joshdick/onedark.vim'
 
-colorscheme molokai
+" colorscheme molokai
 " :SetColors all
 " F8/Alt+F8 switch scheme
 
@@ -893,19 +893,21 @@ endif
 
 """"""""""""""""""""""""""""""""""""ultisnips"""""""""""""""""""""""""""""""""""
 " 代码片段生成
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
-" Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
-let g:UltiSnipsExpandTrigger='<tab>'
-let g:UltiSnipsJumpForwardTrigger='<c-b>'
-let g:UltiSnipsJumpBackwardTrigger='<c-z>'
-" If you want :UltiSnipsEdit to split your window.
-let g:UltiSnipsEditSplit='vertical'
+if (version >= 800 && has('python'))
+  Plug 'SirVer/ultisnips'
+  Plug 'honza/vim-snippets'
+  " Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
+  let g:UltiSnipsExpandTrigger='<tab>'
+  let g:UltiSnipsJumpForwardTrigger='<c-b>'
+  let g:UltiSnipsJumpBackwardTrigger='<c-z>'
+  " If you want :UltiSnipsEdit to split your window.
+  let g:UltiSnipsEditSplit='vertical'
+endif
 
 """""""""""""""""""""""""""""""""""""completor.nvim"""""""""""""""""""""""""""""""""""
 " vim8
 " 代码自动补全
-if version >= 800
+if (version >= 800 && has('python'))
   Plug 'maralla/completor.vim'
   Plug 'kyouryuukunn/completor-necovim'
   Plug 'tokorom/completor-shell'

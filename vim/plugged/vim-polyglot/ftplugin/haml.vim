@@ -1,9 +1,11 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'haml') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'haml', 'ftplugin/haml.vim')
+  finish
+endif
 
 " Vim filetype plugin
 " Language:	Haml
 " Maintainer:	Tim Pope <vimNOSPAM@tpope.org>
-" Last Change:	2016 Aug 29
+" Last Change:	2019 Dec 05
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -71,5 +73,3 @@ let &cpo = s:save_cpo
 unlet s:save_cpo
 
 " vim:set sw=2:
-
-endif

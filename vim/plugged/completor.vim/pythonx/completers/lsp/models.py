@@ -2,10 +2,28 @@
 
 import uuid
 import json
+import logging
+from completor import vim
 
 JSONRPC_VERSION = '2.0'
 
+logger = logging.getLogger("completor")
+
 # Workflow: initilize -> initialized -> open -> completion
+
+
+class VimEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, vim.Dictionary):
+            return {k.decode('utf-8'): v for k, v in obj.items()}
+
+        if isinstance(obj, vim.List):
+            return list(obj)
+
+        if isinstance(obj, bytes):
+            return obj.decode('utf-8')
+
+        return json.JSONEncoder.default(self, obj)
 
 
 class Base(object):
@@ -30,7 +48,7 @@ class Base(object):
     def to_request(self):
         req = self.gen_request(params=self.to_dict())
         req_id = req.get('id')
-        data = json.dumps(req)
+        data = json.dumps(req, cls=VimEncoder)
         items = ['Content-Length: {}'.format(len(data)), '', data]
         return req_id, '\r\n'.join(items)
 
@@ -47,7 +65,17 @@ class Initialize(Base):
             'processId': self.ppid,
             'capabilities': {
                 'workspace': {},
-                'textDocument': {}
+                'textDocument': {
+                    'hover': {
+                        'contentFormat': ['markdown', 'plaintext']
+                    },
+                    'completion': {
+                        'completionItem': {
+                            'snippetSupport': False,
+                            'commitCharactersSupport': False,
+                        }
+                    }
+                }
             },
             'rootUri': self.workspace[0]['uri'],
             # 'workspaceFolders': self.workspace,
@@ -185,3 +213,32 @@ class Signature(Completion):
 
 class Hover(Completion):
     method = "textDocument/hover"
+
+
+class Implementation(Completion):
+    method = "textDocument/implementation"
+
+
+class References(Completion):
+    method = "textDocument/references"
+
+    def to_dict(self):
+        d = super(References, self).to_dict()
+        d['context'] = {
+            'includeDeclaration': True
+        }
+
+        return d
+
+
+class DidChangeConfiguration(Base):
+    method = "workspace/didChangeConfiguration"
+    notify = True
+
+    def __init__(self, conf):
+        self.conf = conf
+
+    def to_dict(self):
+        return {
+            "settings": self.conf
+        }

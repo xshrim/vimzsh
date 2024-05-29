@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'julia') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'julia', 'syntax/juliadoc.vim')
+  finish
+endif
 
 " Vim syntax file for julia document view
 scriptencoding utf-8
@@ -6,6 +8,9 @@ scriptencoding utf-8
 if exists('b:current_syntax')
   finish
 endif
+
+let s:cpo_save = &cpo
+set cpo&vim
 
 syntax sync fromstart
 
@@ -66,4 +71,5 @@ highlight default link juliadocAdmonitionsTitle Title
 
 let b:current_syntax = "juliadoc"
 
-endif
+let &cpo = s:cpo_save
+unlet s:cpo_save

@@ -1,8 +1,15 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'racket') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'racket', 'ftplugin/racket.vim')
+  finish
+endif
 
 " Language:     Racket
 " Maintainer:   Will Langstroth <will@langstroth.com>
 " URL:          http://github.com/wlangstroth/vim-racket
+
+if exists("b:did_ftplugin")
+  finish
+endif
+let b:did_ftplugin = 1
 
 setl iskeyword+=#,%,^
 setl lispwords+=module,module*,module+,parameterize,let-values,let*-values,letrec-values,local
@@ -27,7 +34,7 @@ setl lispwords+=match-letrec,match-define,match-define-values
 setl lisp
 
 " Enable auto begin new comment line when continuing from an old comment line
-setl comments+=:;
+setl comments=:;;;;,:;;;,:;;,:;
 setl formatoptions+=r
 
 setl makeprg=raco\ make\ --\ %
@@ -37,7 +44,10 @@ setl makeprg=raco\ make\ --\ %
 " but then vim says:
 "    "press ENTER or type a command to continue"
 " We avoid the annoyance of having to hit enter by remapping K directly.
-nnoremap <buffer> K :silent !raco docs <cword><cr>:redraw!<cr>
+nnoremap <buffer> <Plug>RacketDoc :silent !raco docs <cword><cr>:redraw!<cr>
+if maparg("K", "n") == ""
+  nmap <buffer> K <Plug>RacketDoc
+endif
 
 " For the visual mode K mapping, it's slightly more convoluted to get the 
 " selected text:
@@ -53,11 +63,18 @@ function! s:Racket_visual_doc()
   endtry
 endfunction
 
-vnoremap <buffer> K :call <SID>Racket_visual_doc()<cr>
-
-nnoremap <buffer> <f9> :!racket -t %<cr>
+vnoremap <buffer> <Plug>RacketDoc :call <SID>Racket_visual_doc()<cr>
+if maparg("K", "v") == ""
+  vmap <buffer> K <Plug>RacketDoc
+endif
 
 "setl commentstring=;;%s
 setl commentstring=#\|\ %s\ \|#
 
-endif
+" Undo our settings when the filetype changes away from Racket
+" (this should be amended if settings/mappings are added above!)
+let b:undo_ftplugin =
+      \  "setl iskeyword< lispwords< lisp< comments< formatoptions<"
+      \. "| setl makeprg< commentstring<"
+      \. "| nunmap <buffer> K"
+      \. "| vunmap <buffer> K"

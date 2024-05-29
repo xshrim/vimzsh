@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'html5') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'html5', 'indent/html.vim')
+  finish
+endif
 
 " Vim indent script for HTML
 " Header: "{{{
@@ -843,12 +845,11 @@ func! HtmlIndent_FindTagStart(lnum)
   " - a flag indicating whether we found the end of a tag.
   " This method is global so that HTML-like indenters can use it.
   " To avoid matching " > " or " < " inside a string require that the opening
-  " "<" is followed by a word character and the closing ">" comes after a
-  " non-white character.
+  " "<" is followed by a word character
   let idx = match(getline(a:lnum), '\S>\s*$')
   if idx > 0
     call cursor(a:lnum, idx)
-    let lnum = searchpair('<\w', '' , '\S>', 'bW', '', max([a:lnum - b:html_indent_line_limit, 0]))
+    let lnum = searchpair('<\w', '' , '>', 'bW', '', max([a:lnum - b:html_indent_line_limit, 0]))
     if lnum > 0
       return [lnum, 1]
     endif
@@ -1061,5 +1062,3 @@ let &cpo = s:cpo_save
 unlet s:cpo_save
 
 " vim: fdm=marker ts=8 sw=2 tw=78
-
-endif

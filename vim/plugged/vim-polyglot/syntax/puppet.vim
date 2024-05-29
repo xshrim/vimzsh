@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'puppet') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'puppet', 'syntax/puppet.vim')
+  finish
+endif
 
 " Language:     Puppet
 " Maintainer:   Voxpupuli
@@ -8,7 +10,7 @@ if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'puppet') == -1
 " and heredoc was copied from ruby and then modified to comply with Puppet syntax.
 
 " Prelude {{{1
-if exists("b:current_syntax")
+if exists('b:current_syntax')
   finish
 endif
 
@@ -30,9 +32,9 @@ syn match  puppetOperator "+=\|-=\|==\|!=\|=\~\|!\~\|>=\|<=\|<-\|<\~\|=>\|+>\|->
 " three character operators
 syn match  puppetOperator "<<|\||>>"
 
-syn region puppetBracketOperator matchgroup=puppetDelimiter start="\[\s*" end="\s*]" contains=ALLBUT,@puppetNotTop
-syn region puppetBraceOperator matchgroup=puppetDelimiter start="{\s*" end="\s*}" contains=ALLBUT,@puppetNotTop
-syn region puppetParenOperator matchgroup=puppetDelimiter start="(\s*" end="\s*)" contains=ALLBUT,@puppetNotTop
+syn region puppetBracketOperator matchgroup=puppetDelimiter start="\[\s*" end="\s*]" fold contains=ALLBUT,@puppetNotTop
+syn region puppetBraceOperator matchgroup=puppetDelimiter start="{\s*" end="\s*}" fold contains=ALLBUT,@puppetNotTop
+syn region puppetParenOperator matchgroup=puppetDelimiter start="(\s*" end="\s*)" fold contains=ALLBUT,@puppetNotTop
 
 " Expression Substitution and Backslash Notation {{{1
 syn match puppetStringEscape "\\\\\|\\[abefnrstv]\|\\\o\{1,3}\|\\x\x\{1,2}" contained display
@@ -435,6 +437,4 @@ HiLink puppetComment              Comment
 
 delcommand HiLink
 
-let b:current_syntax = "puppet"
-
-endif
+let b:current_syntax = 'puppet'

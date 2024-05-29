@@ -7,6 +7,9 @@
 
 if exists('g:loaded_floaterm')
   finish
+elseif !has('nvim') && !has('terminal')
+  call floaterm#util#show_msg("floaterm requires vim to be compiled with 'terminal'", "error")
+  finish
 endif
 let g:loaded_floaterm = 1
 
@@ -15,13 +18,16 @@ let g:floaterm_title            = get(g:, 'floaterm_title', 'floaterm($1/$2)')
 let g:floaterm_width            = get(g:, 'floaterm_width', 0.6)
 let g:floaterm_height           = get(g:, 'floaterm_height', 0.6)
 let g:floaterm_wintype          = get(g:, 'floaterm_wintype', 'float')
-let g:floaterm_autoclose        = get(g:, 'floaterm_autoclose', 0)
+let g:floaterm_autoclose        = get(g:, 'floaterm_autoclose', 1)
 let g:floaterm_autoinsert       = get(g:, 'floaterm_autoinsert', v:true)
 let g:floaterm_autohide         = get(g:, 'floaterm_autohide', 1)
 let g:floaterm_position         = get(g:, 'floaterm_position', 'center')
 let g:floaterm_borderchars      = get(g:, 'floaterm_borderchars', '─│─│┌┐┘└')
 let g:floaterm_rootmarkers      = get(g:, 'floaterm_rootmarkers', ['.project', '.git', '.hg', '.svn', '.root'])
 let g:floaterm_opener           = get(g:, 'floaterm_opener', 'split')
+let g:floaterm_giteditor        = get(g:, 'floaterm_giteditor', v:true)
+let g:floaterm_titleposition    = get(g:, 'floaterm_titleposition', 'left')
+
 
 command! -nargs=* -complete=customlist,floaterm#cmdline#complete -bang -range
                           \ FloatermNew    call floaterm#run('new', <bang>0, [visualmode(), <range>, <line1>, <line2>], <q-args>)

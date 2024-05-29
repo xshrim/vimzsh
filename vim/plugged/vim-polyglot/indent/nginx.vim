@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'nginx') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'nginx', 'indent/nginx.vim')
+  finish
+endif
 
 if exists("b:did_indent")
     finish
@@ -12,4 +14,4 @@ setlocal cindent
 " Just make sure that the comments are not reset as defs would be.
 setlocal cinkeys-=0#
 
-endif
+let b:undo_indent = "setl cin< cink< inde<"

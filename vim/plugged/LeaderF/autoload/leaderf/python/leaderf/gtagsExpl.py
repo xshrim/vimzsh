@@ -30,14 +30,24 @@ class GtagsExplorer(Explorer):
             self._cd_option = ''
         self._root_markers = lfEval("g:Lf_RootMarkers")
         self._db_location = os.path.join(lfEval("g:Lf_CacheDirectory"),
-                                     '.LfCache',
+                                     'LeaderF',
                                      'gtags')
+        self._store_in_project = lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1'
+        self._store_in_rootmarker = lfEval("get(g:, 'Lf_GtagsStoreInRootMarker', 0)") == '1'
         self._project_root = ""
         self._gtagslibpath = []
         self._result_format = None
         self._last_result_format = None
         self._evalVimVar()
         self._has_nvim = lfEval("has('nvim')") == '1'
+        self._db_timestamp = 0
+        self._last_command = ""
+        self._content = []
+        self._with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)") != '0'
+        self._global = lfEval("get(g:, 'Lf_Global', 'global')")
+        self._gtags = lfEval("get(g:, 'Lf_Gtags', 'gtags')")
+        self._is_debug = False
+        self._cmd = ''
 
         self._task_queue = Queue.Queue()
         self._worker_thread = threading.Thread(target=self._processTask)
@@ -58,15 +68,20 @@ class GtagsExplorer(Explorer):
             except Exception as e:
                 print(e)
 
+    def setContent(self, content):
+        if self._last_command == "--all":
+            self._content = content
+
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
+        self._is_debug = "--debug" in arguments_dict
         if "--recall" in arguments_dict:
             return []
 
         if vim.current.buffer.name:
             filename = os.path.normpath(lfDecode(vim.current.buffer.name))
         else:
-            filename = os.path.join(os.getcwd(), 'no_name')
+            filename = os.path.join(lfGetCwd(), 'no_name')
 
         if "--gtagsconf" in arguments_dict:
             self._gtagsconf = arguments_dict["--gtagsconf"][0]
@@ -74,7 +89,7 @@ class GtagsExplorer(Explorer):
             self._gtagslabel = arguments_dict["--gtagslabel"][0]
 
         if self._gtagsconf == '' and os.name == 'nt':
-            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
+            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf")).join('""')
 
         if "--gtagslibpath" in arguments_dict:
             self._gtagslibpath = [os.path.abspath(os.path.expanduser(p)) for p in arguments_dict["--gtagslibpath"]]
@@ -85,11 +100,12 @@ class GtagsExplorer(Explorer):
             self._gtagslibpath = []
 
         if "--update" in arguments_dict:
+            self._evalVimVar()
             if "--accept-dotfiles" in arguments_dict:
                 self._accept_dotfiles = "--accept-dotfiles "
             if "--skip-unreadable" in arguments_dict:
                 self._skip_unreadable = "--skip-unreadable "
-            if "--skip-symlink" in arguments_dict:
+            if "--skip-symlink" in arguments_dict and self._skip_symlink != "":
                 skip_symlink = arguments_dict["--skip-symlink"]
                 self._skip_symlink = "--skip-symlink%s " % ('=' + skip_symlink[0] if skip_symlink else "")
             self.updateGtags(filename, single_update=False, auto=False)
@@ -105,7 +121,10 @@ class GtagsExplorer(Explorer):
 
         auto_jump = False
         self._last_result_format = self._result_format
-        self._result_format = None
+        self._result_format = 'ctags-mod'
+        if "--result" in arguments_dict:
+            self._result_format = arguments_dict["--result"][0]
+
         if "-d" in arguments_dict:
             pattern = arguments_dict["-d"][0]
             pattern_option = "-d -e %s " % pattern
@@ -157,18 +176,26 @@ class GtagsExplorer(Explorer):
             env["GTAGSDBPATH"] = dbpath
 
             if pattern_option is None:  # '--all' or empty means the whole project
-                cmd = 'global -P | global -L- -f {}--gtagslabel={} {}--color=never --result={}'.format(
+                cmd = '{} -P | {} -L- -f {}--gtagslabel={} {}--color=never --result={}'.format(
+                            self._global, self._global,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, path_style, self._result_format)
             else:
-                cmd = 'global {}--gtagslabel={} {} {}--color=never --result={}'.format(
-                            '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
+                cmd = '{} {}--gtagslabel={} {} {}--color=never --result={}'.format(
+                            self._global, '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, pattern_option, path_style, self._result_format)
+
+            if not self._isDBModified(os.path.join(dbpath, 'GTAGS')) and self._content \
+                    and self._cmd == cmd:
+                return self._content
+
+            self._cmd = cmd
 
             executor = AsyncExecutor()
             self._executor.append(executor)
             lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
-            content = executor.execute(cmd, env=env)
+            self._last_command = "--all"
+            content = executor.execute(cmd, env=env, raise_except=False)
             return content
 
         if "-S" in arguments_dict:
@@ -220,13 +247,15 @@ class GtagsExplorer(Explorer):
         env = os.environ
         env["GTAGSROOT"] = root
         env["GTAGSDBPATH"] = dbpath
-        cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result=ctags-mod'.format(
-                    '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
-                    self._gtagslabel, pattern_option, path_style, scope, literal, ignorecase)
+        cmd = '{} {}--gtagslabel={} {} {}{}{}{}--color=never --result={}'.format(
+                    self._global, '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
+                    self._gtagslabel, pattern_option, path_style, scope, literal,
+                    ignorecase, self._result_format)
 
         executor = AsyncExecutor()
         self._executor.append(executor)
         lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
+        self._last_command = "others"
         content = executor.execute(cmd, env=env)
 
         libdb = os.path.join(dbpath, "GTAGSLIBPATH")
@@ -241,9 +270,10 @@ class GtagsExplorer(Explorer):
                     if path_style == "--path-style abslib ":
                         path_style = "--path-style absolute "
 
-                    cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result=ctags-mod -q'.format(
-                                '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
-                                self._gtagslabel, pattern_option, path_style, scope, literal, ignorecase)
+                    cmd = '{} {}--gtagslabel={} {} {}{}{}{}--color=never --result={} -q'.format(
+                                self._global, '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
+                                self._gtagslabel, pattern_option, path_style, scope, literal,
+                                ignorecase, self._result_format)
 
                     executor = AsyncExecutor()
                     self._executor.append(executor)
@@ -262,8 +292,20 @@ class GtagsExplorer(Explorer):
         """
         copied from RgExplorer
         """
+
+        def replace(text, pattern, repl):
+            r"""
+            only replace pattern with even number of \ preceding it
+            """
+            result = ''
+            for s in re.split(r'((?:\\\\)+)', text):
+                result += re.sub(pattern, repl, s)
+
+            return result
+
         vim_regex = regex
 
+        vim_regex = vim_regex.replace(r"\\", "\\")
         vim_regex = re.sub(r'([%@&])', r'\\\1', vim_regex)
 
         # non-greedy pattern
@@ -289,12 +331,12 @@ class GtagsExplorer(Explorer):
             vim_regex = re.sub(r'\(\?>(.+?)\)', r'(\1)@>', vim_regex)
 
         # this won't hurt although they are not the same
-        vim_regex = vim_regex.replace(r'\A', r'^')
-        vim_regex = vim_regex.replace(r'\z', r'$')
-        vim_regex = vim_regex.replace(r'\B', r'')
+        vim_regex = replace(vim_regex, r'\\A', r'^')
+        vim_regex = replace(vim_regex, r'\\z', r'$')
+        vim_regex = replace(vim_regex, r'\\B', r'')
 
         # word boundary
-        vim_regex = re.sub(r'\\b', r'(<|>)', vim_regex)
+        vim_regex = replace(vim_regex, r'\\b', r'(<|>)')
 
         # case-insensitive
         vim_regex = vim_regex.replace(r'(?i)', r'\c')
@@ -309,19 +351,19 @@ class GtagsExplorer(Explorer):
         # \a          bell (\x07)
         # \f          form feed (\x0C)
         # \v          vertical tab (\x0B)
-        vim_regex = vim_regex.replace(r'\a', r'%x07')
-        vim_regex = vim_regex.replace(r'\f', r'%x0C')
-        vim_regex = vim_regex.replace(r'\v', r'%x0B')
+        vim_regex = replace(vim_regex, r'\\a', r'%x07')
+        vim_regex = replace(vim_regex, r'\\f', r'%x0C')
+        vim_regex = replace(vim_regex, r'\\v', r'%x0B')
 
         # \123        octal character code (up to three digits) (when enabled)
         # \x7F        hex character code (exactly two digits)
-        vim_regex = re.sub(r'\\(x[0-9A-Fa-f][0-9A-Fa-f])', r'%\1', vim_regex)
+        vim_regex = replace(vim_regex, r'\\(x[0-9A-Fa-f][0-9A-Fa-f])', r'%\1')
         # \x{10FFFF}  any hex character code corresponding to a Unicode code point
         # \u007F      hex character code (exactly four digits)
         # \u{7F}      any hex character code corresponding to a Unicode code point
         # \U0000007F  hex character code (exactly eight digits)
         # \U{7F}      any hex character code corresponding to a Unicode code point
-        vim_regex = re.sub(r'\\([uU])', r'%\1', vim_regex)
+        vim_regex = replace(vim_regex, r'\\([uU])', r'%\1')
 
         vim_regex = re.sub(r'\[\[:ascii:\]\]', r'[\\x00-\\x7F]', vim_regex)
         vim_regex = re.sub(r'\[\[:word:\]\]', r'[0-9A-Za-z_]', vim_regex)
@@ -343,36 +385,11 @@ class GtagsExplorer(Explorer):
 
         return r'\v' + vim_regex
 
-    def _nearestAncestor(self, markers, path):
-        """
-        return the nearest ancestor path(including itself) of `path` that contains
-        one of files or directories in `markers`.
-        `markers` is a list of file or directory names.
-        """
-        if os.name == 'nt':
-            # e.g. C:\\
-            root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
-        else:
-            root = '/'
-
-        path = os.path.abspath(path)
-        while path != root:
-            for name in markers:
-                if os.path.exists(os.path.join(path, name)):
-                    return path
-            path = os.path.abspath(os.path.join(path, ".."))
-
-        for name in markers:
-            if os.path.exists(os.path.join(path, name)):
-                return path
-
-        return ""
-
     def _isVersionControl(self, filename):
         if self._project_root and filename.startswith(self._project_root):
             return True
 
-        ancestor = self._nearestAncestor(self._root_markers, os.path.dirname(filename))
+        ancestor = nearestAncestor(self._root_markers, os.path.dirname(filename))
         if ancestor:
             self._project_root = ancestor
             return True
@@ -380,12 +397,28 @@ class GtagsExplorer(Explorer):
             return False
 
     def _generateDbpath(self, path):
+        sep_char = '-' if self._with_gutentags else '_'
         if os.name == 'nt':
-            db_folder = re.sub(r'[\\/]', '%', path.replace(':\\', '%', 1))
+            if self._with_gutentags:
+                db_folder = re.sub(r'[:\\/]', sep_char, path)
+            else:
+                db_folder = re.sub(r'[\\/]', sep_char, path.replace(':\\', sep_char, 1))
         else:
-            db_folder = path.replace('/', '%')
+            if self._with_gutentags:
+                db_folder = path[1:].replace('/', sep_char)
+            else:
+                db_folder = path.replace('/', sep_char)
 
-        return os.path.join(self._db_location, db_folder)
+        if self._store_in_project:
+            return path
+        elif self._store_in_rootmarker:
+            for name in self._root_markers:
+                if os.path.exists(os.path.join(path, name)):
+                    return os.path.join(path, name, '.LfGtags')
+            # if not exist root marker, store in project
+            return os.path.join(path, '.LfGtags')
+        else:
+            return os.path.join(self._db_location, db_folder)
 
     def _root_dbpath(self, filename):
         """
@@ -394,23 +427,33 @@ class GtagsExplorer(Explorer):
         if self._project_root and filename.startswith(self._project_root):
             root = self._project_root
         else:
-            ancestor = self._nearestAncestor(self._root_markers, os.path.dirname(filename))
+            ancestor = nearestAncestor(self._root_markers, os.path.dirname(filename))
             if ancestor:
                 self._project_root = ancestor
                 root = self._project_root
             else:
-                ancestor = self._nearestAncestor(self._root_markers, os.getcwd())
+                ancestor = nearestAncestor(self._root_markers, lfGetCwd())
                 if ancestor:
                     self._project_root = ancestor
                     root = self._project_root
                 else:
-                    root = os.getcwd()
+                    root = lfGetCwd()
 
         dbpath = self._generateDbpath(root)
         return (root, dbpath, os.path.exists(os.path.join(dbpath, "GTAGS")))
 
     def updateGtags(self, filename, single_update, auto):
         self._task_queue.put(partial(self._update, filename, single_update, auto))
+
+    def _isDBModified(self, dbpath):
+        try:
+            if self._db_timestamp == os.path.getmtime(dbpath):
+                return False
+            else:
+                self._db_timestamp = os.path.getmtime(dbpath)
+                return True
+        except:
+            return True
 
     def _remove(self, filename):
         if filename == "":
@@ -419,10 +462,19 @@ class GtagsExplorer(Explorer):
         root, dbpath, exists = self._root_dbpath(filename)
         try:
             lfCmd("echohl Question")
-            if lfEval('input("Are you sure you want to remove directory `{}`?[Ny] ")'.format(lfEncode(dbpath.replace('\\', r'\\')))) in ["Y","y"]:
+            if self._store_in_project:
+                if lfEval('input("Are you sure you want to remove GTAGS files?[Ny] ")') in ["Y","y"]:
+                    os.remove(os.path.join(dbpath, "GTAGS"))
+                    os.remove(os.path.join(dbpath, "GPATH"))
+                    os.remove(os.path.join(dbpath, "GRTAGS"))
+                    if os.path.exists(os.path.join(dbpath, "GTAGSLIBPATH")):
+                        os.remove(os.path.join(dbpath, "GTAGSLIBPATH"))
+            elif lfEval('input("Are you sure you want to remove directory `{}`?[Ny] ")'.format(lfEncode(dbpath.replace('\\', r'\\')))) in ["Y","y"]:
                 shutil.rmtree(dbpath)
-        except Exception as e:
-            lfPrintError(e)
+
+            lfCmd("redraw | echo 'Done!'")
+        except Exception:
+            lfPrintTraceback()
         finally:
             lfCmd("echohl NONE")
 
@@ -431,27 +483,28 @@ class GtagsExplorer(Explorer):
             return
 
         if self._gtagsconf == '' and os.name == 'nt':
-            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
+            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf")).join('""')
 
         root, dbpath, exists = self._root_dbpath(filename)
         if not filename.startswith(root):
-            if self._has_nvim:
-                vim.async_call(lfCmd, "let g:Lf_Debug_Gtags = '%s'" % escQuote(str((filename, root))))
-            else:
-                lfCmd("let g:Lf_Debug_Gtags = '%s'" % escQuote(str((filename, root))))
+            # if self._has_nvim:
+            #     vim.async_call(lfCmd, "let g:Lf_Debug_Gtags = '%s'" % escQuote(str((filename, root))))
+            # else:
+            #     lfCmd("let g:Lf_Debug_Gtags = '%s'" % escQuote(str((filename, root))))
 
             return
 
         self._updateLibGtags(root, dbpath)
         if single_update:
             if exists:
-                cmd = 'cd {}"{}" && gtags {}{}{}{}--gtagslabel {} --single-update "{}" "{}"'.format(self._cd_option, root,
-                            self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+                cmd = 'cd {}"{}" && {} {}{}{}{}--gtagslabel {} --single-update "{}" "{}"'.format(self._cd_option, root,
+                            self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, filename, dbpath)
                 env = os.environ
-                env["GTAGSFORCECPP"] = ""
-                subprocess.Popen(cmd, shell=True, env=env)
+                # env["GTAGSFORCECPP"] = "" # lead to issue #489
+                proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE, env=env)
+                _, error = proc.communicate()
         elif not auto:
             self._executeCmd(root, dbpath)
         elif self._isVersionControl(filename):
@@ -472,22 +525,23 @@ class GtagsExplorer(Explorer):
                 f.writelines(libpaths)
 
         if self._gtagsconf == '' and os.name == 'nt':
-            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
+            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf")).join('""')
 
         env = os.environ
-        env["GTAGSFORCECPP"] = ""
+        # env["GTAGSFORCECPP"] = "" # lead to issue #489
         for path in self._gtagslibpath:
             if not os.path.exists(path):
                 continue
             libdbpath = self._generateDbpath(path)
             if not os.path.exists(libdbpath):
                 os.makedirs(libdbpath)
-            cmd = 'cd {}"{}" && gtags -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, path,
-                        self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+            cmd = 'cd {}"{}" && {} -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, path,
+                        self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                         '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                         self._gtagslabel, libdbpath)
 
-            subprocess.Popen(cmd, shell=True, env=env)
+            proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE, env=env)
+            _, error = proc.communicate()
 
     def _which(self, executable):
         for p in os.environ["PATH"].split(";"):
@@ -505,7 +559,11 @@ class GtagsExplorer(Explorer):
         self._skip_unreadable = "--skip-unreadable " if lfEval("get(g:, 'Lf_GtagsSkipUnreadable', '0')") == '1' else ""
         self._skip_symlink = "--skip-symlink%s " % ('=' + lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')")
                                 if lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')") != '' else "")
+        if lfEval("get(g:, 'Lf_GtagsHigherThan6_6_2', '1')") == '0':
+            self._skip_symlink = ""
         self._gtagsconf = lfEval("get(g:, 'Lf_Gtagsconf', '')")
+        if self._gtagsconf:
+            self._gtagsconf = self._gtagsconf.join('""')
         self._gtagslabel = lfEval("get(g:, 'Lf_Gtagslabel', 'default')")
 
         self._Lf_GtagsSource = int(lfEval("get(g:, 'Lf_GtagsSource', 0)"))
@@ -517,10 +575,11 @@ class GtagsExplorer(Explorer):
             return
 
         if lfEval("exists('g:Lf_ExternalCommand')") == '1':
-            self._Lf_ExternalCommand = lfEval("g:Lf_ExternalCommand") % dir.join('""')
+            self._Lf_ExternalCommand = lfEval("g:Lf_ExternalCommand")
             return
+        else:
+            self._Lf_ExternalCommand = None
 
-        self._Lf_ExternalCommand = None
         self._Lf_UseVersionControlTool = lfEval("g:Lf_UseVersionControlTool") == '1'
         self._Lf_WildIgnore = lfEval("g:Lf_WildIgnore")
         self._Lf_RecurseSubmodules = lfEval("get(g:, 'Lf_RecurseSubmodules', 0)") == '1'
@@ -571,20 +630,20 @@ class GtagsExplorer(Explorer):
             return None
 
         if self._Lf_ExternalCommand:
-            return self._Lf_ExternalCommand
+            return self._Lf_ExternalCommand.replace('"%s"', '%s') % dir.join('""')
 
         arguments_dict = kwargs.get("arguments", {})
         if self._Lf_UseVersionControlTool:
             if self._exists(dir, ".git"):
                 wildignore = self._Lf_WildIgnore
-                if ".git" in wildignore["dir"]:
-                    wildignore["dir"].remove(".git")
-                if ".git" in wildignore["file"]:
-                    wildignore["file"].remove(".git")
+                if ".git" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".git")
+                if ".git" in wildignore.get("file", []):
+                    wildignore.get("file", []).remove(".git")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -x "%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -x "%s"' % i
 
                 if "--no-ignore" in arguments_dict:
@@ -601,14 +660,14 @@ class GtagsExplorer(Explorer):
                 return cmd
             elif self._exists(dir, ".hg"):
                 wildignore = self._Lf_WildIgnore
-                if ".hg" in wildignore["dir"]:
-                    wildignore["dir"].remove(".hg")
-                if ".hg" in wildignore["file"]:
-                    wildignore["file"].remove(".hg")
+                if ".hg" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".hg")
+                if ".hg" in wildignore.get("file", []):
+                    wildignore.get("file", []).remove(".hg")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -X "%s"' % self._expandGlob("dir", i)
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -X "%s"' % self._expandGlob("file", i)
 
                 cmd = 'hg files %s "%s"' % (ignore, dir)
@@ -621,19 +680,19 @@ class GtagsExplorer(Explorer):
             if os.name == 'nt': # https://github.com/BurntSushi/ripgrep/issues/500
                 color = ""
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if self._Lf_ShowHidden or not i.startswith('.'): # rg does not show hidden files by default
                         ignore += ' -g "!%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if self._Lf_ShowHidden or not i.startswith('.'):
                         ignore += ' -g "!%s"' % i
             else:
                 color = "--color never"
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if self._Lf_ShowHidden or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if self._Lf_ShowHidden or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
 
@@ -661,10 +720,10 @@ class GtagsExplorer(Explorer):
         elif default_tool["pt"] and self._is_pt_executable and os.name != 'nt': # there is bug on Windows
             wildignore = self._Lf_WildIgnore
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if self._Lf_ShowHidden or not i.startswith('.'): # pt does not show hidden files by default
                     ignore += " --ignore=%s" % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if self._Lf_ShowHidden or not i.startswith('.'):
                     ignore += " --ignore=%s" % i
 
@@ -687,10 +746,10 @@ class GtagsExplorer(Explorer):
         elif default_tool["ag"] and self._is_ag_executable and os.name != 'nt': # https://github.com/vim/vim/issues/3236
             wildignore = self._Lf_WildIgnore
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if self._Lf_ShowHidden or not i.startswith('.'): # ag does not show hidden files by default
                     ignore += ' --ignore "%s"' % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if self._Lf_ShowHidden or not i.startswith('.'):
                     ignore += ' --ignore "%s"' % i
 
@@ -713,11 +772,11 @@ class GtagsExplorer(Explorer):
         elif default_tool["find"] and self._is_find_executable and os.name != 'nt':
             wildignore = self._Lf_WildIgnore
             ignore_dir = ""
-            for d in wildignore["dir"]:
+            for d in wildignore.get("dir", []):
                 ignore_dir += '-type d -name "%s" -prune -o ' % d
 
             ignore_file = ""
-            for f in wildignore["file"]:
+            for f in wildignore.get("file", []):
                     ignore_file += '-type f -name "%s" -o ' % f
 
             if self._Lf_FollowLinks:
@@ -767,30 +826,30 @@ class GtagsExplorer(Explorer):
         cmd = self._file_list_cmd(root)
         if cmd:
             if os.name == 'nt':
-                cmd = 'cd {}"{}" && ( {} ) | gtags -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
-                            self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+                cmd = 'cd {}"{}" && ( {} ) | {} -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
+                            self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, dbpath)
             else:
-                cmd = 'cd {}"{}" && {{ {}; }} | gtags -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
-                            self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+                cmd = 'cd {}"{}" && {{ {}; }} | {} -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
+                            self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, dbpath)
         else:
-            cmd = 'cd {}"{}" && gtags -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, root,
-                        self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+            cmd = 'cd {}"{}" && {} -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, root,
+                        self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                         '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                         self._gtagslabel, dbpath)
 
         env = os.environ
-        env["GTAGSFORCECPP"] = ""
+        # env["GTAGSFORCECPP"] = "" # lead to issue #489
         proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE, env=env)
         _, error = proc.communicate()
 
         def print_log(args):
             print(args)
 
-        if error:
+        if proc.returncode != 0:
             if self._has_nvim:
                 vim.async_call(print_log, cmd)
                 vim.async_call(print_log, error)
@@ -805,16 +864,17 @@ class GtagsExplorer(Explorer):
             else:
                 print("gtags generated successfully!")
 
-        if self._has_nvim:
-            vim.async_call(lfCmd, "let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
-        else:
-            lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
+        if self._is_debug:
+            if self._has_nvim:
+                vim.async_call(print_log, cmd)
+            else:
+                print(cmd)
 
     def getStlCategory(self):
         return 'Gtags'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def cleanup(self):
         for exe in self._executor:
@@ -830,14 +890,15 @@ class GtagsExplorer(Explorer):
     def getLastResultFormat(self):
         return self._last_result_format
 
+
 #*****************************************************
 # GtagsExplManager
 #*****************************************************
 class GtagsExplManager(Manager):
     def __init__(self):
         super(GtagsExplManager, self).__init__()
-        self._match_ids = []
         self._match_path = False
+        self._preview_match_ids = []
 
     def _getExplClass(self):
         return GtagsExplorer
@@ -865,17 +926,28 @@ class GtagsExplManager(Manager):
 
         try:
             if kwargs.get("mode", '') == 't':
-                lfCmd("tab drop %s | %s" % (escSpecial(file), line_num))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+                    lfDrop('tab', file, line_num)
+                else:
+                    lfCmd("tabe %s | %s" % (escSpecial(file), line_num))
             else:
-                lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+                    lfDrop('', file, line_num)
+                else:
+                    lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
+            lfCmd("norm! ^zv")
             lfCmd("norm! zz")
+
+            if "preview" not in kwargs:
+                lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
 
             if vim.current.window not in self._cursorline_dict:
                 self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
 
             lfCmd("setlocal cursorline")
-        except vim.error as e:
-            lfPrintError(e)
+        except vim.error as e: # E37
+            if 'E325' not in str(e).split(':'):
+                lfPrintTraceback()
 
     def updateGtags(self, filename, single_update, auto=True):
         self._getExplorer().updateGtags(filename, single_update, auto)
@@ -892,10 +964,10 @@ class GtagsExplManager(Manager):
                   1, return the name only
                   2, return the directory name
         """
-        if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
-            if self._match_path:
-                return line
+        if self._match_path or mode == 0:
+            return line
 
+        if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
             if mode == 2:
                 return line[:line.find('\t')]
             else:
@@ -905,7 +977,6 @@ class GtagsExplManager(Manager):
                 return line[line.find('\t')+1:]
             else:
                 return line[:line.find('\t')]
-            return line
         elif self._getExplorer().getResultFormat() == "ctags-x":
             if mode == 2:
                 return line[line.find(' ') + 1:]
@@ -922,8 +993,11 @@ class GtagsExplManager(Manager):
                   1, return the start postion of name only
                   2, return the start postion of directory name
         """
+        if self._match_path or mode == 0:
+            return 0
+
         if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
-            if self._match_path or mode == 2:
+            if mode == 2:
                 return 0
 
             return lfBytesLen(line[:line.find('\t', line.find('\t'))]) + 1
@@ -956,38 +1030,88 @@ class GtagsExplManager(Manager):
 
     def _afterEnter(self):
         super(GtagsExplManager, self)._afterEnter()
-        if self._getExplorer().getResultFormat() is None:
-            id = int(lfEval('''matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')'''))
-            self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')'''))
-            self._match_ids.append(id)
-        elif self._getExplorer().getResultFormat() == "ctags":
-            id = int(lfEval('''matchadd('Lf_hl_gtagsFileName', '\t\zs.\{-}\ze\t')'''))
-            self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+$')'''))
-            self._match_ids.append(id)
-        elif self._getExplorer().getResultFormat() == "ctags-x":
-            id = int(lfEval('''matchadd('Lf_hl_gtagsFileName', '^\S\+\s\+\d\+\s\+\zs\S\+')'''))
-            self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_gtagsLineNumber', '^\S\+\s\+\zs\d\+')'''))
-            self._match_ids.append(id)
-        else: # ctags-mod
-            id = int(lfEval('''matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')'''))
-            self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')'''))
-            self._match_ids.append(id)
-        try:
-            for i in self._getExplorer().getPatternRegex():
-                id = int(lfEval("matchadd('Lf_hl_gtagsHighlight', '%s', 9)" % escQuote(i)))
+
+        lfCmd("augroup Lf_Gtags")
+        lfCmd("autocmd!")
+        lfCmd("autocmd VimLeavePre * call leaderf#Gtags#cleanup()")
+        lfCmd("augroup END")
+
+        if self._getInstance().getWinPos() == 'popup':
+            if self._getExplorer().getResultFormat() is None:
+                # \ should be escaped as \\\\
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsFileName', '^.\\\\{-}\\\\ze\\\\t')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
                 self._match_ids.append(id)
-        except vim.error:
-            pass
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsLineNumber', '\\\\t\\\\zs\\\\d\\\\+\\\\ze\\\\t')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+            elif self._getExplorer().getResultFormat() == "ctags":
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsFileName', '\\\\t\\\\zs.\\\\{-}\\\\ze\\\\t')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsLineNumber', '\\\\t\\\\zs\\\\d\\\\+$')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+            elif self._getExplorer().getResultFormat() == "ctags-x":
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsFileName', '^\\\\S\\\\+\\\\s\\\\+\\\\d\\\\+\\\\s\\\\+\\\\zs\\\\S\\\\+')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsLineNumber', '^\\\\S\\\\+\\\\s\\\\+\\\\zs\\\\d\\\\+')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+            else: # ctags-mod
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsFileName', '^.\\\\{-}\\\\ze\\\\t')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsLineNumber', '\\\\t\\\\zs\\\\d\\\\+\\\\ze\\\\t')")"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+            try:
+                for i in self._getExplorer().getPatternRegex():
+                    lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsHighlight', '%s', 9)")"""
+                            % (self._getInstance().getPopupWinId(), re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
+                    id = int(lfEval("matchid"))
+                    self._match_ids.append(id)
+            except vim.error:
+                pass
+        else:
+            if self._getExplorer().getResultFormat() is None:
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')"""))
+                self._match_ids.append(id)
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')"""))
+                self._match_ids.append(id)
+            elif self._getExplorer().getResultFormat() == "ctags":
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '\t\zs.\{-}\ze\t')"""))
+                self._match_ids.append(id)
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+$')"""))
+                self._match_ids.append(id)
+            elif self._getExplorer().getResultFormat() == "ctags-x":
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '^\S\+\s\+\d\+\s\+\zs\S\+')"""))
+                self._match_ids.append(id)
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '^\S\+\s\+\zs\d\+')"""))
+                self._match_ids.append(id)
+            else: # ctags-mod
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')"""))
+                self._match_ids.append(id)
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')"""))
+                self._match_ids.append(id)
+            try:
+                for i in self._getExplorer().getPatternRegex():
+                    id = int(lfEval("matchadd('Lf_hl_gtagsHighlight', '%s', 9)" % escQuote(i)))
+                    self._match_ids.append(id)
+            except vim.error:
+                pass
 
     def _beforeExit(self):
         super(GtagsExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
@@ -995,6 +1119,7 @@ class GtagsExplManager(Manager):
             if k.valid:
                 k.options["cursorline"] = v
         self._cursorline_dict.clear()
+        self._clearPreviewHighlights()
 
     def _bangEnter(self):
         super(GtagsExplManager, self)._bangEnter()
@@ -1010,20 +1135,36 @@ class GtagsExplManager(Manager):
             if instance.isLastReverseOrder():
                 instance.window.cursor = (min(instance.cursorRow, len(instance.buffer)), 0)
             else:
-                instance.window.cursor = (max(instance.cursorRow - instance.helpLength, 1), 0)
-            instance.window.options["cursorline"] = True
+                instance.window.cursor = (instance.cursorRow, 0)
+
+            if instance.getWinPos() == 'popup':
+                lfCmd("call win_execute(%d, 'setlocal cursorline')" % instance.getPopupWinId())
+            elif instance.getWinPos() == 'floatwin':
+                lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % instance.getPopupWinId())
+            else:
+                instance.window.options["cursorline"] = True
 
     def deleteCurrentLine(self):
-        if vim.current.window.cursor[0] <= self._help_length:
+        instance = self._getInstance()
+        if self._inHelpLines():
             return
-        lfCmd("setlocal modifiable")
-        line = vim.current.line
+        if instance.getWinPos() == 'popup':
+            lfCmd("call win_execute(%d, 'setlocal modifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal modifiable")
+        line = instance._buffer_object[instance.window.cursor[0] - 1]
         if len(self._content) > 0:
             self._content.remove(line)
+            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            self._getInstance().setStlResultsCount(len(self._content)//self._getUnit())
         # `del vim.current.line` does not work in neovim
         # https://github.com/neovim/neovim/issues/9361
-        del vim.current.buffer[vim.current.window.cursor[0] - 1]
-        lfCmd("setlocal nomodifiable")
+        del instance._buffer_object[instance.window.cursor[0] - 1]
+        if instance.getWinPos() == 'popup':
+            instance.refreshPopupStatusline()
+            lfCmd("call win_execute(%d, 'setlocal nomodifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal nomodifiable")
 
     def getArguments(self):
         if self._getExplorer().getLastResultFormat() is not None and \
@@ -1036,7 +1177,7 @@ class GtagsExplManager(Manager):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         if  "through" in kwargs.get("arguments", {}).get("--path-style", []):
-            self._orig_cwd = os.getcwd()
+            self._orig_cwd = lfGetCwd()
 
             # https://github.com/neovim/neovim/issues/8336
             if lfEval("has('nvim')") == '1':
@@ -1047,18 +1188,44 @@ class GtagsExplManager(Manager):
             if vim.current.buffer.name:
                 path = os.path.dirname(lfDecode(vim.current.buffer.name))
             else:
-                path = os.getcwd()
+                path = lfGetCwd()
             root_markers = lfEval("g:Lf_RootMarkers")
-            project_root = self._getExplorer()._nearestAncestor(root_markers, path)
-            if project_root == "" and path != os.getcwd():
-                project_root = self._getExplorer()._nearestAncestor(root_markers, os.getcwd())
+            project_root = nearestAncestor(root_markers, path)
+            if project_root == "" and path != lfGetCwd():
+                project_root = nearestAncestor(root_markers, lfGetCwd())
             if project_root:
                 chdir(project_root)
 
         super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    def _clearPreviewHighlights(self):
+        for i in self._preview_match_ids:
+            lfCmd("silent! call matchdelete(%d, %d)" % (i, self._preview_winid))
+
+    def _highlightInPreview(self):
+        if lfEval("has('nvim')") != '1':
+            try:
+                for i in self._getExplorer().getPatternRegex():
+                    lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsHighlight', '%s', 9)")"""
+                            % (self._preview_winid, re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
+                    id = int(lfEval("matchid"))
+                    self._preview_match_ids.append(id)
+            except vim.error:
+                pass
+        else:
+            cur_winid = lfEval("win_getid()")
+            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            if lfEval("win_getid()") != cur_winid:
+                try:
+                    for i in self._getExplorer().getPatternRegex():
+                        id = int(lfEval("matchadd('Lf_hl_gtagsHighlight', '%s', 9)" % escQuote(i)))
+                        self._preview_match_ids.append(id)
+                except vim.error:
+                    pass
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
@@ -1075,8 +1242,12 @@ class GtagsExplManager(Manager):
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
             file = os.path.normpath(lfEncode(file))
 
-        buf_number = lfEval("bufnr('{}', 1)".format(file))
-        self._createPopupPreview("", buf_number, line_num)
+        if lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+            source = int(lfEval("bufadd('%s')" % escQuote(file)))
+        else:
+            source = file
+        self._createPopupPreview("", source, line_num)
+        self._highlightInPreview()
 
 
 #*****************************************************

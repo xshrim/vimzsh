@@ -1,6 +1,7 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'rust') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'rust', 'autoload/rust.vim')
+  finish
+endif
 
-" Author: Kevin Ballard
 " Description: Helper functions for Rust commands/mappings
 " Last Modified: May 27, 2014
 " For bugs, patches and license go to https://github.com/rust-lang/rust.vim
@@ -502,7 +503,15 @@ function! s:SearchTestFunctionNameUnderCursor() abort
 
     " Search the end of test function (closing brace) to ensure that the
     " cursor position is within function definition
-    normal! %
+    if maparg('<Plug>(MatchitNormalForward)') ==# ''
+        keepjumps normal! %
+    else
+        " Prefer matchit.vim official plugin to native % since the plugin
+        " provides better behavior than original % (#391)
+        " To load the plugin, run:
+        "   :packadd matchit
+        execute 'keepjumps' 'normal' "\<Plug>(MatchitNormalForward)"
+    endif
     if line('.') < cursor_line
         return ''
     endif
@@ -510,14 +519,23 @@ function! s:SearchTestFunctionNameUnderCursor() abort
     return matchstr(getline(test_func_line), '\m\C^\s*fn\s\+\zs\h\w*')
 endfunction
 
-function! rust#Test(all, options) abort
+function! rust#Test(mods, winsize, all, options) abort
     let manifest = findfile('Cargo.toml', expand('%:p:h') . ';')
     if manifest ==# ''
         return rust#Run(1, '--test ' . a:options)
     endif
 
-    if has('terminal') || has('nvim')
-        let cmd = 'terminal '
+    " <count> defaults to 0, but we prefer an empty string
+    let winsize = a:winsize ? a:winsize : ''
+
+    if has('terminal')
+        if has('patch-8.0.910')
+            let cmd = printf('%s noautocmd %snew | terminal ++curwin ', a:mods, winsize)
+        else
+            let cmd = printf('%s terminal ', a:mods)
+        endif
+    elseif has('nvim')
+        let cmd = printf('%s noautocmd %snew | terminal ', a:mods, winsize)
     else
         let cmd = '!'
         let manifest = shellescape(manifest)
@@ -535,25 +553,22 @@ function! rust#Test(all, options) abort
     let saved = getpos('.')
     try
         let func_name = s:SearchTestFunctionNameUnderCursor()
-        if func_name ==# ''
-            echohl ErrorMsg
-            echomsg 'No test function was found under the cursor. Please add ! to command if you want to run all tests'
-            echohl None
-            return
-        endif
-        if a:options ==# ''
-            execute cmd . 'cargo test --manifest-path' manifest func_name
-        else
-            execute cmd . 'cargo test --manifest-path' manifest func_name a:options
-        endif
-        return
     finally
         call setpos('.', saved)
     endtry
+    if func_name ==# ''
+        echohl ErrorMsg
+        echomsg 'No test function was found under the cursor. Please add ! to command if you want to run all tests'
+        echohl None
+        return
+    endif
+    if a:options ==# ''
+        execute cmd . 'cargo test --manifest-path' manifest func_name
+    else
+        execute cmd . 'cargo test --manifest-path' manifest func_name a:options
+    endif
 endfunction
 
 " }}}1
 
 " vim: set et sw=4 sts=4 ts=8:
-
-endif

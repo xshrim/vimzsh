@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'ocaml') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'ocaml', 'ftplugin/omake.vim')
+  finish
+endif
 
 " Vim filetype plugin file
 " Language:	OMake
@@ -25,4 +27,4 @@ setlocal expandtab
 " Including files.
 let &l:include = '^\s*include'
 
-endif
+let b:undo_ftplugin = "fo< com< cms< et< inc<"

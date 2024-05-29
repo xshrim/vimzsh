@@ -1,11 +1,13 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'octave') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'octave', 'indent/octave.vim')
+  finish
+endif
 
 " Vim indent file
-" Language:	       Octave
-" Maintainer:	       Nguyễn Gia Phong <vn.mcsinyx@gmail.com>
+" Language:            Octave
+" Maintainer:          Nguyễn Gia Phong <vn.mcsinyx@gmail.com>
 " Original Maintainer: Marcus Aurelius Farias <marcus.cf@bol.com.br>
 " First Author:        Max Ischenko <mfi@ukr.net>
-" Last Change:	       2019-10-11
+" Last Change:         2019-10-16
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -73,5 +75,3 @@ endfunction
 
 setlocal indentexpr=GetOctaveIndent()
 setlocal autoindent
-
-endif

@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'julia') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'julia', 'ftplugin/juliadoc.vim')
+  finish
+endif
 
 " Vim filetype plugin file
 " Language: Julia document
@@ -9,7 +11,7 @@ endif
 let b:did_ftplugin = 1
 
 let s:save_cpo = &cpo
-set cpo-=C
+set cpo&vim
 
 setlocal conceallevel=2
 setlocal concealcursor=nc
@@ -30,5 +32,3 @@ let b:undo_ftplugin .= " | delcommand JuliaDoc | delcommand JuliaDocKeywordprg"
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
-
-endif

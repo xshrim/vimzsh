@@ -1,3 +1,4 @@
+import os
 import vim
 
 
@@ -60,3 +61,56 @@ def _patch_nvim(vim):
 
 if hasattr(vim, 'from_nvim'):
     _patch_nvim(vim_obj)
+
+
+def _cached(f):
+    if os.getenv('DISABLE_CACHE'):
+        def wrap(*args, **kwargs):
+            func = f()
+            return func(*args, **kwargs)
+    else:
+        func = f()
+
+        def wrap(*args, **kwargs):
+            return func(*args, **kwargs)
+
+    wrap.__name__ = f.__name__
+    wrap.__doc__ = f.__doc__
+    wrap.__module__ = f.__module__
+
+    return wrap
+
+
+@_cached
+def vim_expand():
+    return vim_obj.Function('expand')
+
+
+@_cached
+def vim_tempname():
+    return vim_obj.Function('completor#utils#tempname')
+
+
+@_cached
+def vim_support_popup():
+    return vim_obj.Function('completor#support_popup')
+
+
+@_cached
+def vim_action_trigger():
+    return vim_obj.Function('completor#action#trigger')
+
+
+@_cached
+def vim_in_comment_or_string():
+    return vim_obj.Function('completor#utils#in_comment_or_string')
+
+
+@_cached
+def vim_daemon_send():
+    return vim_obj.Function('completor#daemon#send')
+
+
+@_cached
+def vim_exists():
+    return vim_obj.Function('exists')

@@ -5,7 +5,12 @@
 
 scriptencoding utf-8
 
-if !has("conceal") || exists("g:indentLine_loaded")
+if !has("conceal")
+    echoerr "conceal is invalid. To use the plugin, please enable the conceal"
+    finish
+endif
+
+if exists("g:indentLine_loaded")
     finish
 endif
 let g:indentLine_loaded = 1
@@ -18,7 +23,7 @@ let g:indentLine_first_char = get(g:, 'indentLine_first_char', (&encoding ==# "u
 let g:indentLine_indentLevel = get(g:, 'indentLine_indentLevel', 20)
 let g:indentLine_enabled = get(g:, 'indentLine_enabled', 1)
 let g:indentLine_fileType = get(g:, 'indentLine_fileType', [])
-let g:indentLine_fileTypeExclude = get(g:, 'indentLine_fileTypeExclude', [])
+let g:indentLine_fileTypeExclude = get(g:, 'indentLine_fileTypeExclude', ['leaderf'])
 let g:indentLine_bufNameExclude = get(g:, 'indentLine_bufNameExclude', [])
 let g:indentLine_bufTypeExclude = get(g:, 'indentLine_bufTypeExclude', [])
 let g:indentLine_showFirstIndentLevel = get(g:, 'indentLine_showFirstIndentLevel', 0)
@@ -106,6 +111,7 @@ function! s:SetConcealOption()
     endif
 endfunction
 
+"{{{1 function! s:ResetConcealOption()
 function! s:ResetConcealOption()
     if exists("b:indentLine_ConcealOptionSet") && b:indentLine_ConcealOptionSet
         if exists("b:indentLine_original_concealcursor")
@@ -118,13 +124,35 @@ function! s:ResetConcealOption()
     endif
 endfunction
 
+"{{{1 function! s:DisableOnDiff()
+function! s:DisableOnDiff()
+    if &diff
+        call s:IndentLinesDisable()
+        call s:LeadingSpaceDisable()
+    endif
+endfunction
+
+"{{{1 function! s:VimEnter()
+function! s:VimEnter()
+    let init_winnr = winnr()
+    noautocmd windo call s:DisableOnDiff()
+    noautocmd exec init_winnr . "wincmd w"
+endfunction
+
+"{{{1 function! s:ToggleOnDiff()
+function! s:ToggleOnDiff()
+    if &diff
+        call s:IndentLinesDisable()
+        call s:LeadingSpaceDisable()
+    else
+        call s:Setup()
+    endif
+endfunction
+
 "{{{1 function! s:IndentLinesEnable()
 function! s:IndentLinesEnable()
+    let s:indentSpace = get(g:, 'indentLine_indentSpace', &l:shiftwidth == 0 ? &l:tabstop : &l:shiftwidth)
     if g:indentLine_newVersion
-        if &diff
-            return
-        endif
-
         if exists("b:indentLine_enabled") && b:indentLine_enabled == 0
             return
         endif
@@ -139,10 +167,9 @@ function! s:IndentLinesEnable()
             call add(w:indentLine_indentLineId, matchadd('Conceal', '^ ', 0, -1, {'conceal': g:indentLine_first_char}))
         endif
 
-        let space = &l:shiftwidth == 0 ? &l:tabstop : &l:shiftwidth
         let n = len(g:indentLine_char_list)
         let level = 0
-        for i in range(space+1, space * g:indentLine_indentLevel + 1, space)
+        for i in range(s:indentSpace+1, s:indentSpace * g:indentLine_indentLevel + 1, s:indentSpace)
             if n > 0
                 let char = g:indentLine_char_list[level % n]
                 let level += 1
@@ -165,19 +192,17 @@ function! s:IndentLinesEnable()
 
     let g:mysyntaxfile = g:indentLine_mysyntaxfile
 
-    let space = &l:shiftwidth == 0 ? &l:tabstop : &l:shiftwidth
-
     if g:indentLine_showFirstIndentLevel
         execute 'syntax match IndentLine /^ / containedin=ALL conceal cchar=' . g:indentLine_first_char
     endif
 
     if g:indentLine_faster
         execute 'syntax match IndentLineSpace /^\s\+/ containedin=ALL contains=IndentLine'
-        execute 'syntax match IndentLine / \{'.(space-1).'}\zs / contained conceal cchar=' . g:indentLine_char
+        execute 'syntax match IndentLine / \{'.(s:indentSpace-1).'}\zs / contained conceal cchar=' . g:indentLine_char
         execute 'syntax match IndentLine /\t\zs / contained conceal cchar=' . g:indentLine_char
     else
         let pattern = line('$') < g:indentLine_maxLines ? 'v' : 'c'
-        for i in range(space+1, space * g:indentLine_indentLevel + 1, space)
+        for i in range(s:indentSpace+1, s:indentSpace * s:indentLine_indentLevel + 1, s:indentSpace)
             execute 'syntax match IndentLine /\%(^\s\+\)\@<=\%'.i.pattern.' / containedin=ALL conceal cchar=' . g:indentLine_char
         endfor
     endif
@@ -232,10 +257,30 @@ endfunction
 "{{{1 function! s:ResetWidth(...)
 function! s:ResetWidth(...)
     if 0 < a:0
-        let &l:shiftwidth = a:1
+        noautocmd let &l:shiftwidth = a:1
     endif
 
     let b:indentLine_enabled = 1
+    call s:IndentLinesDisable()
+    call s:IndentLinesEnable()
+endfunction
+
+"{{{1 function! s:AutoResetWidth()
+function! s:AutoResetWidth()
+
+    let l:enable = get(
+                    \ b:,
+                    \ 'indentLine_enabled',
+                    \ g:indentLine_enabled ? s:Filter() : 0
+                    \)
+
+    let g:indentLine_autoResetWidth = get(g:, 'indentLine_autoResetWidth', 1)
+
+    if l:enable != 1 || g:indentLine_autoResetWidth != 1
+        return
+    endif
+
+    let b:indentLine_enabled = l:enable
     call s:IndentLinesDisable()
     call s:IndentLinesEnable()
 endfunction
@@ -265,11 +310,7 @@ endfunction
 
 "{{{1 function! s:Disable()
 function! s:Disable()
-    if exists("b:indentLine_enabled") && b:indentLine_enabled
-        return
-    elseif exists("b:indentLine_leadingSpaceEnabled") && b:indentLine_leadingSpaceEnabled
-        return
-    elseif s:Filter() == 0
+    if s:Filter() == 0
         call s:IndentLinesDisable()
         call s:LeadingSpaceDisable()
     endif
@@ -293,10 +334,6 @@ endfunction
 "{{{1 function! s:LeadingSpaceEnable()
 function! s:LeadingSpaceEnable()
     if g:indentLine_newVersion
-        if &diff
-            return
-        endif
-
         if exists("b:indentLine_leadingSpaceEnabled") && b:indentLine_leadingSpaceEnabled == 0
             return
         endif
@@ -374,38 +411,48 @@ endfunction
 augroup indentLine
     autocmd!
     if g:indentLine_newVersion
-        autocmd BufRead,BufNewFile,ColorScheme,Syntax * call <SID>InitColor()
+        autocmd BufRead,BufNewFile,ColorScheme,Syntax * call s:InitColor()
         if exists("##WinNew")
-            autocmd WinNew * call <SID>Setup()
+            autocmd WinNew * call s:Setup()
         endif
-        autocmd BufWinEnter * call <SID>IndentLinesDisable() | call <SID>LeadingSpaceDisable() | call <SID>Setup()
-        autocmd FileType * call <SID>Disable()
+        autocmd BufWinEnter * call s:IndentLinesDisable() | call s:LeadingSpaceDisable() | call s:Setup()
+        autocmd FileType * call s:Disable()
+        if exists("##OptionSet")
+            autocmd OptionSet diff call s:ToggleOnDiff()
+            autocmd OptionSet shiftwidth,tabstop noautocmd call s:AutoResetWidth()
+        endif
+        autocmd VimEnter * call s:VimEnter()
     else
-        autocmd BufWinEnter * call <SID>Setup()
+        autocmd BufWinEnter * call s:Setup()
         autocmd User * if exists("b:indentLine_enabled") || exists("b:indentLine_leadingSpaceEnabled") |
-                        \ call <SID>Setup() | endif
-        autocmd BufRead,BufNewFile,ColorScheme,Syntax * call <SID>InitColor()
+                        \ call s:Setup() | endif
+        autocmd BufRead,BufNewFile,ColorScheme,Syntax * call s:InitColor()
         autocmd BufUnload * let b:indentLine_enabled = 0 | let b:indentLine_leadingSpaceEnabled = 0
         autocmd SourcePre $VIMRUNTIME/syntax/nosyntax.vim doautocmd indentLine BufUnload
-        autocmd FileChangedShellPost * doautocmd indentLine BufUnload | call <SID>Setup()
+        autocmd FileChangedShellPost * doautocmd indentLine BufUnload | call s:Setup()
+        if exists("##OptionSet")
+            autocmd OptionSet diff call s:ToggleOnDiff()
+            autocmd OptionSet shiftwidth,tabstop noautocmd call s:AutoResetWidth()
+        endif
+        autocmd VimEnter * call s:VimEnter()
     endif
 augroup END
 
 "{{{1 commands
-command! -nargs=? IndentLinesReset call <SID>ResetWidth(<f-args>)
-command! IndentLinesToggle call <SID>IndentLinesToggle()
+command! -nargs=? IndentLinesReset call s:ResetWidth(<f-args>)
+command! -bar IndentLinesToggle call s:IndentLinesToggle()
 if g:indentLine_newVersion
-    command! IndentLinesEnable let b:indentLine_enabled = 1 | call <SID>IndentLinesEnable()
-    command! IndentLinesDisable let b:indentLine_enabled = 0 | call <SID>IndentLinesDisable()
-    command! LeadingSpaceEnable let b:indentLine_leadingSpaceEnabled = 1 | call <SID>LeadingSpaceEnable()
-    command! LeadingSpaceDisable let b:indentLine_leadingSpaceEnabled = 0 | call <SID>LeadingSpaceDisable()
+    command! -bar IndentLinesEnable let b:indentLine_enabled = 1 | call s:IndentLinesEnable()
+    command! -bar IndentLinesDisable let b:indentLine_enabled = 0 | call s:IndentLinesDisable()
+    command! -bar LeadingSpaceEnable let b:indentLine_leadingSpaceEnabled = 1 | call s:LeadingSpaceEnable()
+    command! -bar LeadingSpaceDisable let b:indentLine_leadingSpaceEnabled = 0 | call s:LeadingSpaceDisable()
 else
-    command! IndentLinesEnable call <SID>IndentLinesEnable()
-    command! IndentLinesDisable call <SID>IndentLinesDisable()
-    command! LeadingSpaceEnable call <SID>LeadingSpaceEnable()
-    command! LeadingSpaceDisable call <SID>LeadingSpaceDisable()
+    command! -bar IndentLinesEnable call s:IndentLinesEnable()
+    command! -bar IndentLinesDisable call s:IndentLinesDisable()
+    command! -bar LeadingSpaceEnable call s:LeadingSpaceEnable()
+    command! -bar LeadingSpaceDisable call s:LeadingSpaceDisable()
 endif
-command! LeadingSpaceToggle call <SID>LeadingSpaceToggle()
+command! LeadingSpaceToggle call s:LeadingSpaceToggle()
 
 " vim:et:ts=4:sw=4:fdm=marker:fmr={{{,}}}
 

@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'typescript') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'typescript', 'syntax/basic/doc.vim')
+  finish
+endif
 
 "Syntax coloring for Node.js shebang line
 syntax match   shellbang "^#!.*node\>"
@@ -7,8 +9,9 @@ syntax match   shellbang "^#!.*iojs\>"
 
 "JavaScript comments
 syntax keyword typescriptCommentTodo TODO FIXME XXX TBD
+syntax match typescriptMagicComment "@ts-\%(ignore\|expect-error\)\>"
 syntax match   typescriptLineComment "//.*"
-  \ contains=@Spell,typescriptCommentTodo,typescriptRef
+  \ contains=@Spell,typescriptCommentTodo,typescriptRef,typescriptMagicComment
 syntax region  typescriptComment
   \ start="/\*"  end="\*/"
   \ contains=@Spell,typescriptCommentTodo extend
@@ -77,11 +80,9 @@ syntax region  typescriptDocLinkTag            contained matchgroup=typescriptDo
 
 syntax cluster typescriptDocs                  contains=typescriptDocParamType,typescriptDocNamedParamType,typescriptDocParam
 
-if main_syntax == "typescript"
+if exists("main_syntax") && main_syntax == "typescript"
   syntax sync clear
   syntax sync ccomment typescriptComment minlines=200
 endif
 
 syntax case match
-
-endif

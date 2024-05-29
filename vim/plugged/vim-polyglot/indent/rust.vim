@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'rust') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'rust', 'indent/rust.vim')
+  finish
+endif
 
 " Vim indent file
 " Language:         Rust
@@ -25,6 +27,8 @@ setlocal autoindent	" indentexpr isn't much help otherwise
 setlocal indentkeys=0{,0},!^F,o,O,0[,0],0(,0)
 
 setlocal indentexpr=GetRustIndent(v:lnum)
+
+let b:undo_indent = "setlocal cindent< cinoptions< cinkeys< cinwords< lisp< autoindent< indentkeys< indentexpr<"
 
 " Only define the function once.
 if exists("*GetRustIndent")
@@ -193,7 +197,12 @@ function GetRustIndent(lnum)
     " A line that ends with '.<expr>;' is probably an end of a long list
     " of method operations.
     if prevline =~# '\V\^\s\*.' && l:last_prevline_character ==# ';'
-        return indent(prevlinenum) - s:shiftwidth()
+        call cursor(a:lnum - 1, 1)
+        let l:scope_start = searchpair('{\|(', '', '}\|)', 'nbW',
+                    \ 's:is_string_comment(line("."), col("."))')
+        if l:scope_start != 0 && l:scope_start < a:lnum
+            return indent(l:scope_start) + 4
+        endif
     endif
 
     if l:last_prevline_character ==# ","
@@ -279,5 +288,3 @@ unlet s:save_cpo
 " vint: +ProhibitAbbreviationOption
 
 " vim: set et sw=4 sts=4 ts=8:
-
-endif

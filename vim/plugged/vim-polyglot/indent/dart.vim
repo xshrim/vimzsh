@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'dart') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'dart', 'indent/dart.vim')
+  finish
+endif
 
 if exists('b:did_indent')
   finish
@@ -6,13 +8,18 @@ endif
 let b:did_indent = 1
 
 setlocal cindent
-setlocal cinoptions+=j1,J1,(2s,u2s,U1,m1,+2s
+setlocal cinoptions+=j1,J1,U1,m1,+2s
+if get(g:, 'dart_trailing_comma_indent', v:false)
+  setlocal cinoptions+=(2s,u2s
+else
+  setlocal cinoptions+=(s,us
+endif
 
 setlocal indentexpr=DartIndent()
 
 let b:undo_indent = 'setl cin< cino<'
 
-if exists("*DartIndent")
+if exists('*DartIndent')
   finish
 endif
 
@@ -35,5 +42,3 @@ function! DartIndent()
 
   return indentTo
 endfunction
-
-endif

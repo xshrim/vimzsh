@@ -9,8 +9,10 @@ from .utils import *
 
 if sys.version_info >= (3, 0):
     import queue as Queue
+    lfDEVNULL = subprocess.DEVNULL
 else:
     import Queue
+    lfDEVNULL = open(os.devnull)
 
 
 class AsyncExecutor(object):
@@ -19,7 +21,7 @@ class AsyncExecutor(object):
     read the output asynchronously.
     """
     def __init__(self):
-        self._errQueue = Queue.Queue()
+        self._errQueue = None
         self._process = None
         self._finished = False
         self._max_count = int(lfEval("g:Lf_MaxCount"))
@@ -33,24 +35,29 @@ class AsyncExecutor(object):
         finally:
             queue.put(None)
 
-    def execute(self, cmd, encoding=None, cleanup=None, env=None):
+    def execute(self, cmd, encoding=None, cleanup=None, env=None,
+                raise_except=True, format_line=None, cwd=None):
         if os.name == 'nt':
             self._process = subprocess.Popen(cmd, bufsize=-1,
-                                             stdin=subprocess.PIPE,
+                                             stdin=lfDEVNULL,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.PIPE,
                                              shell=True,
+                                             cwd=cwd,
                                              env=env,
                                              universal_newlines=False)
         else:
             self._process = subprocess.Popen(cmd, bufsize=-1,
+                                             stdin=lfDEVNULL,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.PIPE,
                                              preexec_fn=os.setsid,
                                              shell=True,
+                                             cwd=cwd,
                                              env=env,
                                              universal_newlines=False)
 
+        self._errQueue = Queue.Queue()
         self._finished = False
 
         stderr_thread = threading.Thread(target=self._readerThread,
@@ -66,9 +73,15 @@ class AsyncExecutor(object):
                         for line in source:
                             try:
                                 line.decode("ascii")
-                                yield line.rstrip(b"\r\n").decode()
+                                yield (
+                                    format_line(line.rstrip(b"\r\n").decode())
+                                ) if format_line else line.rstrip(b"\r\n").decode()
                             except UnicodeDecodeError:
-                                yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                                yield (
+                                    format_line(lfBytes2Str(line.rstrip(b"\r\n"), encoding))
+                                ) if format_line else (
+                                    lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                                )
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
@@ -78,9 +91,13 @@ class AsyncExecutor(object):
                         for line in source:
                             try:
                                 line.decode("ascii")
-                                yield line.rstrip(b"\r\n").decode()
+                                yield (
+                                    format_line(line.rstrip(b"\r\n").decode())
+                                ) if format_line else line.rstrip(b"\r\n").decode()
                             except UnicodeDecodeError:
-                                yield lfBytes2Str(line.rstrip(b"\r\n"))
+                                yield (
+                                    format_line(lfBytes2Str(line.rstrip(b"\r\n")))
+                                ) if format_line else lfBytes2Str(line.rstrip(b"\r\n"))
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
@@ -88,8 +105,8 @@ class AsyncExecutor(object):
                                     break
 
                     err = b"".join(iter(self._errQueue.get, None))
-                    if err:
-                        raise Exception(lfBytes2Str(err, encoding))
+                    if err and raise_except:
+                        raise Exception(cmd + "\n" + lfBytes2Str(err) + lfBytes2Str(err, encoding))
                 except ValueError:
                     pass
                 finally:
@@ -98,6 +115,7 @@ class AsyncExecutor(object):
                         if self._process:
                             self._process.stdout.close()
                             self._process.stderr.close()
+                            self._process.poll()
                     except IOError:
                         pass
 
@@ -109,7 +127,9 @@ class AsyncExecutor(object):
                     count = 0
                     if encoding:
                         for line in source:
-                            yield line.rstrip(b"\r\n")
+                            yield (
+                                format_line(line.rstrip(b"\r\n"))
+                            ) if format_line else line.rstrip(b"\r\n")
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
@@ -119,9 +139,13 @@ class AsyncExecutor(object):
                         for line in source:
                             try:
                                 line.decode("ascii")
-                                yield line.rstrip(b"\r\n")
+                                yield (
+                                    format_line(line.rstrip(b"\r\n"))
+                                ) if format_line else line.rstrip(b"\r\n")
                             except UnicodeDecodeError:
-                                yield lfEncode(line.rstrip(b"\r\n"))
+                                yield (
+                                    format_line(lfEncode(line.rstrip(b"\r\n")))
+                                ) if format_line else lfEncode(line.rstrip(b"\r\n"))
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
@@ -129,8 +153,8 @@ class AsyncExecutor(object):
                                     break
 
                     err = b"".join(iter(self._errQueue.get, None))
-                    if err:
-                        raise Exception(err)
+                    if err and raise_except:
+                        raise Exception(lfEncode(err) + err)
                 except ValueError:
                     pass
                 finally:
@@ -139,6 +163,7 @@ class AsyncExecutor(object):
                         if self._process:
                             self._process.stdout.close()
                             self._process.stderr.close()
+                            self._process.poll()
                     except IOError:
                         pass
 
@@ -161,6 +186,7 @@ class AsyncExecutor(object):
                 except OSError:
                     pass
 
+            self._process.poll()
             self._process = None
 
     class Result(object):
@@ -180,8 +206,14 @@ class AsyncExecutor(object):
             return self
 
         def __iter__(self):
-            return self._g
+            return self
 
+        def __next__(self):
+            return next(self._g)
+
+        # for python2
+        def next(self):
+            return next(self._g)
 
 if __name__ == "__main__":
     executor = AsyncExecutor()

@@ -3,11 +3,15 @@
 import collections
 import itertools
 import re
+import logging
 
-from completor import Completor, vim
-from completor.compat import to_unicode
+from completor import Completor, vim, LIMIT, get_encoding as get_current_buffer_encoding
+from completor.compat import to_unicode, to_bytes
 
-from .utils import test_subseq, LIMIT
+from .utils import test_subseq
+
+logger = logging.getLogger('completor')
+word = re.compile(r'[^\W\d]\w*$', re.U)
 
 
 def getftime(nr):
@@ -85,16 +89,29 @@ class Buffer(Completor):
     sync = True
 
     def parse(self, base):
-        token_store.parse_buffers(base)
+        match = word.search(base)
+        if not match:
+            return []
+        identifier = match.group()
+        if len(identifier) < self.get_option('min_chars'):
+            return []
+        token_store.parse_buffers(identifier)
 
         res = set()
-        for token, factor in token_store.search(base):
-            if token == base:
+        for token, factor in token_store.search(identifier):
+            if token == identifier:
                 continue
             res.add((token, factor))
             if len(res) >= LIMIT:
                 break
 
+        # NOTE: base class Completor expects the offset in nr of bytes in the
+        # buffer's encoding (Completor.start_column will also be in nr of bytes)
+        current_buf_encoding = get_current_buffer_encoding()
+        offset = (len(to_bytes(base, current_buf_encoding)) -
+                  len(to_bytes(identifier, current_buf_encoding)))
+
         res = list(res)
         res.sort(key=lambda x: (x[1], x[0]))
-        return [{'word': token, 'menu': '[ID]'} for token, _ in res]
+        return [{'word': token, 'menu': '[ID]', 'offset': offset}
+                for token, _ in res]

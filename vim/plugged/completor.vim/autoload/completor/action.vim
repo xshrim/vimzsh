@@ -27,6 +27,9 @@ endfunction
 
 
 function! completor#action#_on_insert_enter()
+  if completor#support_popup()
+    return
+  endif
   if !exists('s:cot')
     " Record cot.
     let s:cot = &cot
@@ -36,6 +39,10 @@ endfunction
 
 
 function! completor#action#_on_insert_leave()
+  if completor#support_popup()
+    call completor#popup#hide()
+    return
+  endif
   if exists('s:cot')
     " Restore cot.
     let &cot = s:cot
@@ -45,19 +52,29 @@ endfunction
 
 function! s:trigger_complete(completions)
   let s:completions = a:completions
-  if empty(s:completions) | return | endif
-  let startcol = completor#action#completefunc(1, '')
-  let matches = completor#action#completefunc(0, '')
-  if startcol >= 0
-    try
-      call complete(startcol + 1, matches.words)
-    catch /E785\|E685/
-    endtry
+  if empty(s:completions)
+    if completor#support_popup()
+      call completor#popup#hide()
+    endif
+    return
   endif
+  try
+    if completor#support_popup()
+      call completor#popup#show(s:completions)
+    else
+      let startcol = s:completions[0].offset
+      try
+        call complete(startcol + 1, s:completions)
+      catch /E785\|E685/
+      endtry
+    endif
+  finally
+    let s:completions = []
+  endtry
 endfunction
 
 
-function! s:jump(items)
+function! s:jump(items, action)
   let tmp = tempname()
   let name = ''
   let content = []
@@ -90,7 +107,13 @@ function! s:jump(items)
   call writefile(content, tmp)
   let tags = &tags
   let wildignore = &wildignore
-  let action = len(content) == 1 ? 'tjump' : 'tselect'
+
+  if len(content) == 1 && a:action ==# 'definition'
+    let action = 'tjump'
+  else
+    let action = 'tselect'
+  endif
+
   try
     set wildignore=
     let &tags = tmp
@@ -107,10 +130,10 @@ function! s:jump(items)
 endfunction
 
 
-function! s:goto_definition(items)
+function! s:goto_definition(items, action)
   if len(a:items) > 0
     try
-      call s:jump(a:items)
+      call s:jump(a:items, a:action)
     catch /E37/
       echohl ErrorMsg
       echomsg '`hidden` should be set (set hidden)'
@@ -149,23 +172,6 @@ function! s:call_signatures(items)
 endfunction
 
 
-function! s:open_doc_window()
-  let n = bufnr('__doc__')
-  let direction = get(s:DOC_POSITION, g:completor_doc_position, s:DOC_POSITION.bottom)
-  if n > 0
-    let i = index(tabpagebuflist(tabpagenr()), n)
-    if i >= 0
-      " Just jump to the doc window
-      silent execute (i + 1).'wincmd w'
-    else
-      silent execute direction.' sbuffer '.n
-    endif
-  else
-    silent execute direction.' split __doc__'
-  endif
-endfunction
-
-
 function! s:show_doc(items)
   if empty(a:items)
     return
@@ -174,14 +180,21 @@ function! s:show_doc(items)
   if empty(doc)
     return
   endif
-  call s:open_doc_window()
 
-  setlocal modifiable noswapfile buftype=nofile
+  let direction = get(s:DOC_POSITION, g:completor_doc_position, s:DOC_POSITION.bottom)
+  let height = min([len(doc), &previewheight])
+  silent execute direction.' pedit +resize'.height.' __doc__'
+
+  wincmd P
+  setlocal modifiable noreadonly
   silent normal! ggdG
   silent $put=doc
   silent normal! 1Gdd
-  setlocal nomodifiable nomodified foldlevel=200
+  setlocal nomodifiable nomodified readonly
+  setlocal noswapfile buftype=nofile nobuflisted bufhidden=wipe
+  setlocal foldlevel=200
   nnoremap <buffer> q ZQ
+  wincmd p
 endfunction
 
 
@@ -206,8 +219,8 @@ function! completor#action#trigger(items)
   endif
   if s:action ==# 'complete'
     call s:trigger_complete(a:items)
-  elseif s:action ==# 'definition'
-    call s:goto_definition(a:items)
+  elseif s:action ==# 'definition' || s:action ==# 'implementation' || s:action ==# 'references'
+    call s:goto_definition(a:items, s:action)
   elseif s:action ==# 'signature'
     call s:call_signatures(a:items)
   elseif s:action ==# 'doc'
@@ -216,33 +229,26 @@ function! completor#action#trigger(items)
     silent edit!
   elseif s:action ==# 'hover'
     if !empty(a:items)
-      echo a:items[0]
+      if completor#support_popup()
+        let p = popup_create(split(a:items[0], "\n"), #{
+              \ moved: 'word',
+              \ pos: 'botleft',
+              \ line: 'cursor-1',
+              \ col: 'cursor',
+              \ zindex: 9999,
+              \ padding: [1, 2, 1, 2],
+              \ })
+        call win_execute(p, 'set ft=markdown')
+      else
+        echo a:items[0]
+      endif
     endif
   endif
 endfunction
 
 
-function! completor#action#stream(msg)
-  call completor#utils#on_stream(s:action, a:msg)
-endfunction
-
-
-function! completor#action#completefunc(findstart, base)
-  if a:findstart
-    if empty(s:completions)
-      return -2
-    endif
-    return completor#utils#get_start_column()
-  endif
-  try
-    let ret = {'words': s:completions}
-    if g:completor_refresh_always
-      let ret.refresh = 'always'
-    endif
-    return ret
-  finally
-    let s:completions = []
-  endtry
+function! completor#action#stream(name, msg)
+  call completor#utils#on_stream(a:name, s:action, a:msg)
 endfunction
 
 

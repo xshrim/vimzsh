@@ -638,7 +638,7 @@ checkcommand() {
 export EDITOR=vim
 
 # 本地二进制路径
-export PATH=$cdir/bin:$PATH
+export PATH=$PATH:$cdir/bin
 
 #命令别名 {{{
 if [ -f ~/.vimrc ];then
@@ -666,11 +666,13 @@ type htop &>/dev/null && alias top='htop'
 
 type bat &>/dev/null && alias cat='bat --paging never -p'
 
-if type highlight &>/dev/null;then
-  alias highlight="highlight -D $cdir/highlight"
-  ! highlight -h &> /dev/null && type highlight.low &>/dev/null && alias highlight="highlight.low -D $cdir/highlight --add-config-dir=$cdir/highlight"
-  alias cat='h'
-  # alias highlight="highlight -D $cdir/highlight --config-file=$cdir/highlight/filetypes.conf"
+type highlight &>/dev/null && alias highlight='highlight -O xterm256'
+
+if ! type highlight &>/dev/null;then
+  #alias highlight="highlight -O xterm256 -D $cdir/highlight"
+  #! highlight -h &> /dev/null && type highlight.low &>/dev/null && alias highlight="highlight.low -O xterm256 -D $cdir/highlight --add-config-dir=$cdir/highlight"
+  #alias cat='h'
+  # alias highlight="highlight -O xterm256 -D $cdir/highlight --config-file=$cdir/highlight/filetypes.conf"
 fi
 
 alias ls='ls -F --color=auto'
@@ -1297,6 +1299,29 @@ function lower() {
 
 function capitalize() {
     echo "$*" | tr '[:upper:]' '[:lower:]' | sed 's/^\w\|\s\w/\U&/g'
+}
+
+#########################################################################
+# 代理切换
+#########################################################################
+# 开启代理
+function proxyon(){
+    port=7897
+    if [ -n "$1" ]; then
+        port=$1
+    fi
+    export ALL_PROXY=socks5://127.0.0.1:$port
+    export http_proxy=http://127.0.0.1:$port
+    export https_proxy=http://127.0.0.1:$port
+    echo -e "已开启代理 <127.0.0.1:$port>"
+}
+
+# 关闭代理
+function proxyoff(){
+    unset ALL_PROXY
+    unset http_proxy
+    unset https_proxy
+    echo -e "已关闭代理"
 }
 
 #########################################################################

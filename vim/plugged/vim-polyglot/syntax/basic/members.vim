@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'typescript') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'typescript', 'syntax/basic/members.vim')
+  finish
+endif
 
 syntax keyword typescriptConstructor           contained constructor
   \ nextgroup=@typescriptCallSignature
@@ -7,7 +9,7 @@ syntax keyword typescriptConstructor           contained constructor
 
 syntax cluster memberNextGroup contains=typescriptMemberOptionality,typescriptTypeAnnotation,@typescriptCallSignature
 
-syntax match typescriptMember /\K\k*/
+syntax match typescriptMember /#\?\K\k*/
   \ nextgroup=@memberNextGroup
   \ contained skipwhite
 
@@ -34,7 +36,7 @@ syntax keyword typescriptClassStatic static
 
 syntax keyword typescriptAccessibilityModifier public private protected contained
 
-syntax keyword typescriptReadonlyModifier readonly contained
+syntax keyword typescriptReadonlyModifier readonly override contained
 
 syntax region  typescriptStringMember   contained
   \ start=/\z(["']\)/  skip=/\\\\\|\\\z1\|\\\n/  end=/\z1/
@@ -43,8 +45,6 @@ syntax region  typescriptStringMember   contained
 
 syntax region  typescriptComputedMember   contained matchgroup=typescriptProperty
   \ start=/\[/rs=s+1 end=/]/
-  \ contains=@typescriptValue,typescriptMember,typescriptMappedIn
+  \ contains=@typescriptValue,typescriptMember,typescriptMappedIn,typescriptCastKeyword
   \ nextgroup=@memberNextGroup
   \ skipwhite skipempty
-
-endif

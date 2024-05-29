@@ -11,7 +11,12 @@ if exists('g:leaderf_loaded') || &compatible
     finish
 elseif v:version < 704 || v:version == 704 && has("patch330") == 0
     echohl Error
-    echo "LeaderF requires Vim 7.4.330+."
+    echomsg "LeaderF requires Vim 7.4.330+."
+    echohl None
+    finish
+elseif !has('pythonx') && !has('python3') && !has('python')
+    echohl Error
+    echomsg "LeaderF requires Vim compiled with python and/or a compatible python version."
     echohl None
     finish
 else
@@ -27,9 +32,22 @@ endfunction
 call s:InitVar('g:Lf_ShortcutF', '<Leader>f')
 call s:InitVar('g:Lf_ShortcutB', '<Leader>b')
 call s:InitVar('g:Lf_WindowPosition', 'bottom')
-call s:InitVar('g:Lf_CacheDirectory', $HOME)
 call s:InitVar('g:Lf_MruBufnrs', [])
 call s:InitVar('g:Lf_PythonExtensions', {})
+call s:InitVar('g:Lf_PreviewWindowID', {})
+
+if has('win32') || has('win64')
+    let s:cache_dir = $APPDATA
+    if s:cache_dir == ''
+        let s:cache_dir = $HOME
+    endif
+else
+    let s:cache_dir = $XDG_CACHE_HOME
+    if s:cache_dir == ''
+        let s:cache_dir = $HOME . '/.cache'
+    endif
+endif
+call s:InitVar('g:Lf_CacheDirectory', s:cache_dir)
 
 function! g:LfNoErrMsgMatch(expr, pat)
     try
@@ -58,17 +76,64 @@ function! g:LfRegisterPythonExtension(name, dict)
     let g:Lf_PythonExtensions[a:name] = a:dict
 endfunction
 
-augroup LeaderF_Mru
-    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
-                \ call lfMru#recordBuffer(expand('<abuf>'))
-augroup END
+let s:leaderf_path = expand("<sfile>:p:h:h")
+function! s:InstallCExtension(install) abort
+    let win_exists = 0
+    let bot_split = "botright new | let w:leaderf_installC = 1 |"
+    let use_cur_win = has("nvim") ? "" : " ++curwin"
+    for n in range(winnr('$'))
+        if getwinvar(n+1, 'leaderf_installC', 0) == 1
+            let win_exists = 1
+            let bot_split = ""
+            exec string(n+1) . "wincmd w"
+            break
+        endif
+    endfor
+    let terminal = exists(':terminal') == 2 ? bot_split ." terminal". use_cur_win : "!"
+    if has('win32') || has('win64')
+        let shell =  "cmd /c"
+        let cd_cmd = "cd /d"
+        let script = "install.bat"
+    else
+        let shell =  "sh -c"
+        let cd_cmd = "cd"
+        let script = "./install.sh"
+    endif
+    let reverse = a:install ? "" : " --reverse"
+    let cmd = printf('%s %s "%s %s && %s%s"', terminal, shell, cd_cmd, s:leaderf_path, script, reverse)
+    exec cmd
+    if has("nvim")
+        norm! G
+    endif
+endfunction
+
+function! s:Normalize(filename)
+    if has("nvim") && (has('win32') || has('win64'))
+        if &shellslash
+            return tr(a:filename, '\', '/')
+        else
+            return tr(a:filename, '/', '\')
+        endif
+    else
+        return a:filename
+    endif
+endfunction
+
+if get(g:, 'Lf_MruEnable', 1) == 1
+    augroup LeaderF_Mru
+        autocmd BufEnter,BufWritePost * call lfMru#record(s:Normalize(expand('<afile>:p'))) |
+                    \ call lfMru#recordBuffer(expand('<abuf>'))
+    augroup END
+endif
 
 augroup LeaderF_Gtags
     autocmd!
     if get(g:, 'Lf_GtagsAutoGenerate', 0) == 1
         autocmd BufRead * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 0)
     endif
-    autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
+    if get(g:, 'Lf_GtagsAutoUpdate', 1) == 1
+        autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
+    endif
 augroup END
 
 noremap <silent> <Plug>LeaderfFileTop        :<C-U>Leaderf file --top<CR>
@@ -101,7 +166,7 @@ noremap <Plug>LeaderfRgBangCwordRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCm
 noremap <Plug>LeaderfRgBangCwordRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(0, 1, 1, 1)<CR>
 
 noremap <Plug>LeaderfRgWORDLiteralNoBoundary :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 0, 0)<CR>
-noremap <Plug>LeaderfRgWORDLiteralBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 0, 1)<CR>
+noremap <Plug>LeaderfRgWORDLiteralBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 0, 0)<CR>
 noremap <Plug>LeaderfRgWORDRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 1, 0)<CR>
 noremap <Plug>LeaderfRgWORDRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 1, 1)<CR>
 
@@ -115,8 +180,18 @@ vnoremap <silent> <Plug>LeaderfRgBangVisualLiteralBoundary   :<C-U><C-R>=leaderf
 vnoremap <silent> <Plug>LeaderfRgBangVisualRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 1, 0)<CR>
 vnoremap <silent> <Plug>LeaderfRgBangVisualRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 1, 1)<CR>
 
-command! -bar -nargs=? -complete=dir LeaderfFile Leaderf file <args>
-command! -bar -nargs=? -complete=dir LeaderfFileFullScreen Leaderf file --fullScreen <args>
+noremap <Plug>LeaderfGtagsDefinition :<C-U><C-R>=leaderf#Gtags#startCmdline(0, 1, 'd')<CR><CR>
+noremap <Plug>LeaderfGtagsReference :<C-U><C-R>=leaderf#Gtags#startCmdline(0, 1, 'r')<CR><CR>
+noremap <Plug>LeaderfGtagsSymbol :<C-U><C-R>=leaderf#Gtags#startCmdline(0, 1, 's')<CR><CR>
+noremap <Plug>LeaderfGtagsGrep :<C-U><C-R>=leaderf#Gtags#startCmdline(0, 1, 'g')<CR><CR>
+
+vnoremap <silent> <Plug>LeaderfGtagsDefinition :<C-U><C-R>=leaderf#Gtags#startCmdline(2, 1, 'd')<CR><CR>
+vnoremap <silent> <Plug>LeaderfGtagsReference :<C-U><C-R>=leaderf#Gtags#startCmdline(2, 1, 'r')<CR><CR>
+vnoremap <silent> <Plug>LeaderfGtagsSymbol :<C-U><C-R>=leaderf#Gtags#startCmdline(2, 1, 's')<CR><CR>
+vnoremap <silent> <Plug>LeaderfGtagsGrep :<C-U><C-R>=leaderf#Gtags#startCmdline(2, 1, 'g')<CR><CR>
+
+command! -bar -nargs=* -complete=dir LeaderfFile Leaderf file <args>
+command! -bar -nargs=* -complete=dir LeaderfFileFullScreen Leaderf file --fullScreen <args>
 command! -bar -nargs=1 LeaderfFilePattern Leaderf file --input <args>
 command! -bar -nargs=0 LeaderfFileCword Leaderf file --cword
 
@@ -173,6 +248,19 @@ command! -bar -nargs=0 LeaderfColorscheme Leaderf colorscheme
 command! -bar -nargs=0 LeaderfRgInteractive call leaderf#Rg#Interactive()
 command! -bar -nargs=0 LeaderfRgRecall exec "Leaderf! rg --recall"
 
+command! -bar -nargs=0 LeaderfFiletype Leaderf filetype
+
+command! -bar -nargs=0 LeaderfCommand Leaderf command
+
+command! -bar -nargs=0 LeaderfWindow Leaderf window
+
+command! -bar -nargs=0 LeaderfQuickFix Leaderf quickfix
+command! -bar -nargs=0 LeaderfLocList  Leaderf loclist
+
+command! -bar -nargs=0 LeaderfGit           Leaderf git
+command! -bar -nargs=0 LeaderfGitSplitDiff  Leaderf git diff --current-file --side-by-side
+command! -bar -nargs=0 LeaderfGitNavigationOpen call leaderf#Git#ExplorerPageDisplay()
+
 try
     if g:Lf_ShortcutF != ""
         exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
@@ -188,3 +276,5 @@ catch /^Vim\%((\a\+)\)\=:E227/
 endtry
 
 command! -nargs=* -bang -complete=customlist,leaderf#Any#parseArguments Leaderf call leaderf#Any#start(<bang>0, <q-args>)
+command! -nargs=0 LeaderfInstallCExtension call s:InstallCExtension(1)
+command! -nargs=0 LeaderfUninstallCExtension call s:InstallCExtension(0)

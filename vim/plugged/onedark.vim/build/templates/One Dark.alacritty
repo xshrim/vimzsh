@@ -2,13 +2,18 @@
 colors:
   # Default colors
   primary:
-    background: '0x{{=c[0]}}'
-    foreground: '0x{{=c[7]}}'
+    foreground: '0x{{=c.foreground}}'
+    background: '0x{{=c.background}}'
 
   # Cursor colors
   cursor:
     text: '0x{{=c[0]}}'
     cursor: '0x{{=c[7]}}'
+
+  # Selection colors
+  selection:
+    text: CellForeground
+    background: '0x{{=c[8]}}'
 
   # Normal colors
   normal:
@@ -31,4 +36,3 @@ colors:
     magenta: '0x{{=c[13]}}'
     cyan:    '0x{{=c[14]}}'
     white:   '0x{{=c[15]}}'
-

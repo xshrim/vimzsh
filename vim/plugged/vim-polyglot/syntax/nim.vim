@@ -1,31 +1,33 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'nim') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'nim', 'syntax/nim.vim')
+  finish
+endif
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
-if version < 600
+if v:version < 600
   syntax clear
-elseif exists("b:current_syntax")
+elseif exists('b:current_syntax')
   finish
 endif
 
 " Keep user-supplied options
-if !exists("nim_highlight_numbers")
+if !exists('nim_highlight_numbers')
   let nim_highlight_numbers = 1
 endif
-if !exists("nim_highlight_builtins")
+if !exists('nim_highlight_builtins')
   let nim_highlight_builtins = 1
 endif
-if !exists("nim_highlight_exceptions")
+if !exists('nim_highlight_exceptions')
   let nim_highlight_exceptions = 1
 endif
-if !exists("nim_highlight_space_errors")
+if !exists('nim_highlight_space_errors')
   let nim_highlight_space_errors = 1
 endif
-if !exists("nim_highlight_special_vars")
+if !exists('nim_highlight_special_vars')
   let nim_highlight_special_vars = 1
 endif
 
-if exists("nim_highlight_all")
+if exists('nim_highlight_all')
   let nim_highlight_numbers      = 1
   let nim_highlight_builtins     = 1
   let nim_highlight_exceptions   = 1
@@ -114,6 +116,7 @@ if nim_highlight_builtins == 1
   syn keyword nimBuiltin addquitproc addQuitProc
   syn keyword nimBuiltin copy setlen setLen newstring newString zeromem zeroMem copymem copyMem movemem moveMem
   syn keyword nimBuiltin equalmem equalMem alloc alloc0 realloc dealloc assert
+  syn keyword nimBuiltin typedesc typed untyped stmt expr
   syn keyword nimBuiltin echo swap getrefcount getRefcount getcurrentexception getCurrentException Msg
   syn keyword nimBuiltin getoccupiedmem getOccupiedMem getfreemem getFreeMem gettotalmem getTotalMem isnil isNil seqtoptr seqToPtr
   syn keyword nimBuiltin find pop GC_disable GC_enable GC_fullCollect
@@ -158,8 +161,8 @@ syn sync match nimSync grouphere NONE "):$"
 syn sync maxlines=200
 syn sync minlines=2000
 
-if version >= 508 || !exists("did_nim_syn_inits")
-  if version <= 508
+if v:version >= 508 || !exists('did_nim_syn_inits')
+  if v:version <= 508
     let did_nim_syn_inits = 1
     command -nargs=+ HiLink hi link <args>
   else
@@ -202,7 +205,5 @@ if version >= 508 || !exists("did_nim_syn_inits")
   delcommand HiLink
 endif
 
-let b:current_syntax = "nim"
+let b:current_syntax = 'nim'
 
-
-endif

@@ -1,12 +1,14 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'ocaml') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'ocaml', 'indent/ocaml.vim')
+  finish
+endif
 
 " Vim indent file
 " Language:     OCaml
 " Maintainers:  Jean-Francois Yuen   <jfyuen@happycoders.org>
 "               Mike Leary           <leary@nwlink.com>
 "               Markus Mottl         <markus.mottl@gmail.com>
-" URL:          http://www.ocaml.info/vim/indent/ocaml.vim
-" Last Change:  2013 Jun 29
+" URL:          https://github.com/ocaml/vim-ocaml
+" Last Change:  2017 Jun 13
 "               2005 Jun 25 - Fixed multiple bugs due to 'else\nreturn ind' working
 "               2005 May 09 - Added an option to not indent OCaml-indents specially (MM)
 "               2013 June   - commented textwidth (Marc Weber)
@@ -26,14 +28,18 @@ setlocal indentkeys+=0=and,0=class,0=constraint,0=done,0=else,0=end,0=exception,
 setlocal nolisp
 setlocal nosmartindent
 
+let b:undo_indent = "setl et< inde< indk< lisp< si<"
+
 " At least Marc Weber and Markus Mottl do not like this:
 " setlocal textwidth=80
 
 " Comment formatting
 if !exists("no_ocaml_comments")
  if (has("comments"))
-   setlocal comments=sr:(*,mb:*,ex:*)
+   setlocal comments=sr:(*\ ,mb:\ ,ex:*)
+   setlocal comments^=sr:(**,mb:\ \ ,ex:*)
    setlocal fo=cqort
+  let b:undo_indent .= " | setl com< fo<"
  endif
 endif
 
@@ -103,7 +109,7 @@ function! GetOCamlIndent()
 
  " Return double 'shiftwidth' after lines matching:
  if lline =~ '^\s*|.*->\s*$'
-   return ind + &sw + &sw
+   return ind + 2 * shiftwidth()
  endif
 
  let line = getline(v:lnum)
@@ -174,7 +180,7 @@ function! GetOCamlIndent()
  " Indent if current line begins with 'and':
  elseif line =~ '^\s*and\>'
    if lline !~ '^\s*\(and\|let\|type\)\>\|\<end\s*$'
-     return ind - &sw
+     return ind - shiftwidth()
    endif
 
  " Indent if current line begins with 'with':
@@ -201,14 +207,14 @@ function! GetOCamlIndent()
  " or 'method':
  elseif line =~ '^\s*\(constraint\|inherit\|initializer\|method\)\>'
    if lline !~ s:obj
-     return indent(search('\<\(object\|object\s*(.*)\)\s*$', 'bW')) + &sw
+     return indent(search('\<\(object\|object\s*(.*)\)\s*$', 'bW')) + shiftwidth()
    endif
 
  endif
 
  " Add a 'shiftwidth' after lines ending with:
  if lline =~ '\(:\|=\|->\|<-\|(\|\[\|{\|{<\|\[|\|\[<\|\<\(begin\|do\|else\|fun\|function\|functor\|if\|initializer\|object\|parser\|private\|sig\|struct\|then\|try\)\|\<object\s*(.*)\)\s*$'
-   let ind = ind + &sw
+   let ind = ind + shiftwidth()
 
  " Back to normal indent after lines ending with ';;':
  elseif lline =~ ';;\s*$' && lline !~ '^\s*;;'
@@ -265,7 +271,7 @@ function! GetOCamlIndent()
 
  " Subtract a 'shiftwidth' after lines matching 'match ... with parser':
  if lline =~ '\<match\>.*\<with\>\s*\<parser\s*$'
-   let ind = ind - &sw
+   let ind = ind - shiftwidth()
  endif
 
  return ind
@@ -273,5 +279,3 @@ function! GetOCamlIndent()
 endfunction
 
 " vim:sw=2
-
-endif

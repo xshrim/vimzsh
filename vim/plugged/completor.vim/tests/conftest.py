@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import sys
 import pytest
 import mock
@@ -45,7 +46,10 @@ class Vim(object):
         self.current.buffer.options = {'fileencoding': b'utf-8'}
         self.funcs = {
             'getbufvar': lambda nr, var: b'',
-            'completor#utils#in_comment_or_string': lambda: 0
+            'completor#utils#in_comment_or_string': lambda: 0,
+            'completor#support_popup': lambda: 0,
+            'expand': lambda x: x,
+            'completor#utils#tempname': lambda: '/tmp/xxx-vim',
         }
 
     def eval(self, expr):
@@ -95,3 +99,7 @@ class Buffer(list):
 @pytest.fixture
 def create_buffer():
     return lambda bufnr, name='': Buffer(bufnr, name)
+
+
+os.environ['DISABLE_CACHE'] = '1'
+import completers.common  # noqa

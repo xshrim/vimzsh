@@ -168,7 +168,7 @@ Other                                                   *completor-other*
 
 *g:completor_enable_{filetype}*
         Used to explicitly allow {filetype} completions. If this
-        option is set, only file types in this list can be allowd for
+        option is set, only file types in this list can be allowed for
         {filetype} completion.
 
         For example enable neosnippet completion for only vim:
@@ -235,7 +235,10 @@ Other                                                   *completor-other*
             vsplit: same as :vsplit.
             tab:    same as :tab split
 
+*g:completor_filename_completion_in_only_comment*
+        This option allows filename completion in only comment or strings.
 
+        Default: 1
 ==============================================================================
 5. Write a new completer                                *completor-writing*
 

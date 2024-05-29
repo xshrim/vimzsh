@@ -1,15 +1,21 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'typescript') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'typescript', 'syntax/basic/type.vim')
+  finish
+endif
 
 " Types
 syntax match typescriptOptionalMark /?/ contained
 
+syntax cluster typescriptTypeParameterCluster contains=
+  \ typescriptTypeParameter,
+  \ typescriptGenericDefault
+
 syntax region typescriptTypeParameters matchgroup=typescriptTypeBrackets
   \ start=/</ end=/>/
-  \ contains=typescriptTypeParameter
+  \ contains=@typescriptTypeParameterCluster
   \ contained
 
 syntax match typescriptTypeParameter /\K\k*/
-  \ nextgroup=typescriptConstraint,typescriptGenericDefault
+  \ nextgroup=typescriptConstraint
   \ contained skipwhite skipnl
 
 syntax keyword typescriptConstraint extends
@@ -52,12 +58,25 @@ syntax cluster typescriptPrimaryType contains=
   \ typescriptTupleType,
   \ typescriptTypeQuery,
   \ typescriptStringLiteralType,
-  \ typescriptReadonlyArrayKeyword
+  \ typescriptTemplateLiteralType,
+  \ typescriptReadonlyArrayKeyword,
+  \ typescriptAssertType
 
 syntax region  typescriptStringLiteralType contained
   \ start=/\z(["']\)/  skip=/\\\\\|\\\z1\|\\\n/  end=/\z1\|$/
   \ nextgroup=typescriptUnion
   \ skipwhite skipempty
+
+syntax region  typescriptTemplateLiteralType contained
+  \ start=/`/  skip=/\\\\\|\\`\|\n/  end=/`\|$/
+  \ contains=typescriptTemplateSubstitutionType
+  \ nextgroup=typescriptTypeOperator
+  \ skipwhite skipempty
+
+syntax region  typescriptTemplateSubstitutionType matchgroup=typescriptTemplateSB
+  \ start=/\${/ end=/}/
+  \ contains=@typescriptType
+  \ contained
 
 syntax region typescriptParenthesizedType matchgroup=typescriptParens
   \ start=/(/ end=/)/
@@ -81,7 +100,7 @@ syntax region typescriptObjectType matchgroup=typescriptBraces
   \ start=/{/ end=/}/
   \ contains=@typescriptTypeMember,typescriptEndColons,@typescriptComments,typescriptAccessibilityModifier,typescriptReadonlyModifier
   \ nextgroup=@typescriptTypeOperator
-  \ contained skipwhite fold
+  \ contained skipwhite skipnl fold
 
 syntax cluster typescriptTypeMember contains=
   \ @typescriptCallSignature,
@@ -89,15 +108,20 @@ syntax cluster typescriptTypeMember contains=
   \ typescriptIndexSignature,
   \ @typescriptMembers
 
+syntax match typescriptTupleLable /\K\k*?\?:/
+    \ contained
+
 syntax region typescriptTupleType matchgroup=typescriptBraces
   \ start=/\[/ end=/\]/
-  \ contains=@typescriptType
-  \ contained skipwhite oneline
+  \ contains=@typescriptType,@typescriptComments,typescriptRestOrSpread,typescriptTupleLable
+  \ contained skipwhite
 
 syntax cluster typescriptTypeOperator
-  \ contains=typescriptUnion,typescriptTypeBracket
+  \ contains=typescriptUnion,typescriptTypeBracket,typescriptConstraint,typescriptConditionalType
 
 syntax match typescriptUnion /|\|&/ contained nextgroup=@typescriptPrimaryType skipwhite skipempty
+
+syntax match typescriptConditionalType /?\|:/ contained nextgroup=@typescriptPrimaryType skipwhite skipempty
 
 syntax cluster typescriptFunctionType contains=typescriptGenericFunc,typescriptFuncType
 syntax region typescriptGenericFunc matchgroup=typescriptTypeBrackets
@@ -108,7 +132,7 @@ syntax region typescriptGenericFunc matchgroup=typescriptTypeBrackets
   \ contained skipwhite skipnl
 
 syntax region typescriptFuncType matchgroup=typescriptParens
-  \ start=/(/ end=/)\s*=>/me=e-2
+  \ start=/(\(\k\+:\|)\)\@=/ end=/)\s*=>/me=e-2
   \ contains=@typescriptParameterList
   \ nextgroup=typescriptFuncTypeArrow
   \ contained skipwhite skipnl oneline
@@ -118,7 +142,6 @@ syntax match typescriptFuncTypeArrow /=>/
   \ containedin=typescriptFuncType
   \ contained skipwhite skipnl
 
-
 syntax keyword typescriptConstructorType new
   \ nextgroup=@typescriptFunctionType
   \ contained skipwhite skipnl
@@ -127,6 +150,10 @@ syntax keyword typescriptUserDefinedType is
   \ contained nextgroup=@typescriptType skipwhite skipempty
 
 syntax keyword typescriptTypeQuery typeof keyof
+  \ nextgroup=typescriptTypeReference
+  \ contained skipwhite skipnl
+
+syntax keyword typescriptAssertType asserts
   \ nextgroup=typescriptTypeReference
   \ contained skipwhite skipnl
 
@@ -149,6 +176,7 @@ syntax match typescriptTypeAnnotation /:/
 syntax cluster typescriptParameterList contains=
   \ typescriptTypeAnnotation,
   \ typescriptAccessibilityModifier,
+  \ typescriptReadonlyModifier,
   \ typescriptOptionalMark,
   \ typescriptRestOrSpread,
   \ typescriptFuncComma,
@@ -187,5 +215,3 @@ syntax region typescriptAliasDeclaration matchgroup=typescriptUnion
 syntax keyword typescriptReadonlyArrayKeyword readonly
   \ nextgroup=@typescriptPrimaryType
   \ skipwhite
-
-endif

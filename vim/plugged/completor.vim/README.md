@@ -1,7 +1,7 @@
 Completor
 =========
 
-[![Build Status](https://travis-ci.org/maralla/completor.vim.svg?branch=master)](https://travis-ci.org/maralla/completor.vim)
+[![Test Status](https://github.com/maralla/completor.vim/workflows/unit%20test/badge.svg)](https://github.com/maralla/completor.vim/actions)
 
 Completor is an asynchronous code completion framework for vim8. New features
 of vim8 are used to implement the fast completion engine with low overhead.
@@ -74,6 +74,11 @@ You can add some complete functions with shell command by [completor-shell](http
 
 Completion from words in tmux panes is supported by [completor-tmux](https://github.com/ferreum/completor-tmux).
 
+#### syntax
+
+Completion from syntax file is supported by [completor-necosyntax](https://github.com/kyouryuukunn/completor-necosyntax).
+
+
 #### Python
 Use [jedi](https://github.com/davidhalter/jedi) for completion. jedi should be
 installed for semantic completion.  Install jedi to global environment or in virtualenv:
@@ -98,7 +103,7 @@ let g:completor_racer_binary = '/path/to/racer'
 
 #### Javascript
 Use [tern](https://github.com/ternjs/tern) for completion. To install tern
-you must have node and either npm or yarn installed. Then run:
+you must have node and either npm or yarn installed. Then go to the `completor.vim` directory and run:
 
 ```bash
 make js
@@ -108,6 +113,13 @@ The node executable path can be specified using:
 
 ```vim
 let g:completor_node_binary = '/path/to/node'
+```
+
+If you're using vim-plug, you can just use post install hook to do this for you.
+
+```
+Plug 'ternjs/tern_for_vim', { 'do': 'npm install' }
+Plug 'maralla/completor.vim', { 'do': 'make js' }
 ```
 
 #### c/c++

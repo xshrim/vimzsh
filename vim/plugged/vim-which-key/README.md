@@ -1,6 +1,6 @@
 # vim-which-key
 
-<!-- vim-markdown-toc GFM -->
+<!-- TOC GFM -->
 
 * [Introduction](#introduction)
 * [Pros.](#pros)
@@ -12,15 +12,18 @@
 * [Requirement](#requirement)
 * [Usage](#usage)
     * [`timeoutlen`](#timeoutlen)
+    * [Special keys](#special-keys)
     * [Configuration](#configuration)
-        * [Miminal Configuration](#miminal-configuration)
+        * [Minimal Configuration](#minimal-configuration)
         * [Example](#example)
         * [Hide statusline](#hide-statusline)
     * [Commands](#commands)
     * [Options](#options)
+    * [FAQ](#faq)
+        * [How to map some special keys like `<BS>`?](#how-to-map-some-special-keys-like-bs)
 * [Credit](#credit)
 
-<!-- vim-markdown-toc -->
+<!-- /TOC -->
 
 ## Introduction
 
@@ -104,9 +107,16 @@ Pressing other keys within `timeoutlen` will either complete the mapping or open
 
 Please note that no matter which mappings and menus you configure, your original leader mappings will remain unaffected. The key guide is an additional layer. It will only activate, when you do not complete your input during the timeoutlen duration.
 
+### Special keys
+
+- Use <kbd>BS</kbd> to show the upper level mappings.
+
 ### Configuration
 
-#### Miminal Configuration
+- For neovim, [nvim-whichkey-setup.lua](https://github.com/AckslD/nvim-whichkey-setup.lua) provides a wrapper around vim-which-key to simplify configuration in lua.
+  It also solves issues (see #126) when the mapped command is more complex and makes it easy to also map `localleader`.
+
+#### Minimal Configuration
 
 `:WhichKey` and `:WhichKeyVisual` are the primary way of interacting with this plugin.
 
@@ -125,9 +135,10 @@ If no description dictionary is available, the right-hand-side of all mappings w
 
 <p align="center"><img width="800px" src="https://raw.githubusercontent.com/liuchengxu/img/master/vim-which-key/raw-spc-w.png"></p>
 
-The dictionary configuration is necessary to provide group names or a description text.
+The dictionary configuration is necessary to provide group names or a description text:
 
 ```vim
+let g:which_key_map = {}
 let g:which_key_map['w'] = {
       \ 'name' : '+windows' ,
       \ 'w' : ['<C-W>w'     , 'other-window']          ,
@@ -140,14 +151,15 @@ let g:which_key_map['w'] = {
       \ 'l' : ['<C-W>l'     , 'window-right']          ,
       \ 'k' : ['<C-W>k'     , 'window-up']             ,
       \ 'H' : ['<C-W>5<'    , 'expand-window-left']    ,
-      \ 'J' : ['resize +5'  , 'expand-window-below']   ,
+      \ 'J' : [':resize +5'  , 'expand-window-below']   ,
       \ 'L' : ['<C-W>5>'    , 'expand-window-right']   ,
-      \ 'K' : ['resize -5'  , 'expand-window-up']      ,
+      \ 'K' : [':resize -5'  , 'expand-window-up']      ,
       \ '=' : ['<C-W>='     , 'balance-window']        ,
       \ 's' : ['<C-W>s'     , 'split-window-below']    ,
       \ 'v' : ['<C-W>v'     , 'split-window-below']    ,
       \ '?' : ['Windows'    , 'fzf-window']            ,
       \ }
+call which_key#register('<Space>', "g:which_key_map")
 ```
 
 <p align="center"><img width="800px" src="https://raw.githubusercontent.com/liuchengxu/img/master/vim-which-key/spc-w.png"></p>
@@ -159,6 +171,16 @@ nnoremap <leader>1 :1wincmd w<CR>
 let g:which_key_map.1 = 'which_key_ignore'
 ```
 
+If you want to hide a group of non-top level mappings, set the `name` to `'which_key_ignore'`. For example,
+
+```vim
+nnoremap <leader>_a :echom '_a'<CR>
+nnoremap <leader>_b :echom '_b'<CR>
+let g:which_key_map['_'] = { 'name': 'which_key_ignore' }
+```
+
+If you want to hide all mappings outside of the elements of the description dictionary, use: `let g:which_key_ignore_outside_mappings = 1`.
+
 #### Example
 
 You can configure a Dict for each prefix so that the display is more readable.
@@ -166,10 +188,16 @@ You can configure a Dict for each prefix so that the display is more readable.
 To make the guide pop up **Register the description dictionary for the prefix first**. Assuming `Space` is your leader key and the Dict for configuring `Space` is `g:which_key_map`:
 
 ```vim
-call which_key#register('<Space>', "g:which_key_map")
-
 nnoremap <silent> <leader> :<c-u>WhichKey '<Space>'<CR>
 vnoremap <silent> <leader> :<c-u>WhichKeyVisual '<Space>'<CR>
+
+call which_key#register('<Space>', "g:which_key_map")
+```
+
+The above registers the same description dictionary for both normal and visual modes. To use a separate description dictionary for each mode: add a third argument specifying which mode:
+```vim
+call which_key#register('<Space>', "g:which_key_map", 'n')
+call which_key#register('<Space>', "g:which_key_map_visual", 'v')
 ```
 
 The next step is to add items to `g:which_key_map`:
@@ -206,7 +234,14 @@ let g:which_key_map.o = {
 " =======================================================
 " Create menus not based on existing mappings:
 " =======================================================
-" Provide commands(ex-command, <Plug>/<C-W>/<C-d> mapping, etc.) and descriptions for existing mappings
+" Provide commands(ex-command, <Plug>/<C-W>/<C-d> mapping, etc.)
+" and descriptions for the existing mappings.
+"
+" Note:
+" Some complicated ex-cmd may not work as expected since they'll be
+" feed into `feedkeys()`, in which case you have to define a decicated
+" Command or function wrapper to make it work with vim-which-key.
+" Ref issue #126, #133 etc.
 let g:which_key_map.b = {
       \ 'name' : '+buffer' ,
       \ '1' : ['b1'        , 'buffer 1']        ,
@@ -263,18 +298,47 @@ autocmd  FileType which_key set laststatus=0 noshowmode noruler
 
 See more details about commands and options via `:h vim-which-key`.
 
-Command              | Description
-:----                | :----:
-`:WhichKey {prefix}` | Open the guide window for the given prefix
-`:WhichKey! {dict}`  | Open the guide window for a given dictionary directly
+| Command              |                      Description                      |
+| :------------------- | :---------------------------------------------------: |
+| `:WhichKey {prefix}` |      Open the guide window for the given prefix       |
+| `:WhichKey! {dict}`  | Open the guide window for a given dictionary directly |
 
 ### Options
 
-Variable               | Default    | Description
-:----                  | :----:     | :----:
-`g:which_key_vertical` | 0          | show popup vertically
-`g:which_key_position` | `botright` | split a window at the bottom
-`g:which_key_hspace`   | 5          | minimum horizontal space between columns
+| Variable               |  Default   |                 Description                 |
+| :--------------------- | :--------: | :-----------------------------------------: |
+| `g:which_key_vertical` |     0      |            show popup vertically            |
+| `g:which_key_position` | `botright` |        split a window at the bottom         |
+| `g:which_key_hspace`   |     5      |  minimum horizontal space between columns   |
+| `g:which_key_centered` |     1      | make all keybindings centered in the middle |
+
+### FAQ
+
+#### How to map some special keys like `<BS>`?
+
+See [#178](https://github.com/liuchengxu/vim-which-key/issues/178).
+
+#### How to set keybindings on filetype or other condition?
+
+You may use BufEnter/BufLeave [#132](https://github.com/liuchengxu/vim-which-key/issues/132), a `dictionary-function` [#209](https://github.com/liuchengxu/vim-which-key/pull/209), or *[experimental]* setup per buffer [#48](https://github.com/liuchengxu/vim-which-key/pull/48).
+
+#### How to map lua functions?
+
+This is possible via [nvim-whichkey-setup.lua](https://github.com/AckslD/nvim-whichkey-setup.lua). For example, if one wanted to map [spectre's](https://github.com/windwp/nvim-spectre) `open` to `<leader>S`, which in vimscipt would be `nnoremap <leader>S <cmd>lua require('spectre').open()<CR>`, one could use the following in one's `init.vim`:
+
+```vim
+lua<<EOF
+local wk = require('whichkey_setup')
+
+local keymap = {
+    S = {':lua require("spectre").open()<CR>', 'Search'},
+}
+
+wk.register_keymap('leader', keymap)
+EOF
+```
+
+NB that keymaps can only be registered once. The entirety of one's `vim-which-key` configuration must be ported to [nvim-whichkey-setup.lua](https://github.com/AckslD/nvim-whichkey-setup.lua) in order to enable this functionality.
 
 ## Credit
 

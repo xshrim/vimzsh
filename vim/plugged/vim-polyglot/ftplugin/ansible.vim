@@ -1,10 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'ansible') == -1
-
-" Slow yaml highlighting workaround
-if exists('+regexpengine') && ('&regexpengine' == 0)
-  setlocal regexpengine=1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'ansible', 'ftplugin/ansible.vim')
+  finish
 endif
+
 set isfname+=@-@
 set path+=./../templates,./../files,templates,files
-
-endif

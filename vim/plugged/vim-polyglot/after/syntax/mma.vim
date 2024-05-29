@@ -1,17 +1,15 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'mathematica') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'mathematica', 'after/syntax/mma.vim')
+  finish
+endif
 
 "Vim conceal file
 " Language: Mathematica
-" Maintainer:   Voldikss <dyzplus@gmail.com>
-" Last Change:  2019 Jan 23 by Voldikss
-" Source:       https://github.com/voldikss/vim-mma/after/syntax/mma.vim
-" Credits:
-"   Rsmenon: https://github.com/rsmenon
+" Maintainer: R. Menon <rsmenon@icloud.com>
+" Last Change: Feb 25, 2013
 
 if (exists('g:mma_candy') && g:mma_candy == 0) || !has('conceal') || &enc != 'utf-8'
     finish
 endif
-
 
 "These are fairly safe and straightforward conceals
 if exists('g:mma_candy') && g:mma_candy > 0
@@ -1446,5 +1444,3 @@ endif
 hi! link Conceal Normal
 setlocal conceallevel=2
 
-
-endif

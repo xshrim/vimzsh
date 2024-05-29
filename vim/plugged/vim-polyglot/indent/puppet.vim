@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'puppet') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'puppet', 'indent/puppet.vim')
+  finish
+endif
 
 " Vim indent file
 " Language: Puppet
@@ -6,7 +8,7 @@ if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'puppet') == -1
 " Last Change:  2009 Aug 19
 " vim: set sw=4 sts=4:
 
-if exists("b:did_indent")
+if exists('b:did_indent')
     finish
 endif
 let b:did_indent = 1
@@ -15,11 +17,11 @@ setlocal autoindent smartindent
 setlocal indentexpr=GetPuppetIndent()
 setlocal indentkeys+=0],0)
 
-let b:undo_indent = "
+let b:undo_indent = '
     \ setlocal autoindent< smartindent< indentexpr< indentkeys<
-    \"
+    \'
 
-if exists("*GetPuppetIndent")
+if exists('*GetPuppetIndent')
     finish
 endif
 
@@ -35,7 +37,7 @@ function! s:PartOfInclude(lnum)
         if line !~ ',$'
             break
         endif
-        if line =~ '^\s*include\s\+[^,]\+,$' && line !~ '[=>]>'
+        if line =~# '^\s*include\s\+[^,]\+,$' && line !~ '[=>]>'
             return 1
         endif
     endwhile
@@ -82,7 +84,7 @@ function! GetPuppetIndent(...)
     " the same indent here would be premature since for that particular case
     " we want to instead get the indent level of the matching opening brace or
     " parenthenses.
-    if pline =~ '^\s*#' && line !~ '^\s*\(}\(,\|;\)\?$\|]:\|],\|}]\|];\?$\|)\)'
+    if pline =~# '^\s*#' && line !~# '^\s*\(}\(,\|;\)\?$\|]:\|],\|}]\|];\?$\|)\)'
         return ind
     endif
 
@@ -103,11 +105,16 @@ function! GetPuppetIndent(...)
         let ind = indent(s:PrevNonMultilineString(pnum - 1))
     endif
 
-    if pline =~ '\({\|\[\|(\|:\)\s*\(#.*\)\?$'
+    let l:bracketAtEndOfLinePattern = '\({\|\[\|(\|:\)\s*\(#.*\)\?$'
+    if pline =~ l:bracketAtEndOfLinePattern
+    let l:i = match(pline, l:bracketAtEndOfLinePattern)
+    let l:syntaxType = synIDattr(synID(pnum, l:i + 1, 0), 'name')
+    if l:syntaxType !~# '\(Comment\|String\)$'
         let ind += &sw
+    endif
     elseif pline =~ ';$' && pline !~ '[^:]\+:.*[=+]>.*'
         let ind -= &sw
-    elseif pline =~ '^\s*include\s\+.*,$' && pline !~ '[=+]>'
+    elseif pline =~# '^\s*include\s\+.*,$' && pline !~ '[=+]>'
         let ind += &sw
     endif
 
@@ -116,12 +123,12 @@ function! GetPuppetIndent(...)
     endif
 
     " Match } }, }; ] ]: ], ]; )
-    if line =~ '^\s*\(}\(,\|;\)\?$\|]:\|],\|}]\|];\?$\|)\)'
+    if line =~# '^\s*\(}\(,\|;\)\?$\|]:\|],\|}]\|];\?$\|)\)'
         let ind = indent(s:OpenBrace(v:lnum))
     endif
 
     " Don't actually shift over for } else {
-    if line =~ '^\s*}\s*els\(e\|if\).*{\s*$'
+    if line =~# '^\s*}\s*els\(e\|if\).*{\s*$'
         let ind -= &sw
     endif
     " Don't indent resources that are one after another with a ->(ordering arrow)
@@ -139,5 +146,3 @@ function! GetPuppetIndent(...)
 
     return ind
 endfunction
-
-endif

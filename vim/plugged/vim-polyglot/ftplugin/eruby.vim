@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'ruby') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'ruby', 'ftplugin/eruby.vim')
+  finish
+endif
 
 " Vim filetype plugin
 " Language:		eRuby
@@ -87,8 +89,12 @@ runtime! ftplugin/ruby.vim ftplugin/ruby_*.vim ftplugin/ruby/*.vim
 let b:did_ftplugin = 1
 
 " Combine the new set of values with those previously included.
-if exists("b:undo_ftplugin")
-  let s:undo_ftplugin = b:undo_ftplugin . " | " . s:undo_ftplugin
+if !exists('b:undo_ftplugin')
+  " No-op
+  let b:undo_ftplugin = 'exe'
+endif
+if !empty(s:undo_ftplugin)
+  let b:undo_ftplugin .= '|' . s:undo_ftplugin
 endif
 if exists ("b:browsefilter")
   let s:browsefilter = substitute(b:browsefilter,'\cAll Files (\*\.\*)\t\*\.\*\n','','') . s:browsefilter
@@ -119,8 +125,8 @@ endif
 " TODO: comments=
 setlocal commentstring=<%#%s%>
 
-let b:undo_ftplugin = "setl cms< "
-      \ " | unlet! b:browsefilter b:match_words | " . s:undo_ftplugin
+let b:undo_ftplugin = "setl cms< " .
+      \ " | unlet! b:browsefilter b:match_words | " . b:undo_ftplugin
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
@@ -131,5 +137,3 @@ function! ErubyAtCursor() abort
 endfunction
 
 " vim: nowrap sw=2 sts=2 ts=8:
-
-endif

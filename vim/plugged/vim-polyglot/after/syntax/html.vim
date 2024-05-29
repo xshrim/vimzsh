@@ -1,4 +1,6 @@
-if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'html5') == -1
+if polyglot#init#is_disabled(expand('<sfile>:p'), 'html5', 'after/syntax/html.vim')
+  finish
+endif
 
 " Vim syntax file
 " Language:     HTML (version 5.1)
@@ -12,5 +14,3 @@ if !exists('g:polyglot_disabled') || index(g:polyglot_disabled, 'html5') == -1
 " https://github.com/w3c/html/issues/694
 syntax region htmlComment start=+<!--+ end=+-->+ contains=@Spell
 syntax region htmlComment start=+<!DOCTYPE+ keepend end=+>+
-
-endif

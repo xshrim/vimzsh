@@ -7,7 +7,7 @@
 
 let s:broot_default_confpath = fnamemodify('~/.config/broot/conf.hjson', ':p')
 let s:broot_wrapper_confpath = fnamemodify(expand('<sfile>'), ':h') . '/broot.hjson'
-let s:broot_confpath = s:broot_default_confpath . ';' . s:broot_wrapper_confpath
+let s:broot_confpath = s:broot_wrapper_confpath . ';' . s:broot_default_confpath
 
 let s:broot_wrapper_config = [
       \ '{',
@@ -15,7 +15,8 @@ let s:broot_wrapper_config = [
       \ '		{',
       \ '			invocation: terminal',
       \ '			key: enter',
-      \ '			execution: ":print_path"',
+      \ '			execution: "echo {line} {file}"',
+      \ '			leave_broot: true',
       \ '			apply_to: file',
       \ '		}',
       \ '	]',
@@ -30,7 +31,7 @@ function! floaterm#wrapper#broot#(cmd, jobopts, config) abort
 
   let cmdlist = split(a:cmd)
   let cmd = printf(
-        \ '%s --conf "%s" --out "%s"',
+        \ '%s --conf "%s" > "%s"',
         \ a:cmd,
         \ s:broot_confpath,
         \ s:broot_tmpfile
@@ -52,7 +53,11 @@ function! s:broot_callback(job, data, event, opener) abort
       endif
       let locations = []
       for filename in filenames
-        let dict = {'filename': fnamemodify(filename, ':p')}
+        let lnum_file = split(filename)
+        let dict = {
+              \ 'filename': fnamemodify(lnum_file[1], ':p'),
+              \ 'lnum': lnum_file[0],
+              \ }
         call add(locations, dict)
       endfor
       call floaterm#util#open(locations, a:opener)

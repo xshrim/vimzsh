@@ -30,18 +30,18 @@ class JediProcessor(object):
 
     @contextlib.contextmanager
     def jedi_context(self, args):
-        self.script = self.jedi.Script(
-            source=args['content'], line=args['line'] + 1,
-            column=args['col'], path=args['filename'])
+        self.script = self.jedi.Script(code=args['content'],
+                                       path=args['filename'])
         try:
             yield
         finally:
             self.script = None
 
-    def ignore(self):
+    def ignore(self, args):
         script = self.script
+        pos = args['line']+1, args['col']
         try:
-            node = script._module_node.get_leaf_for_position(script._pos)
+            node = script._module_node.get_leaf_for_position(pos)
             return not node or node.type in ('string', 'number')
         except Exception as e:
             logger.exception(e)
@@ -53,43 +53,57 @@ class JediProcessor(object):
         if not func:
             return []
         with self.jedi_context(args):
-            if self.ignore():
+            if self.ignore(args):
                 return []
-            return list(func())
+            return list(func(args))
 
-    def on_complete(self):
-        for c in self.script.completions():
-            yield {
-                'word': c.name,
-                'abbr': c.name_with_symbols,
-                'menu': c.description,
-                'info': c.docstring(),
-            }
+    def _statement(self, c, args):
+        if c.type == 'statement':
+            assignments = c.goto()
+            if assignments:
+                return assignments[-1]
+        return c
 
-    def on_definition(self):
-        for d in self.script.goto_assignments(follow_imports=True):
+    def on_complete(self, args):
+        for c in self.script.complete(args['line']+1, args['col'], fuzzy=True):
+            statement_c = self._statement(c, args)
+            try:
+                yield {
+                    'word': c.name,
+                    'abbr': c.name_with_symbols,
+                    'menu': statement_c.description,
+                    'info': statement_c.docstring(),
+                }
+            except Exception as e:
+                logger.exception(e)
+                continue
+
+    def on_definition(self, args):
+        for d in self.script.goto(args['line']+1, args['col'],
+                                  follow_imports=True):
             item = {'text': d.description}
             if d.in_builtin_module():
                 item['text'] = 'Builtin {}'.format(item['text'])
             else:
                 item.update({
-                    'filename': d.module_path,
+                    'filename': str(d.module_path),
                     'lnum': d.line,
                     'col': d.column + 1,
                     'name': d.name,
                 })
             yield item
 
-    def on_doc(self):
-        for d in self.script.goto_assignments(follow_imports=True):
+    def on_doc(self, args):
+        for d in self.script.goto(args['line']+1, args['col'],
+                                  follow_imports=True):
             yield d.docstring(fast=False).strip()
 
-    def on_signature(self):
-        for s in self.script.call_signatures():
+    def on_signature(self, args):
+        for s in self.script.get_signatures(args['line']+1, args['col']):
             params = [p.description.replace('\n', '')[6:] for p in s.params]
             yield {
                 'params': params,
-                'func': s.call_name,
+                'func': s.name,
                 'index': s.index or 0
             }
 
@@ -128,7 +142,7 @@ def main():
     try:
         import jedi
     except ImportError:
-        return
+        exit(1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--verbose', action='store_true')

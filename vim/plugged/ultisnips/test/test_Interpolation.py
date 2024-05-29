@@ -5,8 +5,6 @@ from test.vim_test_case import VimTestCase as _VimTest
 from test.constant import EX, JF, ESC
 from test.util import running_on_windows
 
-# ShellCode Interpolation  {{{#
-
 
 class TabStop_Shell_SimpleExample(_VimTest):
     skip_if = lambda self: running_on_windows()
@@ -62,27 +60,18 @@ class TabStop_Shell_ShebangPython(_VimTest):
     snippets = (
         "test",
         """Hallo ${1:now `#!/usr/bin/env %s
-print "Hallo Welt"
+print("Hallo Welt")
 `} end"""
-        % (os.environ.get("PYTHON", "python2"),),
+        % os.environ.get("PYTHON", "python3"),
     )
     keys = "test" + EX + JF + "and more"
     wanted = "Hallo now Hallo Welt endand more"
-
-
-# End: ShellCode Interpolation  #}}}
-# VimScript Interpolation  {{{#
 
 
 class TabStop_VimScriptInterpolation_SimpleExample(_VimTest):
     snippets = ("test", """hi `!v indent(".")` End""")
     keys = "    test" + EX
     wanted = "    hi 4 End"
-
-
-# End: VimScript Interpolation  #}}}
-# PythonCode Interpolation  {{{#
-# Deprecated Implementation  {{{#
 
 
 class PythonCodeOld_SimpleExample(_VimTest):
@@ -125,10 +114,6 @@ else:
     )
     keys = "    test" + EX
     wanted = "    start b isbigger a end"
-
-
-# End: Deprecated Implementation  #}}}
-# New Implementation  {{{#
 
 
 class PythonCode_UseNewOverOld(_VimTest):
@@ -556,17 +541,8 @@ snip.rv = "placeholder: " + snip.p.current_text`)""",
 first second (placeholder: )"""
 
 
-# Tests for https://bugs.launchpad.net/bugs/1259349
-
-
-class Python_WeirdScoping_Error(_VimTest):
-    snippets = (
-        "test",
-        "h`!p import re; snip.rv = '%i' % len([re.search for i in 'aiiia'])`b",
-    )
+class Python_SnipRvCanBeNonText(_VimTest):
+    # Test for https://github.com/SirVer/ultisnips/issues/1132
+    snippets = ("test", "`!p snip.rv = 5`")
     keys = "test" + EX
-    wanted = "h5b"
-
-
-# End: New Implementation  #}}}
-# End: PythonCode Interpolation  #}}}
+    wanted = "5"

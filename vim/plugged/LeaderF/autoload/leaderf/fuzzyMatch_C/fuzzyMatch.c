@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+#ifndef PY_SSIZE_T_CLEAN
+    #define PY_SSIZE_T_CLEAN
+#endif
+
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -163,6 +167,11 @@ PatternContext* initPattern(const char* pattern, uint16_t pattern_len)
     {
         fprintf(stderr, "Out of memory in initPattern()!\n");
         return NULL;
+    }
+    pPattern_ctxt->actual_pattern_len = pattern_len;
+    if ( pattern_len >= 64 )
+    {
+        pattern_len = 63;
     }
     pPattern_ctxt->pattern = pattern;
     pPattern_ctxt->pattern_len = pattern_len;
@@ -419,7 +428,6 @@ ValueElements* evaluate(TextContext* pText_ctxt,
         }
         if ( bits == 0 )
         {
-            memset(val, 0, sizeof(ValueElements));
             return val;
         }
         else
@@ -460,13 +468,15 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 #endif
         special = k == 0 ? 5 : 3;
     else if ( isupper(text[i]) )
-        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
+        special = (!isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ?
+                   (i < 5 ? 5 : 3) : 0);
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
     /*     special = 3;                                                     */
     /* else if ( text[i-1] == '.' )                                         */
     /*     special = 3;                                                     */
     else if ( !isalnum(text[i-1]) )
-        special = 3;
+        /* if there is an icon at the beginning, `if ( i == 0 )` won't meet */
+        special = i < 5 ? 5 : 3;
     else
         special = 0;
     ++i;
@@ -529,8 +539,13 @@ ValueElements* evaluate(TextContext* pText_ctxt,
                         score = prefix_score + pVal->score - 0.3f * (pVal->beg - i);
                         end_pos = pVal->end;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
+
             if ( score > max_score )
             {
                 max_score = score;
@@ -631,9 +646,10 @@ float getWeight(const char* text, uint16_t text_len,
     char first_char = pattern[0];
     char last_char = pattern[pattern_len - 1];
 
-    if ( pattern_len >= 64 )
+    /* maximum number of int16_t is (1 << 15) - 1 */
+    if ( text_len >= (1 << 15) )
     {
-        return MIN_WEIGHT;
+        text_len = (1 << 15) - 1;
     }
 
     if ( pattern_len == 1 )
@@ -677,9 +693,9 @@ float getWeight(const char* text, uint16_t text_len,
         }
     }
 
+    int16_t first_char_pos = -1;
     if ( pPattern_ctxt->is_lower )
     {
-        int16_t first_char_pos = -1;
         int16_t i;
         for ( i = 0; i < text_len; ++i )
         {
@@ -727,7 +743,6 @@ float getWeight(const char* text, uint16_t text_len,
     }
     else
     {
-        int16_t first_char_pos = -1;
         if ( isupper(first_char) )
         {
             int16_t i;
@@ -825,6 +840,31 @@ float getWeight(const char* text, uint16_t text_len,
         return MIN_WEIGHT;
     }
 
+    if ( pPattern_ctxt->actual_pattern_len >= 64 )
+    {
+        int16_t i;
+        j = 0;
+        for ( i = first_char_pos; i < text_len; ++i )
+        {
+            if ( j < pPattern_ctxt->actual_pattern_len )
+            {
+                if ( (pPattern_ctxt->is_lower && tolower(text[i]) == pattern[j])
+                     || text[i] == pattern[j] )
+                {
+                    ++j;
+                }
+            }
+            else
+                break;
+        }
+
+        if ( j < pPattern_ctxt->actual_pattern_len )
+        {
+            free(text_mask);
+            return MIN_WEIGHT;
+        }
+    }
+
     TextContext text_ctxt;
     text_ctxt.text = text;
     text_ctxt.text_len = text_len;
@@ -853,7 +893,7 @@ float getWeight(const char* text, uint16_t text_len,
 
         free(text_mask);
 
-        return score + (float)pattern_len/text_len + (float)(pattern_len << 1)/(text_len - beg);
+        return score + (float)(pattern_len<<1)/text_len + (float)pattern_len/(text_len - beg);
     }
 }
 
@@ -1221,19 +1261,20 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                     max_prefix_score = prefix_score;
                     pText_ctxt->offset = i;
                     HighlightGroup* pGroup = evaluateHighlights(pText_ctxt, pPattern_ctxt, k + n, groups);
-                    if ( pGroup )
+                    if ( pGroup && pGroup->end )
                     {
-                        if ( pGroup->end )
-                        {
-                            score = prefix_score + pGroup->score - 0.3f * (pGroup->beg - i);
-                            cur_highlights.score = score;
-                            cur_highlights.beg = i - n;
-                            cur_highlights.end = pGroup->end;
-                            cur_highlights.positions[0].col = i - n + 1;
-                            cur_highlights.positions[0].len = n;
-                            memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
-                            cur_highlights.end_index = pGroup->end_index + 1;
-                        }
+                        score = prefix_score + pGroup->score - 0.3f * (pGroup->beg - i);
+                        cur_highlights.score = score;
+                        cur_highlights.beg = i - n;
+                        cur_highlights.end = pGroup->end;
+                        cur_highlights.positions[0].col = i - n + 1;
+                        cur_highlights.positions[0].len = n;
+                        memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
+                        cur_highlights.end_index = pGroup->end_index + 1;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
             }
@@ -1340,6 +1381,12 @@ HighlightGroup* getHighlights(const char* text,
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
     char first_char = pattern[0];
     char last_char = pattern[pattern_len - 1];
+
+    /* maximum number of int16_t is (1 << 15) - 1 */
+    if ( text_len >= (1 << 15) )
+    {
+        text_len = (1 << 15) - 1;
+    }
 
     if ( pattern_len == 1 )
     {
@@ -1634,7 +1681,7 @@ uint32_t getPathWeight(const char* filename,
                         break;
                     }
                 }
-                filename_prefix = p - filename_start;
+                filename_prefix = (uint32_t)(p - filename_start);
             }
             else if ( (*p >= 'A' && *p <= 'Z') && (*p1 >= 'A' && *p1 <= 'Z')
                       && (*(p-1) >= 'A' && *(p-1) <= 'Z') )
@@ -1651,7 +1698,7 @@ uint32_t getPathWeight(const char* filename,
                         break;
                     }
                 }
-                filename_prefix = p - filename_start;
+                filename_prefix = (uint32_t)(p - filename_start);
             }
         }
 
@@ -1727,8 +1774,8 @@ uint32_t getPathWeight(const char* filename,
         ++dirname_lcp;
     }
 
-    /* if dirname is empty, filename_start == p */
-    is_dirname_same = filename_start - p < 2;
+    /* if dirname is empty, filename_start == path */
+    is_dirname_same = filename_start - p == 1 || (*dirname == '\0' && filename_start == path) ;
 
     /* dirname/filename+suffix is the same as path */
     if ( is_basename_same && is_dirname_same )
@@ -1758,7 +1805,7 @@ static PyObject* fuzzyMatchC_initPattern(PyObject* self, PyObject* args)
     if ( !PyArg_ParseTuple(args, "s#:initPattern", &pattern, &pattern_len) )
         return NULL;
 
-    PatternContext* pCtxt = initPattern(pattern, pattern_len);
+    PatternContext* pCtxt = initPattern(pattern, (uint16_t)pattern_len);
 
     return PyCapsule_New(pCtxt, NULL, delPatternContext);
 }
@@ -1779,7 +1826,7 @@ static PyObject* fuzzyMatchC_getWeight(PyObject* self, PyObject* args, PyObject*
     if ( !pCtxt )
         return NULL;
 
-    return Py_BuildValue("f", getWeight(text, text_len, pCtxt, is_name_only));
+    return Py_BuildValue("f", getWeight(text, (uint16_t)text_len, pCtxt, is_name_only));
 }
 
 static PyObject* fuzzyMatchC_getHighlights(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -1798,7 +1845,7 @@ static PyObject* fuzzyMatchC_getHighlights(PyObject* self, PyObject* args, PyObj
     if ( !pCtxt )
         return NULL;
 
-    HighlightGroup* pGroup = getHighlights(text, text_len, pCtxt, is_name_only);
+    HighlightGroup* pGroup = getHighlights(text, (uint16_t)text_len, pCtxt, is_name_only);
     if ( !pGroup )
         return NULL;
 

@@ -96,10 +96,14 @@ function! qf#SetList(newlist, ...)
     " call partial with optional arguments
     call call(Func, a:000)
 
+    if a:newlist == []
+        return
+    endif
+
     if get(b:, 'qf_isLoc', 0)
-        execute get(g:, "qf_auto_resize", 1) ? 'lclose|' . min([ max_height, len(getloclist(0)) ]) . 'lwindow' : 'lwindow'
+        execute get(g:, "qf_auto_resize", 1) ? 'lclose|' . min([ max_height, len(getloclist(0)) ]) . 'lwindow' : 'lclose|lwindow'
     else
-        execute get(g:, "qf_auto_resize", 1) ? 'cclose|' . min([ max_height, len(getqflist()) ]) . 'cwindow' : 'cwindow'
+        execute get(g:, "qf_auto_resize", 1) ? 'cclose|' . min([ max_height, len(getqflist()) ]) . 'cwindow' : 'cclose|cwindow'
     endif
 endfunction
 
@@ -116,7 +120,17 @@ function! qf#OpenQuickfix()
     if get(g:, 'qf_auto_open_quickfix', 1)
         " get user-defined maximum height
         let max_height = get(g:, 'qf_max_height', 10) < 1 ? 10 : get(g:, 'qf_max_height', 10)
-        execute get(g:, "qf_auto_resize", 1) ? 'cclose|' . min([ max_height, len(getqflist()) ]) . 'cwindow' : 'cwindow'
+
+        let qf_list_title = getqflist({ 'title': 1 })
+        let qf_list = getqflist()
+
+        " shorten paths if applicable
+        if get(g:, 'qf_shorten_path', 0) > 0
+            call setqflist([], 'r', qf_list_title)
+            call setqflist(qf#ShortenPathsInList(qf_list), 'a')
+        endif
+
+        execute get(g:, "qf_auto_resize", 1) ? 'cclose|' . min([ max_height, len(qf_list) ]) . 'cwindow' : 'cclose|cwindow'
     endif
 endfunction
 
@@ -125,8 +139,40 @@ function! qf#OpenLoclist()
     if get(g:, 'qf_auto_open_loclist', 1)
         " get user-defined maximum height
         let max_height = get(g:, 'qf_max_height', 10) < 1 ? 10 : get(g:, 'qf_max_height', 10)
-        execute get(g:, "qf_auto_resize", 1) ? 'lclose|' . min([ max_height, len(getloclist(0)) ]) . 'lwindow' : 'lwindow'
+
+        let loc_list_title = getloclist(0, { 'title': 1 })
+        let loc_list = getloclist(0)
+
+        " shorten paths if applicable
+        if get(g:, 'qf_shorten_path', 0) > 0
+            call setloclist(0, [], 'r', loc_list_title)
+            call setloclist(0, qf#ShortenPathsInList(loc_list), 'a')
+        endif
+
+        execute get(g:, "qf_auto_resize", 1) ? 'lclose|' . min([ max_height, len(loc_list) ]) . 'lwindow' : 'lclose|lwindow'
     endif
+endfunction
+
+" shorten file paths in given qf/loc list
+function! qf#ShortenPathsInList(list)
+    let index = 0
+    while index < len(a:list)
+        " item is a dict, sample: { lnum: 14, text: 'foo bar', bufnr: 3, ... }
+        let item = a:list[index]
+
+        let filepath = bufname(item["bufnr"])
+        let trim_len = get(g:, "qf_shorten_path", 1)
+
+        " set the 'module' field to customise the visual filename in the qf/loc list (available since 8.0.1782)
+        if has('patch-8.2.1741')
+            let item["module"] = pathshorten(filepath, trim_len)
+        else
+            let item["module"] = pathshorten(filepath)
+        endif
+
+        let index = index + 1
+    endwhile
+    return a:list
 endfunction
 
 let &cpo = s:save_cpo
