@@ -11,23 +11,19 @@ image() {
 		exit 1
 	else
 		chafa "$1" -s "${4}x${5}"
+    #feh "$1"
 	fi
 }
 
 CACHE="$HOME/.cache/lf/thumbnail.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$1")" | sha256sum | awk '{print $1}'))"
-
-h() {
-  if type highlight &>/dev/null; then
-    highlight -D /home/xshrim/.oh-my-zsh/custom/plugins/comm/highlight -O xterm256 -t 4 -s bipolar $@ 2>/dev/null || highlight -D /home/xshrim/.oh-my-zsh/custom/plugins/comm/highlight -S sh -O xterm256 -t 4 -s bipolar $@ 2>/dev/null || \cat $@
-  fi
-}
 
 case "$(echo "$1" | awk '{print tolower($0)}')" in
 *.tar*) tar tvf "$1" ;;
 *.zip|*.jar|*.war|*.ear|*.oxt) unzip -l "$1" ;;
 *.rar) unrar l "$1" ;;
 *.7z) 7z l "$1" ;;
-*.deb) ar -tOv "$1" ;;
+#*.deb) ar -tOv "$1" ;;
+*.deb) dpkg -c "$1" ;;
 *.rpm) rpm -qpvl "$1" ;;
 *.pdf) pdftotext "$1" - ;;
 *.[1-8]) man "$1" | col -b ;;
@@ -42,27 +38,30 @@ case "$(echo "$1" | awk '{print tolower($0)}')" in
 *.csv) h "$1" ;;
 *.json) jq --color-output "$1" ;;
 *.htm|*.html|*.xhtml) w3m -dump "$1" ;;
-*.bmp|*.jpg|*.jpeg|*.png|*.xpm|*.webp)
-  image "$1" "$num" 1 "$numb" "$numc"
-  ;;
+*.bmp|*.jpg|*.jpeg|*.png|*.xpm|*.webp) image "$1" "$num" 1 "$numb" "$numc";;
+#*.bmp|*.jpg|*.jpeg|*.png|*.xpm|*.webp) feh "$1";;
 *.wav|*.dff|*.dsf|*.wv|*.wvc|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx])
   mediainfo "$1"
   ;;
 *.otf|*.ttf|*.ttc)
 	[ ! -f "${CACHE}.jpg" ] && fontpreview -i "$1" -o "${CACHE}.jpg"
   image "${CACHE}.jpg" "$num" 1 "$numb" "$numc"
+  #feh "${CACHE}.jpg"
   ;;
 *.pdf)
   [ ! -f "${CACHE}.jpg" ] && pdftoppm -jpeg -f 1 -singlefile "$1" "$CACHE"
   image "${CACHE}.jpg" "$num" 1 "$numb" "$numc"
+  #feh "${CACHE}.jpg"
   ;;
 *.epub)
   [ ! -f "$CACHE" ] && epub-thumbnailer "$1" "$CACHE" 1024
   image "$CACHE" "$num" 1 "$numb" "$numc"
+  #feh "$CACHE"
   ;;
 *.avi|*.mp4|*.wmv|*.dat|*.3gp|*.ogv|*.mkv|*.mpg|*.mpeg|*.vob|*.fl[icv]|*.m2v|*.mov|*.webm|*.ts|*.mts|*.m4v|*.r[am]|*.qt|*.divx)
   [ ! -f "${CACHE}.jpg" ] && ffmpegthumbnailer -i "$1" -o "${CACHE}.jpg" -s 0 -q 5
   image "${CACHE}.jpg" "$num" 1 "$numb" "$numc"
+  #feh "${CACHE}.jpg"
   ;;
 *) h "$1" ;;
 esac
