@@ -666,14 +666,9 @@ type htop &>/dev/null && alias top='htop'
 
 type bat &>/dev/null && alias cat='bat --paging never -p'
 
-type highlight &>/dev/null && alias highlight='highlight -O xterm256'
-
-if ! type highlight &>/dev/null;then
-  #alias highlight="highlight -O xterm256 -D $cdir/highlight"
-  #! highlight -h &> /dev/null && type highlight.low &>/dev/null && alias highlight="highlight.low -O xterm256 -D $cdir/highlight --add-config-dir=$cdir/highlight"
-  #alias cat='h'
-  # alias highlight="highlight -O xterm256 -D $cdir/highlight --config-file=$cdir/highlight/filetypes.conf"
-fi
+type highlight &>/dev/null && alias highlight='highlight -O xterm256 --force'
+! highlight -h &> /dev/null && type highlight.low &>/dev/null && alias highlight="highlight.low -O xterm256 --force -D $cdir/highlight --add-config-dir=$cdir/highlight"
+highlight -h &> /dev/null && alias cat='highlight'
 
 alias ls='ls -F --color=auto'
 type exa &>/dev/null && exa --help &>/dev/null && alias ls='exa -F --color=auto'
@@ -802,8 +797,6 @@ function hl() {
 # alias cat='h'
 function h() {
   #local cmds="*ls* *echo* *cat* *ps* *who* *pwd* *arch* *lspci* *lsusb* *time* *date* *cal* *tree* *iconv* *env* *set* *df* *dfc* *tree* *free* *alias* *rpm* *yum* *dnf* *apt* *apt-get* *pacman* *sar* *lsattr* *h* *tar* *sort* *grep* *egrep* *recode* *pvs* *pvdisplay* *pvscan* *vgscan* *lvs* *lvdisplay* *vgs* *vgdisplay* *pvcreate* *pvremove* *lvcreate* *lvremove* *lvextend* *lvresize* *lvreduce* *lvrename* *lvconvert* *lvscan* *lvchange* *vgchange* *vgcreate* *vgreduce* *vgextend**vgrename* *ip* *ping* *ifconfig* *route* *hostname* *iwlist* *host* *npm* *nslookup* *whois* *dig* *dmesg* *rsync* *cp* *mv* *glog* *git* *mtr* *ss* *fd* *ag* *bat* *pycp* *pymv* *highlight* *xargs* *more* *less* *wd* *dict* *exa* *sysctl* *nmap* *convert* *ethtool* *smbclient* *mount* *umount* *tar* *zip* *unzip* *firewall-cmd* *iptables* *gs* *systemctl* *journalctl* *hostnamectl* *dmidecode* *hdparm* *which* *whereis* *locate* *jobs* *uname* *head* *tail* *cut* *tr* *sed* *awk* *file* *lsof* *netstat* *vmstat* *iostat* *docker* *docker-compose* *kubectl* *helm* *redis-cli* *mc* *mysql* *pgsql* *node* *python* *python3* *java* *go* *pip* *pip3* *make* *gcc* *tsc* *perl* *lua* *ruby* *rust* *scala* *julia* "
-
-
   if [ ! -t 1 ]
   then
     \cat $@
@@ -820,7 +813,7 @@ function h() {
         #CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
         #highlight -O xterm256 -t 4 -s $style -S $syntax
         if type highlight &>/dev/null;then
-            highlight -S sh ${sn[*]} -O xterm256 -t 4 -s bipolar
+            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar
         elif type bat &>/dev/null;then
             bat ${sn[*]} --paging never -p
         elif type ccat &>/dev/null;then
@@ -835,7 +828,7 @@ function h() {
             echo -en "\033[0m"
         else
         if type highlight &>/dev/null;then
-            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight -S sh ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || \cat ${sn[*]} $@
+            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || \cat ${sn[*]} $@
         elif type bat &>/dev/null;then
             bat ${sn[*]} --paging never -p $@ 2> /dev/null || \cat ${sn[*]} $@
         elif type ccat &>/dev/null;then
@@ -847,14 +840,6 @@ function h() {
         fi
     fi
   fi
-#        if [[ "$cmds" =~ "*"$1"*" ]]
-#         then
-#             #$* | highlight -O xterm256 -t 4 -s $style 2> /dev/null || $* | highlight -O xterm256 -t 4 -s $style -S sh
-#             $* | highlight -O xterm256 -t 4 -s $style -S $syntax
-#         else
-#             highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@
-#         fi
-  #highlight -O xterm256 -t 4 -s $style $@ 2> /dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@ 2> /dev/null || bat -p $@ 2> /dev/null || cat $@
   fi
 }
 
