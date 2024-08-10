@@ -1,0 +1,117 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kind
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."hub"]
+    endpoint = ["http://registry:5000", "https://8g8uw1kk.mirror.aliyuncs.com", "https://docker.mirrors.ustc.edu.cn/"]
+networking:
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
+  kubeProxyMode: "ipvs"
+nodes:
+- role: control-plane
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+  extraMounts:
+  - hostPath: /tmp/
+    containerPath: /temp/
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 8080
+  - containerPort: 443
+    hostPort: 8443
+  - containerPort: 30080
+    hostPort: 30080
+  - containerPort: 30443
+    hostPort: 30443
+  - containerPort: 31021
+    hostPort: 31021
+  - containerPort: 31340
+    hostPort: 31340
+  - containerPort: 31443
+    hostPort: 31443
+    # optional: set the bind address on the host
+    # 0.0.0.0 is the current default
+    # listenAddress: "127.0.0.1"
+    # optional: set the protocol to one of TCP, UDP, SCTP.
+    # TCP is the default
+    protocol: TCP
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "node=init"
+- role: worker
+  image: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+  kubeadmConfigPatches:
+  - |
+    kind: JoinConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "node=join"
+        
+# steps
+# 1. cluster
+# kind create cluster --config ~/git/vimzsh/tools/kind.yaml
+# docker run -d --name registry --restart=always --net=kind -p 5000:5000 -e REGISTRY_PROXY_REMOTEURL=https://8g8uw1kk.mirror.aliyuncs.com registry:2
+## docker run -d --name registry --restart=always --net=kind -p 5000:5000 -e http_proxy=http://$(ip a|grep "inet "|awk '{print $2}'|grep "/24"|cut -d'/' -f1):8888/ -e https_proxy=http://$(ip a|grep "inet "|awk '{print $2}'|grep "/24"|cut -d'/' -f1):8888/ -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io registry:2
+# curl http://localhost:5000/v2/_catalog
+# 2. istio
+# istioctl install --set profile=demo -y
+# kubectl label namespace default istio-injection=enabled
+# kubectl -n istio-system patch svc istio-ingressgateway --patch '{"spec": {"ports": [{"port": 15021, "nodePort": 31021}, {"port": 80, "nodePort": 30080}, {"port": 443, "nodePort": 30443}, {"port": 31400, "nodePort": 31400}, {"port": 15443, "nodePort": 31443}]}}'
+# curl -v http://127.0.0.1:31021/healthz/ready
+# 3. demo
+# kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml
+# kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml
+# kubectl apply -f samples/bookinfo/networking/destination-rule-all.yaml
+# curl -v http://127.0.0.1:30080/productpage
+# kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}" |tr -s '[[:space:]]' '\n' |sort |uniq -c
+# 4. clean
+# sh samples/bookinfo/platform/kube/cleanup.sh
+# istioctl x uninstall --purge
+# kind delete cluster
+
+
+# https://kind.sigs.k8s.io/docs/user/quick-start/
+# kind create cluster --config kind.yaml
+# k run test --image=busybox --image-pull-policy=IfNotPresent -- tail -f /dev/null
+
+# containerd proxy
+#vi /etc/systemd/system/containerd.service
+#[Service]
+#Environment="HTTP_PROXY=http://19.21.60.88:8123/"
+# 
+# or
+#
+# mkdir /etc/systemd/system/containerd.service.d
+# cat > /etc/systemd/system/containerd.service.d/http_proxy.conf << EOF
+#> [Service]
+#> Environment="HTTP_PROXY=http://<proxy_ip>:<proxy_port>/"
+#> EOF
+#
+# # 配置 no_proxy 指定不走代理的域名或ip
+# cat > /etc/systemd/system/containerd.service.d/no_proxy.conf << EOF
+#> [Service]
+#> Environment="NO_PROXY=http://<apiserver_ip>:<apiserver_port>/"
+#> EOF
+#
+#systemctl daemon-reload
+#systemctl restart containerd
+
+
+# docker mirror
+#docker run -d --name proxy --restart=always --net=kind -e REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io registry:2
+#docker run -d --name registry --restart=always --net=kind -p 5000:5000 registry:2
+# docker network connect "kind" "registry"
+#kind create cluster --config /dev/stdin <<EOF
+#kind: Cluster
+#apiVersion: kind.x-k8s.io/v1alpha4
+#containerdConfigPatches:
+  #- |-
+    #[plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+      #endpoint = ["http://proxy:5000"]
+    #[plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
+      #endpoint = ["http://registry:5000"]
+#EOF

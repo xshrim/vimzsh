@@ -1,0 +1,19 @@
+#!/bin/bash
+
+syntax="sh"
+style="bipolar"
+cmds="*ls* *echo* *cat* *ps* *who* *pwd* *arch* *lspci* *lsusb* *time* *date* *cal* *tree* *iconv* *env* *set* *df* *dfc* *tree* *free* *alias* *rpm* *yum* *dnf* *apt* *apt-get* *pacman* *sar* *lsattr* *h* *tar* *sort* *grep* *egrep* *recode* *pvs* *pvdisplay* *pvscan* *vgscan* *lvs* *lvdisplay* *vgs* *vgdisplay* *pvcreate* *pvremove* *lvcreate* *lvremove* *lvextend* *lvresize* *lvreduce* *lvrename* *lvconvert* *lvscan* *lvchange* *vgchange* *vgcreate* *vgreduce* *vgextend**vgrename* *ip* *ping* *ifconfig* *route* *hostname* *iwlist* *host* *npm* *nslookup* *whois* *dig* *dmesg* *rsync* *cp* *mv* *glog* *git* *mtr* *ss* *fd* *ag* *bat* *pycp* *pymv* *highlight* *xargs* *more* *less* *wd* *dict* *exa* *sysctl* *nmap* *convert* *ethtool* *smbclient* *mount* *umount* *tar* *zip* *unzip* *firewall-cmd* *iptables* *gs* *systemctl* *journalctl* *hostnamectl* *dmidecode* *hdparm* *which* *whereis* *locate* *jobs* *uname* *head* *tail* *cut* *tr* *sed* *awk* *file* *lsof* *netstat* *vmstat* *iostat* *docker* *docker-compose* *kubectl* *helm* *redis-cli* *mc* *mysql* *pgsql* *node* *python* *python3* *java* *go* *pip* *pip3* *make* *gcc* *tsc* *perl* *lua* *ruby* *rust* *scala* *julia* "
+if [ $# -eq 0 ]; then
+  highlight -O xterm256 -t 4 -s $style -S $syntax
+else
+  if [[ "$cmds" =~ "*"$1"*" ]]; then
+    # $* | highlight -O xterm256 -t 4 -s $style 2> /dev/null || $* | highlight -O xterm256 -t 4 -s $style -S sh
+    $* | highlight -O xterm256 -t 4 -s $style -S $syntax
+  else
+    highlight -O xterm256 -t 4 -s $style $@ 2>/dev/null || highlight -O xterm256 -t 4 -s $style -S $syntax $@ 2>/dev/null || cat $@
+  fi
+fi
+
+# tail -f xxx.log | perl -pe 's/(ERROR)/\e[1;31m$1\e[0m/g'
+
+# \cp -f filetypes.conf /etc/highlight/
