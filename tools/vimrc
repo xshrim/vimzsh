@@ -688,6 +688,13 @@ Plug 'Raimondi/delimitMate'
 " golang插件
 " Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 
+""""""""""""""""""""""""""""""""""""minimap.vim""""""""""""""""""""""""""""""""""
+" 代码minimap
+Plug 'wfxr/minimap.vim'
+let g:minimap_width = 10
+let g:minimap_auto_start = 1
+let g:minimap_auto_start_win_enter = 1
+
 """"""""""""""""""""""""""""""""""""txt.vim"""""""""""""""""""""""""""""""""
 " 高亮显示txt文本
 Plug 'vim-scripts/txt.vim'
