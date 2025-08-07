@@ -668,6 +668,7 @@ type bat &>/dev/null && alias cat='bat --paging never -p'
 
 type highlight &>/dev/null && alias highlight='highlight -O xterm256 --force'
 ! highlight -h &> /dev/null && type highlight.low &>/dev/null && alias highlight="highlight.low -O xterm256 --force -D $cdir/highlight --add-config-dir=$cdir/highlight"
+! highlight /etc/profile &> /dev/null && alias highlight="highlight -O xterm256 --force -D $cdir/highlight"
 highlight -h &> /dev/null && alias cat='highlight'
 
 alias ls='ls -F --color=auto'
