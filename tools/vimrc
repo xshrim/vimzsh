@@ -619,7 +619,7 @@ Plug 'liuchengxu/vim-which-key'
 """""""""""""""""""""""""""""""""""""LeaderF""""""""""""""""""""""""""""""""
 " 模糊查找
 "if version >= 704 || (version == 704 && has('patch399'))
-if has("patch-7.4-399")
+if has("patch-7.4-399") && (has('python') || has('python3'))
   Plug 'Yggdroot/LeaderF'
 endif
 
@@ -690,10 +690,12 @@ Plug 'Raimondi/delimitMate'
 
 """"""""""""""""""""""""""""""""""""minimap.vim""""""""""""""""""""""""""""""""""
 " 代码minimap
-Plug 'wfxr/minimap.vim'
-let g:minimap_width = 10
-let g:minimap_auto_start = 1
-let g:minimap_auto_start_win_enter = 1
+if executable('code-minimap')
+    Plug 'wfxr/minimap.vim'
+    let g:minimap_width = 10
+    let g:minimap_auto_start = 1
+    let g:minimap_auto_start_win_enter = 1
+endif
 
 """"""""""""""""""""""""""""""""""""txt.vim"""""""""""""""""""""""""""""""""
 " 高亮显示txt文本
