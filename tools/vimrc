@@ -1,0 +1,1121 @@
+" debug vim
+" vim --noplugin -D
+" disable all pulgins
+" vim -U NONE -u
+
+" 设置.vim文件路径
+" vim -u ~/.vimrc  " 设置vim启动时使用的配置文件
+set runtimepath=~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after
+if version >=800
+  set packpath=~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after
+endif
+
+set encoding=utf-8
+scriptencoding utf-8
+" 识别文件编码
+set fileencodings=utf-8,ucs-bom,shift-jis,gb18030,gbk,gb2312,cp936
+set termencoding=utf-8
+set fileencodings=ucs-bom,utf-8,cp936
+set fileencoding=utf-8
+" 显示中文帮助
+set helplang=cn
+" 语言设置
+set langmenu=zh_CN.UTF-8
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" vim主题站点：http://bytefluent.com/vivify/
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 显示相关
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set t_Co=256
+set nocompatible  "去掉讨厌的有关vi一致性模式，避免以前版本的一些bug和局限
+" 自定义高亮当前行
+set cursorline
+"hi CursorLine  cterm=NONE   ctermbg=darkred ctermfg=white
+"hi CursorColumn cterm=NONE ctermbg=darkred ctermfg=white
+"set cuc      " 高亮列
+set shortmess=atI   " 启动的时候不显示那个援助乌干达儿童的提示
+"set go=             " 不要图形按钮
+"color desert     " 设置背景主题
+"color maroloccio     " 设置背景主题
+"color torte     " 设置背景主题
+"colorscheme murphy
+"if has('gui_running')
+"    set background=light
+"else
+"    set background=dark
+"endif
+set guifont=DejaVu\ Sans\ mono\ 11   " 设置字体
+"autocmd InsertLeave * se nocul  " 用浅色高亮当前行
+"autocmd InsertEnter * se cul    " 用浅色高亮当前行
+"set whichwrap+=<,>,h,l   " 允许backspace和光标键跨越行边界(不建议)
+set scrolloff=2     " 光标移动到buffer的顶部和底部时保持2行距离
+set laststatus=2    " 启动显示状态行(1),总是显示状态行(2)
+"set foldenable      " 允许折叠
+"set foldmethod=manual   " 手动折叠
+" 侦测文件类型
+filetype on
+" 载入文件类型插件
+filetype plugin on
+" 为特定文件类型载入相关缩进文件
+filetype indent on
+" 开启语法检查
+syntax enable
+syntax on
+" 自动缩进
+set autoindent
+set cindent
+" Tab键的宽度
+set tabstop=2
+" 统一缩进为2
+set softtabstop=2
+set shiftwidth=2
+" 用空格代替制表符
+set expandtab
+" 在行和段开始处使用制表符
+set smarttab
+" 显示行号
+set nonumber
+" set nu
+" 显示相对行号
+" set relativenumber
+" 历史记录数
+set history=10000
+" 搜索逐字符高亮
+set hlsearch
+set incsearch
+" 命令行高度
+set cmdheight=1
+" 代码补全
+set completeopt=preview,menu
+"set completeopt=longest,menu
+"set completeopt=menu
+" 允许不保存buffer时切换
+set hidden
+" 共享剪贴板
+set clipboard=unnamed,unnamedplus
+" 自动保存
+set autowrite
+"set ruler                   " 打开状态栏标尺
+set magic                    " 设置魔术
+"set guioptions-=T           " 隐藏工具栏
+"set guioptions-=m           " 隐藏菜单栏
+"set foldcolumn=0
+set foldmethod=indent
+set nofoldenable
+"set foldlevel=3
+" 去掉输入错误的提示声音
+set noerrorbells
+" 去掉按Enter键或其他命令以继续提示
+set shortmess=atI
+" 在处理未保存或只读文件的时候，弹出确认
+set confirm
+" 禁止生成临时文件
+set nobackup
+set noswapfile
+set noundofile
+" 搜索忽略大小写
+set ignorecase
+set smartcase
+set linespace=0
+" 增强模式中的命令行自动完成操作
+set wildmenu
+" 使回格键（backspace）正常处理indent, eol, start等
+set backspace=2
+" 允许backspace和光标键跨越行边界
+set whichwrap+=<,>,h,l
+" 通过使用: commands命令，告诉我们文件的哪一行被改变过
+set report=0
+" 在被分割的窗口间显示空白，便于阅读
+set fillchars=vert:\ ,stl:\ ,stlnc:\
+" 高亮显示匹配的括号
+set showmatch
+" 匹配括号高亮的时间（单位是十分之一秒）
+set matchtime=1
+" 设置映射延迟和按键延迟
+set timeoutlen=500
+set ttimeoutlen=10
+" 保存全局变量
+set viminfo+=!
+" 带有如下符号的单词不要被换行分割
+set iskeyword+=_,$,@,%,#,-
+" 字符间插入的像素行数目
+set ruler           " 显示标尺
+set showcmd         " 输入的命令显示出来，看的清楚些
+set showmode        " 显示当前模式
+" 将tab替换为空格
+"nmap tt :%s/\t/    /g<CR>
+" 仅需要时重绘
+"set lazyredraw
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"键盘命令
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 自定义老板键(默认是\)
+let mapleader="\\"
+" 自定义esc键(默认是<esc>和<C-[>)
+" inoremap jo <esc>
+
+" 可以在buffer的任何地方使用鼠标（类似office中在工作区双击鼠标定位）
+" 支持滚轮
+set mousemodel=popup_setpos
+set mouse=a
+set selection=exclusive
+set selectmode=mouse,key
+map <ScrollWheelUp> :bprevious<CR>
+map <ScrollWheelDown> :bnext<CR>
+"nnoremap <RightMouse> :<C-u>confirm bdelete<CR>
+" 输入法
+:let g:vimim_map='c-/'
+":let g:vimim_cloud='sougou' " QQ云输入
+:let g:vimim_punctuation=0  " 不用中文标点
+:let g:vimim_cloud=-1
+
+" 编辑模式下映射方向键使hjkl能移动光标
+inoremap <silent><C-H> <Left>
+inoremap <silent><C-L> <Right>
+inoremap <silent><C-J> <Down>
+inoremap <silent><C-K> <Up>
+
+" 大于小于号缩进
+xnoremap < <gv
+xnoremap > >gv
+
+" 复制粘贴映射
+map <C-y> "+y
+map <C-p> "+gp
+
+" 禁用箭头按键
+"nnoremap <left> <Nop>
+"nnoremap <right> <Nop>
+"nnoremap <up> <Nop>
+"nnoremap <down> <Nop>
+"inoremap <left> <Nop>
+"inoremap <right> <Nop>
+"inoremap <up> <Nop>
+"inoremap <down> <Nop>
+"vnoremap <left> <Nop>
+"vnoremap <right> <Nop>
+"vnoremap <up> <Nop>
+"vnoremap <down> <Nop>
+
+let &t_SI .= "\<Esc>[?2004h"
+let &t_EI .= "\<Esc>[?2004l"
+
+inoremap <special> <expr> <Esc>[200~ XTermPasteBegin()
+
+function! XTermPasteBegin()
+  set pastetoggle=<Esc>[201~
+  set paste
+  return ""
+endfunction
+
+" 自定义statusline函数(ale插件实现)
+function! LinterStatus() abort
+    let l:counts = ale#statusline#Count(bufnr(''))
+
+    let l:all_errors = l:counts.error + l:counts.style_error
+    let l:all_non_errors = l:counts.total - l:all_errors
+
+    return l:counts.total == 0 ? 'OK' : printf(
+    \   '%dW %dE',
+    \   all_non_errors,
+    \   all_errors
+    \)
+endfunction
+
+" 自定义状态栏
+"set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}\ %{LinterStatus()}   "状态行显示的内容
+set statusline=%F%m%r%h%w\ [FORMAT=%{&ff}]\ [TYPE=%Y]\ [ASCII=/%03.3b]\ [POS=%l,%v]\ [LEN=%L]\ [%p%%]\ %{strftime(\"%d/%m/%y\ -\ %H:%M\")}   "状态行显示的内容
+
+
+" 设置当文件被改动时自动载入
+set autoread
+augroup filetype_cpp
+    autocmd!
+    autocmd FileType c,cpp map <buffer> <leader><space> :w<cr>:make<cr>
+augroup END
+augroup filetype_dict
+    autocmd!
+    autocmd FileType php set dict+=~/.vim/dict/php_funclist.dict
+    autocmd FileType css set dict+=~/.vim/dict/css.dict
+    autocmd FileType c set dict+=~/.vim/dict/c.dict
+    autocmd FileType cpp set dict+=~/.vim/dict/cpp.dict
+    autocmd FileType scale set dict+=~/.vim/dict/scale.dict
+    autocmd FileType javascript set dict+=~/.vim/dict/javascript.dict
+    autocmd FileType html set dict+=~/.vim/dict/javascript.dict
+    autocmd FileType html set dict+=~/.vim/dict/css.dict
+augroup END
+
+"修改文件为unix格式
+map <C-!> :call FormatClean()<CR>
+func! FormatClean()
+    exec 'set fileformat=unix'
+    exec 'w'
+endfunc
+
+" 统一缩进
+"nnoremap <F2> gg=G<CR>
+" 设置代码折叠
+"map <F2> :call CodeFold()<CR>
+"func! CodeFold()
+    "exec 'set foldmethod=indent'
+    "zC
+    "zO
+"endfunc
+
+" 去空行
+nnoremap <F9> :g/^\s*$/d<CR>
+
+"taglist
+":nmap <silent> <F4> <ESC>:Tlist<RETURN>
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""""按F5编译运行
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+map <F5> :call CompileRun()<CR>
+func! CompileRun()
+    exec 'w'
+    if search('mpi\.h') != 0
+        exec '!mpirun -np 4 ./%<'
+    elseif &filetype ==? 'c'
+        let l:compilecmd='!gcc '
+        let l:compileflag='-o %< '
+        if search('mpi\.h') != 0
+            let l:compilecmd = '!mpicc '
+        endif
+        if search('glut\.h') != 0
+            let l:compileflag .= ' -lglut -lGLU -lGL '
+        endif
+        if search('cv\.h') != 0
+            let l:compileflag .= ' -lcv -lhighgui -lcvaux '
+        endif
+        if search('omp\.h') != 0
+            let l:compileflag .= ' -fopenmp '
+        endif
+        if search('math\.h') != 0
+            let l:compileflag .= ' -lm '
+        endif
+        exec l:compilecmd.' % '.l:compileflag
+        :!time ./%<
+        :!rm -f ./%<
+    elseif &filetype ==? 'cpp'
+        let l:compilecmd='!g++ '
+        let l:compileflag='-o %< '
+        if search('mpi\.h') != 0
+            let l:compilecmd = '!mpic++ '
+        endif
+        if search('glut\.h') != 0
+            let l:compileflag .= ' -lglut -lGLU -lGL '
+        endif
+        if search('cv\.h') != 0
+            let l:compileflag .= ' -lcv -lhighgui -lcvaux '
+        endif
+        if search('omp\.h') != 0
+            let l:compileflag .= ' -fopenmp '
+        endif
+        if search('math\.h') != 0
+            let l:compileflag .= ' -lm '
+        endif
+        exec l:compilecmd.' % '.l:compileflag
+        :!time ./%<
+        :!rm -f ./%<
+    elseif &filetype ==? 'java'
+        :!javac %
+        :!time java %<
+    elseif &filetype ==? 'sh'
+        :!time bash %
+    elseif &filetype ==? 'python'
+        :!time python3 %
+    elseif &filetype ==? 'javascript'
+        :!time node %
+    elseif &filetype ==? 'typescript'
+        :!time tsc %
+    elseif &filetype ==? 'html'
+        :!firefox % &
+    elseif &filetype ==? 'php'
+        :!time php -f %
+    elseif &filetype ==? 'lua'
+        :!time lua %
+    elseif &filetype ==? 'go'
+        "":!go build %<
+        :!time go run %
+    elseif &filetype ==? 'julia'
+        :!time julia %
+    elseif &filetype ==? 'ruby'
+        :!time ruby %
+    elseif &filetype ==? 'rust'
+        :!time rust %
+    elseif &filetype ==? 'mkd'
+        :!~/.vim/markdown.pl % > %.html &
+        :!firefox %.html &
+    endif
+endfunc
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""""""C,C++的调试
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+map <F6> :call Rungdb()<CR>
+func! Rungdb()
+    exec 'w'
+    exec '!g++ % -g -o %<'
+    exec '!gdb ./%<'
+endfunc
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""""""代码格式化
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"map <F8> :call FormatSrc()<CR>
+
+" 定义FormartSrc()
+func! FormatSrc()
+    exec 'w'
+    if &filetype ==? 'c'
+        exec '!astyle --style=ansi -a --suffix=none %'
+    elseif &filetype ==? 'cpp' || &filetype ==? 'hpp'
+        exec 'r !astyle --style=ansi --one-line=keep-statements -a --suffix=none %> /dev/null 2>&1'
+    elseif &filetype ==? 'perl'
+        exec '!astyle --style=gnu --suffix=none %'
+    elseif &filetype ==? 'py'||&filetype ==? 'python'
+        exec 'r !autopep8 -i --aggressive %'
+    elseif &filetype ==? 'java'
+        exec '!astyle --style=java --suffix=none %'
+    elseif &filetype ==? 'jsp'
+        exec '!astyle --style=gnu --suffix=none %'
+    elseif &filetype ==? 'xml'
+        exec '!astyle --style=gnu --suffix=none %'
+    else
+        exec 'normal gg=G'
+        return
+    endif
+    exec 'e! %'
+endfunc
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""实用设置
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+if has('autocmd')
+    augroup ac
+        autocmd!
+        autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal g`\"" | endif
+    augroup END
+endif
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""切换行号显示和缩进线显示
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+nmap <F7> :call ToggleLineNumber()<CR>
+func! ToggleLineNumber()
+  if !exists("b:togglenum")
+    let b:togglenum=0
+  endif
+  if b:togglenum==0
+    execute "set number"
+    execute "set norelativenumber"
+    execute "set signcolumn=yes"
+    let b:togglenum=1
+    if exists("g:indentLine_enabled")
+      execute "IndentLinesEnable"
+    endif
+  else
+    if b:togglenum==1
+      execute "set number"
+      execute "set relativenumber"
+      execute "set signcolumn=yes"
+      let b:togglenum=2
+      if exists("g:indentLine_enabled")
+        execute "IndentLinesEnable"
+      endif
+    else
+      execute "set nonumber"
+      execute "set norelativenumber"
+      execute "set signcolumn=no"
+      let b:togglenum=0
+      if exists("g:indentLine_enabled")
+        execute "IndentLinesDisable"
+      endif
+    endif
+  endif
+endfunc
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""解决输入法问题
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:input_toggle = 0          " 设置默认为英文输入法
+function! Fcitx2en()
+   let s:input_status = system("fcitx5-remote")
+   if s:input_status == 2
+      let g:input_toggle = 1
+      let l:a = system("fcitx5-remote -c")
+   endif
+endfunction
+
+function! Fcitx2zh()
+   let s:input_status = system("fcitx5-remote")
+   if s:input_status != 2 && g:input_toggle == 1
+      let l:a = system("fcitx5-remote -o")
+      let g:input_toggle = 0
+   endif
+endfunction
+
+set timeoutlen=150
+autocmd InsertLeave * call Fcitx2en()    " 退出Insert模式时关闭中文输入法
+autocmd InsertEnter * call Fcitx2zh()   " 进入Insert模式时开启中文输入法
+
+" 为C程序提供自动缩进
+" 自动补全
+"":inoremap ( ()<ESC>i
+"":inoremap ) <c-r>=ClosePair(')')<CR>
+":inoremap { {<CR>}<ESC>O
+":inoremap } <c-r>=ClosePair('}')<CR>
+"":inoremap [ []<ESC>i
+"":inoremap ] <c-r>=ClosePair(']')<CR>
+"":inoremap " ""<ESC>i
+"":inoremap ' ''<ESC>i
+""function! ClosePair(char)
+""  if getline('.')[col('.') - 1] == a:char
+""      return "\<Right>"
+""  else
+""      return a:char
+""  endif
+""endfunction
+
+
+" 能够漂亮地显示.NFO文件
+function! SetFileEncodings(encodings)
+    let b:myfileencodingsbak=&fileencodings
+    let &fileencodings=a:encodings
+endfunction
+function! RestoreFileEncodings()
+    let &fileencodings=b:myfileencodingsbak
+    unlet b:myfileencodingsbak
+endfunction
+augroup auc
+    autocmd!
+    autocmd BufReadPre *.nfo call SetFileEncodings('cp437')|setambiwidth=single autocmd BufReadPost *.nfo callRestoreFileEncodings()
+augroup END
+
+
+" execute a command and show its output in a split window
+command! -nargs=* -complete=shellcmd Rsplit execute "new | r! <args>"
+
+" execute a command and show its output in a new tab
+command! -nargs=* -complete=shellcmd Rtab execute "tabnew | r! <args>"
+
+" :new | 0read ! <command>
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Vim-Plug
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+silent! call plug#begin('~/.vim/plugged')
+
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source ~/.vimrc
+endif
+
+"""""""""""""""""""""""""""""""""""vim-which-key"""""""""""""""""""""""""""""
+" 显示按键绑定
+Plug 'liuchengxu/vim-which-key'
+let g:which_key_use_floating_win = 1
+let g:which_key_map = {}
+let g:which_key_map['<F1>'] = '帮助文档'
+let g:which_key_map['<F2>'] = '浮动终端'
+let g:which_key_map['<F3>'] = '文件列表'
+let g:which_key_map['<F4>'] = '显示标记'
+let g:which_key_map['<F5>'] = '编译运行'
+let g:which_key_map['<F6>'] = '执行调试'
+let g:which_key_map['<F7>'] = '切换行号'
+let g:which_key_map['<F8>'] = '格式内容'
+let g:which_key_map['<F9>'] = '去除空行'
+let g:which_key_map['<PgUp>'] = '上一主题'
+let g:which_key_map['<PgDn>'] = '下一主题'
+let g:which_key_map[':bn/:bd'] = '切换/删除缓冲区'
+let g:which_key_map['f/s'] = '单/双字符查找'
+let g:which_key_map['>/<'] = '向右/向左缩进'
+let g:which_key_map['za'] = '折叠切换'
+
+let g:which_key_map.k = { 'name': '+功能键(F1-F12)' }
+let g:which_key_map.k['1'] = [ '<F1>', '帮助文档' ]
+let g:which_key_map.k['2'] = [ '<F2>', '浮动终端' ]
+let g:which_key_map.k['3'] = [ '<F3>', '文件列表' ]
+let g:which_key_map.k['4'] = [ '<F4>', '显示标记' ]
+let g:which_key_map.k['5'] = [ '<F5>', '编译运行' ]
+let g:which_key_map.k['6'] = [ '<F6>', '执行调试' ]
+let g:which_key_map.k['7'] = [ '<F7>', '切换行号' ]
+let g:which_key_map.k['8'] = [ '<F8>', '格式内容' ]
+let g:which_key_map.k['9'] = [ '<F9>', '去除空行' ]
+nnoremap <silent> <leader> :<c-u>WhichKey mapleader<CR>
+vnoremap <silent> <leader> :<c-u>WhichKeyVisual mapleader<CR>
+"highlight WhichKey          ctermfg=155 cterm=bold
+"highlight WhichKeyGroup     ctermfg=81  cterm=bold
+"highlight WhichKeyDesc      ctermfg=225
+
+autocmd VimEnter * if exists(':WhichKey') | call which_key#register(mapleader, "g:which_key_map") | endif
+
+""""""""""""""""""""""""""""""""toggle-terminal"""""""""""""""""""""""""""
+" vim8
+" terminal toggle
+if version >= 800
+  Plug 'pakutoma/toggle-terminal'
+  tnoremap <silent> <C-@> <C-w>:ToggleTerminal<CR>
+  nnoremap <silent> <C-@> :ToggleTerminal<CR>
+  let g:toggle_terminal#command = 'zsh'
+  let g:toggle_terminal#position = 'topleft'
+endif
+
+" map <C-@> to toggle
+" set your favorite shell
+" set terminal window position
+" (see possible options at :help vertical)
+
+":term
+":vert term
+
+""""""""""""""""""""""""""""""""""""taglist"""""""""""""""""""""""""""""""
+"let g:Tlist_Show_One_File=1     "不同时显示多个文件的tag，只显示当前文件的
+"let g:Tlist_Exit_OnlyWindow=1   "如果taglist窗口是最后一个窗口，则退出vim
+"let g:Tlist_Ctags_Cmd='/usr/bin/ctags' "将taglist与ctags关联
+"execute pathogen#infect()
+
+"""""""""""""""""""""""""""""""""vim-commentary"""""""""""""""""""""""""""
+" 代码注释(nerdcommenter取代)
+" Plug 'tpope/vim-commentary'
+" autocmd FileType apache setlocal commentstring=#\ %s
+
+"""""""""""""""""""""""""""""""""vim-translator"""""""""""""""""""""""""""
+" 单词翻译
+Plug 'voldikss/vim-translator'
+" Echo translation in the cmdline
+nmap <silent> <Leader>t <Plug>Translate
+vmap <silent> <Leader>t <Plug>TranslateV
+" Display translation in a window
+nmap <silent> <Leader>w <Plug>TranslateW
+vmap <silent> <Leader>w <Plug>TranslateWV
+" Replace the text with translation
+nmap <silent> <Leader>r <Plug>TranslateR
+vmap <silent> <Leader>r <Plug>TranslateRV
+" Translate the text in clipboard
+nmap <silent> <Leader>z <Plug>TranslateX
+"nmap <silent>di :!curl dict://dict.org/d:<cword><CR><CR>
+
+"""""""""""""""""""""""""""""""""vim-fugitive"""""""""""""""""""""""""""""
+" Git包装(disabled)
+if executable('git')
+  Plug 'tpope/vim-fugitive', {'on': []}
+endif
+
+"""""""""""""""""""""""""""""""""vim-surround"""""""""""""""""""""""""""""
+" 字符串标记处理
+Plug 'tpope/vim-surround'
+
+"""""""""""""""""""""""""""""""""""wildfire"""""""""""""""""""""""""""""""
+" 代码段自动选择
+Plug 'gcmt/wildfire.vim'
+
+"""""""""""""""""""""""""""""""""vim-autoformat"""""""""""""""""""""""""""
+" 自动格式化
+Plug 'Chiel92/vim-autoformat'
+" let g:autoformat_autoindent = 0
+" let g:autoformat_retab = 0
+" let g:autoformat_remove_trailing_spaces = 0
+" autocmd FileType vim,tex let b:autoformat_autoindent=0
+" au BufWrite * :Autoformat
+
+map <F8> :call Format()<CR>
+func! Format()
+    exec 'w'
+    exec 'Autoformat'
+endfunc
+
+""""""""""""""""""""""""""""""""vim-colorschemes""""""""""""""""""""""""""
+" 配色方案
+Plug 'flazz/vim-colorschemes'
+" onehalf theme
+Plug 'sonph/onehalf'
+" onedark theme
+Plug 'joshdick/onedark.vim'
+
+" colorscheme molokai
+" 上下翻页切换主题
+nnoremap <silent> <PageDown> :call SwitchColors(1)<CR>
+nnoremap <silent> <PageUp> :call SwitchColors(-1)<CR>
+nnoremap <silent> <PageUP><PageDown> :call SwitchColors(0)<CR>
+function! SwitchColors(direction)
+    " 1. 获取所有已安装的主题列表 (排除掉一些不需要的路径)
+    " globpath 会搜索所有 runtime 目录下的 colors 文件夹
+    let l:files = split(globpath(&runtimepath, 'colors/*.vim'), "\n")
+    let l:names = map(l:files, 'fnamemodify(v:val, ":t:r")')
+    
+    " 如果没找到主题，直接返回
+    if len(l:names) == 0 | return | endif
+
+    " 2. 找到当前主题在列表中的位置
+    let l:current = get(g:, 'colors_name', '')
+    let l:idx = index(l:names, l:current)
+
+    " 3. 计算下一个主题的索引
+    " direction 为 0 随机选择
+    if a:direction == 0
+      let l:seed = reltime()[1]
+      let l:new_idx = l:seed % len(l:names)
+    else
+      " direction 为 1 往后走，-1 往前走
+      let l:new_idx = (l:idx + a:direction) % len(l:names)
+      " 处理负数索引（向前切换时）
+      if l:new_idx < 0
+        let l:new_idx = len(l:names) - 1
+      endif
+    endif
+
+    " 4. 执行切换
+    let l:target = l:names[l:new_idx]
+    execute 'colorscheme ' . l:target
+    
+    " 在底部状态栏回显当前主题名
+    redraw
+    echo "Current Theme: " . l:target . " (" . (l:new_idx + 1) . "/" . len(l:names) . ")"
+endfunction
+
+
+"""""""""""""""""""""""""""""""""""unite.vim"""""""""""""""""""""""""""""""
+" 自定义弹出菜单
+Plug 'Shougo/unite.vim'
+
+""""""""""""""""""""""""""""""""""limelight.vim"""""""""""""""""""""""""""""
+" 聚焦当前行
+Plug 'junegunn/limelight.vim'
+
+"""""""""""""""""""""""""""""""""""vim-polyglot"""""""""""""""""""""""""""""
+" 编程语言包
+Plug 'sheerun/vim-polyglot'
+
+"""""""""""""""""""""""""""""""""""vim-gitgutter"""""""""""""""""""""""""""""
+" 代码变更记录
+if executable('git')
+  Plug 'airblade/vim-gitgutter'
+endif
+
+"""""""""""""""""""""""""""""""""""vim-closetag"""""""""""""""""""""""""""""
+" tag自动配对
+Plug 'alvan/vim-closetag'
+
+"""""""""""""""""""""""""""""""""""""Leaderd""""""""""""""""""""""""""""""""
+" 模糊查找
+"if version >= 704 || (version == 704 && has('patch399'))
+if has("patch-7.4-399")
+  Plug 'Yggdroot/LeaderF'
+endif
+
+""""""""""""""""""""""""""""""""""vim-sneak""""""""""""""""""""""""""""
+"快速跳转
+Plug 'justinmk/vim-sneak'
+let g:sneak#label = 1
+"map f <Plug>Sneak_f
+"map F <Plug>Sneak_F
+"map t <Plug>Sneak_t
+"map T <Plug>Sneak_T
+
+""""""""""""""""""""""""""""""""""clever-f""""""""""""""""""""""""""""
+"快速跳转
+Plug 'rhysd/clever-f.vim'
+
+""""""""""""""""""""""""""""""""""""""vim-qf""""""""""""""""""""""""""""""""
+" quickfix增强
+Plug 'romainl/vim-qf'
+
+""""""""""""""""""""""""""""""""""asyncrun.vim""""""""""""""""""""""""""""""
+" vim8
+" 异步执行
+if version >=800
+  Plug 'skywind3000/asyncrun.vim'
+endif
+" let g:asyncrun_open = 8
+
+""""""""""""""""""""""""""""""""""vim-fcitx"""""""""""""""""""""""""""""""""
+" fcitx状态切换
+"Plug 'h-youhei/vim-fcitx'
+
+""""""""""""""""""""""""""""""""""vim-alias"""""""""""""""""""""""""""""""""
+" 命令别名
+Plug 'Konfekt/vim-alias'
+" if exists('s:loaded_vimafter')
+"   silent doautocmd VimAfter VimEnter *
+" else
+"   let s:loaded_vimafter = 1
+"   augroup VimAfter
+"     autocmd!
+"     autocmd VimEnter * source ~/.vim/after/vimrc.vim
+"   augroup END
+" endif
+
+autocmd VimEnter * :Alias ar AsyncRun
+
+""""""""""""""""""""""""""""""""""delimitMate"""""""""""""""""""""""""""""""
+" 符号自动补全
+Plug 'Raimondi/delimitMate'
+
+""""""""""""""""""""""""""""""""""""vim-go""""""""""""""""""""""""""""""""""
+" golang插件
+" Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+
+""""""""""""""""""""""""""""""""""""minimap.vim""""""""""""""""""""""""""""""""""
+" 代码minimap
+if has('code-minimap')
+  Plug 'wfxr/minimap.vim'
+  let g:minimap_width = 10
+  let g:minimap_auto_start = 1
+  let g:minimap_auto_start_win_enter = 1
+endif
+""""""""""""""""""""""""""""""""""""txt.vim"""""""""""""""""""""""""""""""""
+" 高亮显示txt文本
+Plug 'vim-scripts/txt.vim'
+
+" 漂亮显示txt
+let g:tlist_txt_settings = 'txt;c:content;f:figures;t:tables'
+au BufRead,BufNewFile *.txt setlocal ft=txt
+
+"""""""""""""""""""""""""""""""""vim-floaterm""""""""""""""""""""""""""""""
+if version >=800
+  Plug 'voldikss/vim-floaterm'
+  let g:floaterm_keymap_toggle = '<F2>'
+  "nnoremap   <silent>   <F2>   :FloatermToggle<CR>
+  "tnoremap   <silent>   <F2>   <C-\><C-n>:FloatermToggle<CR>
+endif
+
+"""""""""""""""""""""""""""""""""SingleCompile""""""""""""""""""""""""""""""
+" 运行代码
+Plug 'xuhdev/SingleCompile'
+" nmap <F5> :SCCompileRun<cr>
+
+""""""""""""""""""""""""""""""""""vim-markdown""""""""""""""""""""""""""""""
+" markdown支持
+Plug 'godlygeek/tabular' 
+Plug 'plasticboy/vim-markdown'
+Plug 'mzlogin/vim-markdown-toc'
+" 在当前光标后生成目录
+" :GenTocMarked
+" 更新目录
+" :UpdateToc
+" 取消储存时自动更新目录
+let g:vmt_auto_update_on_save = 0
+" 高亮数学公式
+let g:vim_markdown_math = 1
+" 禁用代码块语法隐藏
+let g:vim_markdown_conceal_code_blocks = 0
+" 启用删除线
+let g:vim_markdown_strikethrough = 1
+" 列表缩进
+let g:vim_markdown_new_list_item_indent = 2
+" 语法突出
+let g:vim_markdown_frontmatter = 1
+let g:vim_markdown_toml_frontmatter = 1
+let g:vim_markdown_json_frontmatter = 1
+
+"""""""""""""""""""""""""""""""""""indentLine"""""""""""""""""""""""""""""""
+" 可视化缩进
+Plug 'Yggdroot/indentLine'
+" let g:indentLine_setColors = 0
+" let g:indentLine_color_term = 239
+" let g:indentLine_char_list = ['|', '¦', '┆', '┊']
+" let g:indentLine_concealcursor = 'inc'
+" let g:indentLine_conceallevel = 2
+let g:indentLine_enabled = 0
+"nnoremap   <silent>   <F3>   :IndentLineToggle<CR>
+
+""""""""""""""""""""""""""""""""""nerdcommenter""""""""""""""""""""""""""""""
+" 代码注释
+Plug 'scrooloose/nerdcommenter'
+" Add spaces after comment delimiters by default
+let g:NERDSpaceDelims = 1
+
+" Use compact syntax for prettified multi-line comments
+let g:NERDCompactSexyComs = 1
+
+" Align line-wise comment delimiters flush left instead of following code indentation
+let g:NERDDefaultAlign = 'left'
+
+" Set a language to use its alternate delimiters by default
+let g:NERDAltDelims_java = 1
+
+" Add your own custom formats or override the defaults
+let g:NERDCustomDelimiters = { 'c': { 'left': '/**','right': '*/' } }
+
+" Allow commenting and inverting empty lines (useful when commenting a region)
+let g:NERDCommentEmptyLines = 1
+
+" Enable trimming of trailing whitespace when uncommenting
+let g:NERDTrimTrailingWhitespace = 1
+
+" Enable NERDCommenterToggle to check all selected lines is commented or not
+let g:NERDToggleCheckAllLines = 1
+
+"""""""""""""""""""""""""""""""""""""nerdtree"""""""""""""""""""""""""""""""""
+" 树形文件浏览器 
+Plug 'scrooloose/nerdtree'
+Plug 'numEricL/nerdtree-live-preview'
+nnoremap <F3> :exe 'NERDTreeToggle'<CR>
+set splitbelow
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
+
+let g:NERDChristmasTree=1
+let g:NERDTreeAutoCenter=1
+" let g:NERDTreeBookmarksFile=$VIM.'\Data\NerdBookmarks.txt'
+let g:NERDTreeNodeDelimiter="\u00a0"
+let g:NERDTreeMouseMode=2
+let g:NERDTreeShowBookmarks=1
+let g:NERDTreeShowFiles=1
+let g:NERDTreeShowHidden=1
+let g:NERDTreeShowLineNumbers=1
+let g:NERDTreeWinPos='left'
+let g:NERDTreeWinSize=31
+" NERDTress File highlighting
+" function! NERDTreeHighlightFile(extension, fg, bg, guifg, guibg)
+"  exec 'autocmd filetype nerdtree highlight ' . a:extension .' ctermbg='. a:bg .' ctermfg='. a:fg .' guibg='. a:guibg .' guifg='. a:guifg
+"  exec 'autocmd filetype nerdtree syn match ' . a:extension .' #^\s\+.*'. a:extension .'$#'
+" endfunction
+
+" call NERDTreeHighlightFile('jade', 'green', 'none', 'green', '#151515')
+" call NERDTreeHighlightFile('ini', 'yellow', 'none', 'yellow', '#151515')
+" call NERDTreeHighlightFile('md', 'blue', 'none', '#3366FF', '#151515')
+" call NERDTreeHighlightFile('yml', 'yellow', 'none', 'yellow', '#151515')
+" call NERDTreeHighlightFile('config', 'yellow', 'none', 'yellow', '#151515')
+" call NERDTreeHighlightFile('conf', 'yellow', 'none', 'yellow', '#151515')
+" call NERDTreeHighlightFile('json', 'yellow', 'none', 'yellow', '#151515')
+" call NERDTreeHighlightFile('html', 'yellow', 'none', 'yellow', '#151515')
+" call NERDTreeHighlightFile('styl', 'cyan', 'none', 'cyan', '#151515')
+" call NERDTreeHighlightFile('css', 'cyan', 'none', 'cyan', '#151515')
+" call NERDTreeHighlightFile('coffee', 'Red', 'none', 'red', '#151515')
+" call NERDTreeHighlightFile('js', 'Red', 'none', '#ffa500', '#151515')
+" call NERDTreeHighlightFile('php', 'Magenta', 'none', '#ff00ff', '#151515')
+
+""""""""""""""""""""""""""""vim-nerdtree-syntax-highlight""""""""""""""""""""""""""
+" 树形文件浏览器 
+" nerdtree高亮
+Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+
+""""""""""""""""""""""""""""rainbow_parentheses.vim"""""""""""""""""""""""""""""""""
+" 彩色括号
+Plug 'kien/rainbow_parentheses.vim'
+let g:rbpt_colorpairs = [['brown',       'RoyalBlue3'],['Darkblue',    'SeaGreen3'],['darkgray',    'DarkOrchid3'],['darkgreen',   'firebrick3'],['darkcyan',    'RoyalBlue3'],['darkred',     'SeaGreen3'],['darkmagenta', 'DarkOrchid3'],['brown',       'firebrick3'],['gray',        'RoyalBlue3'],['darkmagenta', 'DarkOrchid3'],['Darkblue',    'firebrick3'],['darkgreen',   'RoyalBlue3'],['darkcyan',    'SeaGreen3'],['darkred',     'DarkOrchid3'],['red',         'firebrick3'],]
+
+" 不加入这行, 防止黑色括号出现, 很难识别
+" " \ ['black',       'SeaGreen3'],
+
+let g:rbpt_max = 16
+ let g:rbpt_loadcmd_toggle = 0
+augroup rpt
+    autocmd!
+    autocmd VimEnter * RainbowParenthesesToggle
+    autocmd Syntax * RainbowParenthesesLoadRound
+    autocmd Syntax * RainbowParenthesesLoadSquare
+    autocmd Syntax * RainbowParenthesesLoadBraces
+augroup END
+
+""""""""""""""""""""""""""""""""""""""""ale""""""""""""""""""""""""""""""""""""
+" 异步检错
+Plug 'dense-analysis/ale'
+"始终开启标志列
+let g:ale_sign_column_always = 1
+let g:ale_set_highlights = 0
+"自定义error和warning图标
+let g:ale_sign_error = '✗'
+let g:ale_sign_warning = '⚠'
+"在vim自带的状态栏中整合ale
+let g:ale_statusline_format = ['✗ %d', '⚠ %d', '✔ OK']
+"显示Linter名称,出错或警告等相关信息
+let g:ale_echo_msg_error_str = '✗'
+let g:ale_echo_msg_warning_str = '⚠'
+let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+"避免Java调试信息乱码
+let g:ale_java_javac_options = '-encoding UTF-8  -J-Duser.language=en'
+"文件内容发生变化时不进行检查
+let g:ale_lint_on_text_changed = 'never'
+"打开文件时进行检查
+let g:ale_lint_on_enter = 1
+"使用quickfix代替loclist进行错误和警告信息显示
+let g:ale_completion_enabled = 1
+let g:ale_set_loclist = 0
+let g:ale_set_quickfix = 1
+"是否在有警告或错误时打开quickfix窗口
+let g:ale_open_list = 0
+"quickfix窗口高度
+let g:ale_list_window_size = 5
+"警告和错误消失, quickfix窗口不关闭
+"let g:ale_keep_list_window_open = 1
+"纵向显示quickfix窗口
+"let g:ale_list_vertical = 1
+"普通模式下，xp前往上一个错误或警告，xn前往下一个错误或警告
+nmap xp <Plug>(ale_previous_wrap)
+nmap xn <Plug>(ale_next_wrap)
+"<Leader>x触发/关闭语法检查
+nmap <Leader>x :ALEToggle<CR>
+"<Leader>d查看错误或警告的详细信息
+nmap <Leader>d :ALEDetail<CR>
+
+""""""""""""""""""""""""""""""""""""""tagbar""""""""""""""""""""""""""""""""""""
+" 标记显示
+Plug 'majutsushi/tagbar'
+nmap <F4> :TagbarToggle<CR>
+
+""""""""""""""""""""""""""""""""""""ultisnips"""""""""""""""""""""""""""""""""""
+" 代码片段生成
+if (version >= 800 && has('python'))
+  Plug 'SirVer/ultisnips'
+  Plug 'honza/vim-snippets'
+  " Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
+  let g:UltiSnipsExpandTrigger='<tab>'
+  let g:UltiSnipsJumpForwardTrigger='<c-b>'
+  let g:UltiSnipsJumpBackwardTrigger='<c-z>'
+  " If you want :UltiSnipsEdit to split your window.
+  let g:UltiSnipsEditSplit='vertical'
+endif
+
+"""""""""""""""""""""""""""""""""""""completor.nvim"""""""""""""""""""""""""""""""""""
+" vim8
+" 代码自动补全
+if (version >= 800 && has('python'))
+  Plug 'maralla/completor.vim'
+  Plug 'kyouryuukunn/completor-necovim'
+  Plug 'tokorom/completor-shell'
+  Plug 'masawada/completor-dictionary'
+  Plug 'maralla/completor-typescript'
+
+  let g:completor_python_binary = 'python3'
+  let g:completor_clang_binary = 'clang'
+  let g:completor_gocode_binary = 'gocode'
+  let g:completor_node_binary = 'node'
+  let g:completor_tsserver_binary = 'tsserver'
+  let g:completor_css_omni_trigger = '([\w-]+|@[\w-]*|[\w-]+:\s*[\w-]*)$'
+
+  let g:completor_auto_trigger = 1
+  let g:completor_complete_options = 'menuone,noselect,preview'
+
+  let g:completor_go_guru_binary = 'guru'
+  let g:completor_go_gofmt_binary = 'goimports'
+
+  noremap <silent> <leader>d :call completor#do('definition')<CR>
+  noremap <silent> <leader>c :call completor#do('doc')<CR>
+  noremap <silent> <leader>f :call completor#do('format')<CR>
+  noremap <silent> <leader>s :call completor#do('hover')<CR>
+
+  autocmd BufWritePost *.go :call completor#do('format')
+endif
+
+"let g:completor_racer_binary = '/path/to/racer'
+
+" other languages
+"let g:completor_{filetype}_omni_trigger = '<python regex>'
+
+" Enable LSP
+"let g:completor_filetype_map = {}
+" Enable lsp for go by using gopls
+"let g:completor_filetype_map.go = {'ft': 'lsp', 'cmd': 'gopls'}
+" Enable lsp for rust by using rls
+"let g:completor_filetype_map.rust = {'ft': 'lsp', 'cmd': 'rls'}
+" Enable lsp for c by using clangd
+"let g:completor_filetype_map.c = {'ft': 'lsp', 'cmd': 'clangd-7'}
+
+"""""""""""""""""""""""""""""""""""""youcompleteme"""""""""""""""""""""""""""""""""""
+" 代码自动补全
+"Plug 'ycm-core/YouCompleteMe'
+
+"""""""""""""""""""""""""""""""""""""coc.nvim"""""""""""""""""""""""""""""""""""
+" vim8
+" 代码自动补全
+"if version >= 800
+  " Plug 'neoclide/coc.nvim', {'branch': 'release'}
+"endif
+
+"""""""""""""""""""""""""""""""""""""deoplete.nvim"""""""""""""""""""""""""""""""""""
+" vim8
+" 代码自动补全
+" if version >= 800
+  "Plug 'Shougo/deoplete.nvim'
+  "Plug 'Shougo/deoplete.nvim'
+  "Plug 'roxma/nvim-yarp'
+  "Plug 'roxma/vim-hug-neovim-rpc'
+  " 补全源
+  "Plug 'tbodt/deoplete-tabnine', { 'do': './install.sh' }
+  "Plug 'deoplete-plugins/deoplete-go', { 'do': 'make'}
+
+  "let g:deoplete#enable_at_startup = 1
+"endif
+
+"""""""""""""""""""""""""""""""""""lightline.vim""""""""""""""""""""""""""""""""""
+" 轻量级状态栏
+"Plug 'itchyny/lightline.vim'
+"set laststatus=2
+
+"""""""""""""""""""""""""""""""""""""vim-airline"""""""""""""""""""""""""""""""""""
+" 重量级状态栏
+Plug 'bling/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+let g:airline_left_sep=''
+let g:airline_right_sep=''
+let g:airline_powerline_fonts = 1
+let g:airline_enable_branch=1
+let g:airline#extensions#branch#enabled = 1
+let g:airline#extensions#hunks#enabled=0
+let g:airline_enable_syntastic=0
+let g:airline_detect_paste=1
+let g:airline_theme='badwolf'         "设置主题
+let g:airline_detect_whitespace = 0    "关闭空白符检测
+let g:airline#extensions#ale#enabled = 1
+let g:airline#extensions#tabline#enabled = 1    "顶部tab栏显示
+let g:airline#extensions#csv#enabled = 1
+let g:airline#extensions#csv#column_display = 'Number'
+let g:airline#extensions#csv#column_display = 'Name'
+
+if !exists('g:airline_symbols')
+let g:airline_symbols = {}
+endif
+" unicode symbols
+let g:airline_left_sep = '»'
+let g:airline_left_sep = '▶'
+let g:airline_right_sep = '«'
+let g:airline_right_sep = '◀'
+let g:airline_symbols.linenr = '␊'
+let g:airline_symbols.linenr = '␤'
+let g:airline_symbols.linenr = '¶'
+let g:airline_symbols.branch = '⎇'
+let g:airline_symbols.paste = 'ρ'
+let g:airline_symbols.paste = 'Þ'
+let g:airline_symbols.paste = '∥'
+let g:airline_symbols.whitespace = 'Ξ'
+
+" airline symbols
+let g:airline_left_sep = ''
+let g:airline_left_alt_sep = ''
+let g:airline_right_sep = ''
+let g:airline_right_alt_sep = ''
+let g:airline_symbols.branch = ''
+let g:airline_symbols.readonly = ''
+let g:airline_symbols.crypt = '🔒'
+let g:airline_symbols.maxlinenr = '☰'
+let g:airline_symbols.notexists = '∄'
+let g:airline_symbols.linenr = ''
+
+let g:airline#extensions#ale#enabled = 1
+let g:airline#extensions#default#section_truncate_width = {'b': 79,'x': 60,'y': 88,'z': 45,'warning': 80,'error': 80,}
+let g:airline#extensions#default#layout = [[ 'a', 'b', 'c', 'gutter' ],[ 'x', 'y', 'z', 'error', 'warning' ]]
+"let g:airline_section_a = airline#section#create(['mode', 'paste', 'capslock', 'iminsert'])
+"let g:airline_section_b = airline#section#create(['branch'])
+"let g:airline_section_b = '%F%m%r%h%w'
+let g:airline_section_c = '[No.%n:%F %{printf("%.2f",getfsize(bufname("%"))/1000.0)}K /%B]'
+"let g:airline_section_gutter = airline#section#create(['%='])
+"let g:airline_section_gutter = airline#section#create(['branch', 'hunks'])
+
+"let g:airline_section_x = airline#section#create(['branch', 'ffenc'])
+let g:airline_section_x = '[%{strftime("%Y-%m-%d %H:%M")}]'
+"let g:airline_section_y = airline#section#create_right(['ffenc', 'filetype'])
+"let g:airline_section_y = '%{&fileformat} %{(&fenc == "" ? &enc : &fenc)} %{strlen(&ft) ? &ft : "Noft"}%{&bomb ? " BOM" : ""}'
+"let g:airline_section_y = '[%{strftime("%Y-%m-%d %H:%M")}]'
+"let g:airline_section_z = '%#__accent_bold#[%p%% : (%l,%v)/%LL]%#__restore__#'
+"let g:airline_section_warning = airline#section#create(['syntastic', 'eclim', 'whitespace'])
+let g:asyncrun_status = ''
+"let g:airline_section_gutter = airline#section#create(['%{g:asyncrun_status}', '%='])
+
+call plug#end()

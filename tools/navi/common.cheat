@@ -1,0 +1,4 @@
+% ops
+
+# show process
+lsof -p <pid>
