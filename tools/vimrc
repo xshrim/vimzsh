@@ -159,7 +159,7 @@ let mapleader="\\"
 " 可以在buffer的任何地方使用鼠标（类似office中在工作区双击鼠标定位）
 " 支持滚轮
 set mousemodel=popup_setpos
-set mouse=a
+set mouse-=a
 set selection=exclusive
 set selectmode=mouse,key
 map <ScrollWheelUp> :bprevious<CR>
