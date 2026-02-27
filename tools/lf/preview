@@ -19,13 +19,15 @@ text() {
         cat "$*"
       fi
       ;;
-    application/x-executable|application/x-sharedlib|application/x-object|application/octet-stream)
-      file -b "$*"
+    *)
+      echo "--- File Type Classification ---"
+      echo ""
+      file -b "$*" | fold -s
+      echo ""
       stat "$*"
       ;;
   esac
 }
-
 
 image() {
 	if [ -n "$DISPLAY" ]; then
