@@ -5,6 +5,28 @@ num="$(printf "%0.f\n" "$(echo "$(tput cols) / 2" | bc)")"
 numb="$(printf "%0.f\n" "$(echo "$(tput cols) - $num - 1" | bc)")"
 numc="$(printf "%0.f\n" "$(echo "$(tput lines) - 2" | bc)")"
 
+text() {
+  mime=$(file --dereference --mime-type -b "$*")
+  case "$mime" in
+    text/*)
+      if type highlight &>/dev/null; then
+        highlight -O xterm256 -t 4 -s bipolar --force "$*"
+      elif type bat &>/dev/null; then
+        bat -Pp "$*"
+      elif type ccat &>/dev/null; then
+        ccat "$*"
+      else
+        cat "$*"
+      fi
+      ;;
+    application/x-executable|application/x-sharedlib|application/x-object|application/octet-stream)
+      file -b "$*"
+      stat "$*"
+      ;;
+  esac
+}
+
+
 image() {
 	if [ -n "$DISPLAY" ]; then
 		declare -p -A cmd=([action]=add [identifier]="PREVIEW" [x]="$2" [y]="$3" [max_width]="$4" [max_height]="$5" [path]="$1") > "$FIFO_UEBERZUG"
@@ -19,7 +41,7 @@ CACHE="$HOME/.cache/lf/thumbnail.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(
 
 case "$(echo "$1" | awk '{print tolower($0)}')" in
 *.tar*) tar tvf "$1" ;;
-*.zip|*.jar|*.war|*.ear|*.oxt) unzip -l "$1" ;;
+*.zip|*.jar|*.apk|*.war|*.ear|*.oxt) unzip -l "$1" ;;
 *.rar) unrar l "$1" ;;
 *.7z) 7z l "$1" ;;
 #*.deb) ar -tOv "$1" ;;
@@ -35,7 +57,7 @@ case "$(echo "$1" | awk '{print tolower($0)}')" in
 *.docx) docx2txt "$1" - ;;
 *.xls) xls2csv "$1" ;;
 *.xlsx) xlsx2csv "$1" ;;
-*.csv) h "$1" ;;
+*.csv) text "$1" ;;
 *.json) jq --color-output "$1" ;;
 *.htm|*.html|*.xhtml) w3m -dump "$1" ;;
 *.bmp|*.jpg|*.jpeg|*.png|*.xpm|*.webp) image "$1" "$num" 1 "$numb" "$numc";;
@@ -63,5 +85,5 @@ case "$(echo "$1" | awk '{print tolower($0)}')" in
   image "${CACHE}.jpg" "$num" 1 "$numb" "$numc"
   #feh "${CACHE}.jpg"
   ;;
-*) h "$1" ;;
+*) text "$1" ;;
 esac
