@@ -676,7 +676,7 @@ type bat &>/dev/null && alias bat='bat -Pp'
 
 type highlight &>/dev/null && highlight -h &>/dev/null && alias highlight='highlight -O xterm256 --force'
 if [ -d $cdir/highlight ]; then
-  alias highlight="highlight -D $cdir/highlight"
+  alias highlight="highlight -O xterm256 --force -D $cdir/highlight"
 fi
 # ! highlight -h &> /dev/null && highlight.low -h &>/dev/null && alias highlight="highlight.low -O xterm256 --force -D $cdir/highlight --add-config-dir=$cdir/highlight"
 # ! highlight /etc/profile &> /dev/null && alias highlight="highlight -O xterm256 --force -D $cdir/highlight"
@@ -1535,7 +1535,7 @@ function h() {
         #CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
         #highlight -O xterm256 -t 4 -s $style -S $syntax
         if type highlight &>/dev/null;then
-            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar
+            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar --force
         elif type bat &>/dev/null;then
             bat ${sn[*]} -Pp
         elif type ccat &>/dev/null;then
