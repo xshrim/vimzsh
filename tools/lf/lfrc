@@ -1,10 +1,8 @@
 # https://pkg.go.dev/github.com/gokcehan/lf
-
 # ~/.config/lf/lfrc
 
-set previewer ~/.config/lf/preview
 #map i $LESSOPEN='| ~/.config/lf/pv.sh %s' less -R $f
-#set previewer ~/.config/lf/preview
+set previewer ~/.config/lf/preview
 set cleaner ~/.config/lf/clean
 
 set icons
