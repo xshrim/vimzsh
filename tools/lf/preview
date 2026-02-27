@@ -40,15 +40,16 @@ image() {
 }
 
 CACHE="$HOME/.cache/lf/thumbnail.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$1")" | sha256sum | awk '{print $1}'))"
+TREE=$(type tree &>/dev/null && echo "tree --fromfile -C" || echo "cat")
 
 case "$(echo "$1" | awk '{print tolower($0)}')" in
-*.tar*) tar tvf "$1" ;;
-*.zip|*.jar|*.apk|*.war|*.ear|*.oxt) unzip -l "$1" ;;
-*.rar) unrar l "$1" ;;
-*.7z) 7z l "$1" ;;
-#*.deb) ar -tOv "$1" ;;
-*.deb) dpkg -c "$1" ;;
-*.rpm) rpm -qpvl "$1" ;;
+*.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.txz) tar tf "$1" | $TREE;;
+*.zip|*.jar|*.apk|*.war|*.ear|*.oxt) unzip -l "$1" | awk 'NR>3 {print $4}' | sed '/^$/d' | $TREE;;
+*.rar) unrar lb "$1" | $TREE;;
+*.7z) 7z l "$1" | sed -n '/^---/,/^---/p' | sed '1d;$d' | cut -c 53- | sed 's/^[[:space:]]*//' | $TREE;;
+#*.deb) ar -tOv "$1" | $TREE;;
+*.deb) dpkg -c "$1" | awk '{print $6}' | sed 's/^\.//' | $TREE;;
+*.rpm) rpm -qpl "$1" 2>/dev/null | $TREE;;
 *.pdf) pdftotext "$1" - ;;
 *.[1-8]) man "$1" | col -b ;;
 *.o) nm "$1" | less ;;
