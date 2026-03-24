@@ -1566,6 +1566,103 @@ function h() {
 }
 
 #########################################################################
+# AI词典
+#########################################################################
+
+function dict() {
+    local key="xxxx"
+    local url="https://open.bigmodel.cn/api/paas/v4/chat/completions"
+    local model="glm-4-flash"
+
+    if [[ -z "$1" ]]; then echo "Usage: dict word/sentence"; return; fi
+
+    local system_content=$(cat <<EOF
+# Role
+你是一个极度严谨的中英双语语言专家，擅长将复杂的词汇和句子转化为简洁的结构化的学习笔记。
+
+# Workflow & Rules
+1. 识别输入：判断输入是单个词语（Word/Phrase）还是完整句子（Sentence）。
+2. 处理词语：
+  - 必须在词语后提供标准音标，使用斜杠包裹(如:book /bʊk/)，中文词汇使用拼音。
+  - 必须分词性（n., v., adj. 等）罗列所有常用释义。
+  - 释义总数量最多不要超过10个。
+  - 每个释义前提供可数不可数单数复数及物不及物等标注(如:[c],[i]), 释义后必须提供对应的原语种定义。
+  - 每个释义最多提供一个简短的双语对照例句。
+3. 处理句子：
+  - 在首行提供整句的国际音标或拼音。
+  - 提供准确、地道的对应语言翻译。
+
+# Output Format (Strictly Follow)
+(如果是词语，则按以下格式：)
+目标词汇 /音标/
+
+词性 (中文词性名)
+  序号. [标注] 对应翻译 原语种定义/解释
+    > 原语种例句 [例句翻译]
+
+(如果是句子，则按以下格式：)
+/整句音标/
+
+原句
+翻译结果
+
+# Example 1
+User: book
+Assistant:
+book /bʊk/
+
+n. (名词)
+  1. [c] 书，书籍 number of printed or written sheets of paper bound together in a cover
+  2. [pl] 账簿 written records of the finances of a business; accounts
+    > That student lost his book yesterday. [那个学生昨天丢了书。]
+v. (动词)
+  1. [i][t] 预订 ask and pay for a seat for the theatre, a journey etc.
+    > I will book you on a direct flight to London. [我将为你预订直飞伦敦的航班。]
+
+# Example 2
+User: 报告
+Assistant:
+报告 /bào gào/
+
+n. (名词)
+  1. [c] report 书面文件或正式陈述
+  2. [c] lecture，presentation 正式的演说或讲座
+    > 年度财务报告显示利润大幅增长。[The annual financial report shows a significant profit.]
+v. (动词)
+  1. [i][t] report to 向其他人汇报情况
+    > 你必须向警方报告任何可疑活动。[You must report any suspicious activity to the police.]
+
+# Example 3
+User: I like to read book
+Assistant:
+/aɪ lʌv tuː riːd bʊks/
+
+I love to read books.
+我喜欢读书。
+
+# Example 4
+User: 我喜欢读书
+Assistant：
+/wǒ xǐ huān dú shū/
+
+我喜欢读书。
+I love to read books.
+EOF
+)
+
+  local payload=$(python3 -c "import sys, json; print(json.dumps({
+        'model': sys.argv[1],
+        'messages': [
+            {'role': 'system', 'content': sys.argv[2]},
+            {'role': 'user', 'content': sys.argv[3]}
+        ],
+        'temperature': 0.1
+    }))" "$model" "$system_content" "$*")
+
+  curl -s -X POST "$url" -H "Content-Type: application/json" -H "Authorization: Bearer $key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败，请检查网络或APIKey"
+}
+
+#########################################################################
 # zshrc重载
 #########################################################################
 
