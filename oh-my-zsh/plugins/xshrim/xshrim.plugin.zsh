@@ -1523,6 +1523,43 @@ function uz() {
 }
 
 #########################################################################
+# 容器信息
+#########################################################################
+function di() {
+  local container="$1"
+  if [[ -z "$container" ]]; then
+    echo "用法: di <容器ID 或 容器名称>"
+    return 1
+  fi
+
+  # 检查容器是否存在
+  if ! docker ps -a --format '{{.Names}}' | grep -q "^${container}$" && ! docker ps -a -q | grep -q "^${container}"; then
+    echo "❌ 错误: 容器 $container 不存在"
+    return 1
+  fi
+
+  docker inspect "$container" --format '
+容器名称:  {{.Name}}
+容器状态:  {{.State.Status}}
+镜像名称:  {{.Config.Image}}
+交互终端:  {{.Config.Tty}} / {{.Config.OpenStdin}}
+入口命令:  {{json .Config.Entrypoint}} {{json .Config.Cmd}}
+工作目录:  {{.Config.WorkingDir}}
+网络模式:  {{.HostConfig.NetworkMode}}
+网络地址:  {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}
+端口映射:
+{{range $p, $conf := .NetworkSettings.Ports}}{{range $conf}}  - {{.HostIp}}:{{.HostPort}} -> {{$p}}
+{{else}}  - (仅容器内监听) -> {{$p}}
+{{end}}{{end}}
+挂载配置:
+{{range .Mounts}}  - {{.Source}} -> {{.Destination}} ({{.Mode}})
+{{end}}
+环境变量:
+{{range .Config.Env}}  - {{.}}
+{{end}}'
+}
+
+#########################################################################
 # 批量ping主机
 #########################################################################
 function pping() {
