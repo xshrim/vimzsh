@@ -1114,9 +1114,25 @@ autoload -U add-zsh-hook
 autoload -U zcalc
 
 #########################################################################
+# zshrc重载
+#########################################################################
+function src() {
+	local cache="$ZSH_CACHE_DIR"
+	autoload -U compinit zrecompile
+	compinit -i -d "$cache/zcomp-$HOST"
+
+	for f in ~/.zshrc "$cache/zcomp-$HOST"; do
+		zrecompile -p $f && command rm -f $f.zwc.old
+	done
+
+	# Use $SHELL if available; remove leading dash if login shell
+	[[ -n "$SHELL" ]] && exec ${SHELL#-} || exec zsh
+}
+alias reload='src'
+
+#########################################################################
 # 计算器
 #########################################################################
-
 function calc() {
     zcalc -e "$*"
 }
@@ -1130,7 +1146,6 @@ function c()
 #########################################################################
 # 大小写转换
 #########################################################################
-
 function upper() {
     echo "$*" | tr '[:lower:]' '[:upper:]'
 }
@@ -1146,7 +1161,6 @@ function capitalize() {
 #########################################################################
 # 生成uuid
 #########################################################################
-
 function uuid() {
   if [[ -n "$1" ]]; then
     local seed="$1"
@@ -1177,7 +1191,7 @@ function uuid() {
 #########################################################################
 # 端口开放
 #########################################################################
-
+# 开放端口
 function popen() {
   for item in $*; do
     if [[ "$item" == */* ]]; then
@@ -1205,7 +1219,7 @@ function popen() {
   done
 }
 
-
+# 关闭端口
 function pclose() {
   for item in $*;
   do
@@ -1234,6 +1248,7 @@ function pclose() {
   done
 }
 
+# 开放端口列表
 function plist() {
   local zone
   local result=()
@@ -1262,7 +1277,6 @@ function plist() {
 
   echo "$zone: ${(j: :)result}"
 }
-
 
 #########################################################################
 # 代理切换
@@ -1345,7 +1359,7 @@ wa() {
 #########################################################################
 # 进程信息
 #########################################################################
-function pd(){
+function proc(){
   verbose=false
   if [ $# -eq 0 ]; then
     echo "usage: $0 [-v] port"
@@ -1568,7 +1582,6 @@ function h() {
 #########################################################################
 # AI词典
 #########################################################################
-
 function dict() {
     local key="xxxx"
     local url="https://open.bigmodel.cn/api/paas/v4/chat/completions"
@@ -1663,22 +1676,22 @@ EOF
 }
 
 #########################################################################
-# zshrc重载
+# 临时别名
 #########################################################################
+als() {
+  # 获取上一条执行过的命令（排除 'als' 本身）
+  local last_cmd=$(fc -ln -1 -1)
 
-function src() {
-	local cache="$ZSH_CACHE_DIR"
-	autoload -U compinit zrecompile
-	compinit -i -d "$cache/zcomp-$HOST"
+  # 去除首尾空格
+  last_cmd="${last_cmd#"${last_cmd%%[![:space:]]*}"}"
+  last_cmd="${last_cmd%"${last_cmd##*[![:space:]]}"}"
 
-	for f in ~/.zshrc "$cache/zcomp-$HOST"; do
-		zrecompile -p $f && command rm -f $f.zwc.old
-	done
+  # 定义别名
+  local alias_name="${1:-L}"
+  alias "$alias_name"="$last_cmd"
 
-	# Use $SHELL if available; remove leading dash if login shell
-	[[ -n "$SHELL" ]] && exec ${SHELL#-} || exec zsh
+  echo "✅ 临时别名: $alias_name -> $last_cmd"
 }
-alias reload='src'
 
 #########################################################################
 # 自动解压
@@ -1721,7 +1734,6 @@ fi
 #########################################################################
 # 推荐工具
 #########################################################################
-
 function awesome(){
     echo "fping: https://github.com/schweikert/fping (A high performance ping tool)"
     echo "coreutils: https://github.com/uutils/coreutils (A cross-platform rust rewrite of the GNU coreutils)"
