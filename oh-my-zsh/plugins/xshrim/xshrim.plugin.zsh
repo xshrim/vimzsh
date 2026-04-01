@@ -1439,6 +1439,68 @@ function proc(){
 }
 
 #########################################################################
+# 资源占用
+#########################################################################
+uz() {
+  local target="$1"
+
+  if [[ -z "$target" ]]; then
+    echo "用法: whouse <路径 | 端口 | IP/域名 | 'deleted'>"
+    return 1
+  fi
+
+  # 场景 1: 扫描“幽灵文件”（文件已删除但空间未释放）
+  if [[ "$target" == "deleted" ]]; then
+    echo "🔍 正在扫描已删除但未释放的文件..."
+    local del_files=$(lsof +L1 2>/dev/null)
+    if [[ -n "$del_files" ]]; then
+      echo "$del_files"
+    else
+      echo "✅ 未发现此类文件"
+    fi
+
+  # 场景 2: 判断是否为纯数字 (端口号)
+  elif [[ "$target" =~ ^[0-9]+$ ]]; then
+    echo "🔍 正在查询占用端口 [$target] 的进程..."
+    # -i :端口 匹配所有相关连接
+    # -sTCP:LISTEN 仅过滤处于监听状态的 TCP 连接
+    local result=$(lsof -nP -iTCP:"$target" -sTCP:LISTEN 2>/dev/null)
+    
+    # 如果 TCP 没搜到，再尝试搜 UDP (UDP 没有 LISTEN 状态，直接搜端口)
+    if [[ -z "$result" ]]; then
+        result=$(lsof -nP -iUDP:"$target" 2>/dev/null)
+    fi
+
+    [[ -n "$result" ]] && echo "$result" || echo "❌ 端口 $target 未被占用"
+
+  # 场景 3: 判断是否为网络目标 (IP 地址或域名)
+  elif [[ "$target" =~ ^[a-zA-Z0-9.-]+\.[a-z]{2,}$ ]] || [[ "$target" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+    echo "🔍 正在查询与 [$target] 建立连接的进程..."
+    local result=$(lsof -i @"$target" 2>/dev/null)
+    [[ -n "$result" ]] && echo "$result" || echo "❌ 没有进程连接到 $target"
+
+  # 场景 4: 判断是否为路径 (文件、目录或挂载点)
+  elif [[ -e "$target" ]]; then
+    # 如果是挂载点，尝试找到所有访问该分区的进程
+    if mount | grep -q "on $target "; then
+      echo "🔍 正在查询占用挂载点 [$target] 的进程..."
+      local result=$(lsof -f -- "$target" 2>/dev/null)
+    elif [[ -d "$target" ]]; then
+      echo "🔍 正在查询占用目录 [$target] 的进程..."
+      local result=$(lsof +D "$target" 2>/dev/null)
+    else
+      echo "🔍 正在查询占用文件 [$target] 的进程..."
+      local result=$(lsof "$target" 2>/dev/null)
+    fi
+    [[ -n "$result" ]] && echo "$result" || echo "❌ $target 未被占用"
+
+  else
+    echo "⚠️ 识别失败: 无法判断 $target 的类型"
+    return 2
+  fi
+}
+
+#########################################################################
 # 批量ping主机
 #########################################################################
 function pping() {
