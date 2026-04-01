@@ -1756,8 +1756,15 @@ als() {
 }
 
 #########################################################################
-# 自动解压
+# 压缩解压
 #########################################################################
+# 自动压缩
+function gz() {
+    local target="${1%/}"
+    tar -cvzf "${target}.tgz" "$target"
+    echo "✅ 已压缩至: ${target}.tgz"
+}
+# 自动解压
 function ex() {
  if [ -z "$1" ]; then
     # display usage if no parameters given
