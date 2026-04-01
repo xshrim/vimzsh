@@ -1144,6 +1144,16 @@ function c()
 }
 
 #########################################################################
+# 数字时钟
+#########################################################################
+function clock() {
+  while true; do
+    echo -ne "\r\033[1;33m🕒 $(date +%H:%M:%S)\033[0m"
+    sleep 1
+  done
+}
+
+#########################################################################
 # 大小写转换
 #########################################################################
 function upper() {
@@ -1304,7 +1314,7 @@ function proxyoff(){
 #########################################################################
 # 命令监控
 #########################################################################
-wa() {
+function wa() {
   local interval=1
   if [[ "$1" == "-n" ]]; then
     interval=$2
@@ -1441,7 +1451,7 @@ function proc(){
 #########################################################################
 # 资源占用
 #########################################################################
-uz() {
+function uz() {
   local target="$1"
 
   if [[ -z "$target" ]]; then
@@ -1740,7 +1750,7 @@ EOF
 #########################################################################
 # 临时别名
 #########################################################################
-als() {
+function als() {
   # 获取上一条执行过的命令（排除 'als' 本身）
   local last_cmd=$(fc -ln -1 -1)
 
@@ -1799,6 +1809,100 @@ function ex() {
     done
 fi
 }
+
+#########################################################################
+# 自动执行sudo命令(Alt+Enter)
+#########################################################################
+function sd() {
+    if [[ -n "$1" ]]; then
+      user="$1"
+    else
+      user="$USER"
+    fi
+
+    if grep -q "^sudo:" /etc/group; then
+      sudo usermod -aG sudo $user
+    else
+      sudo usermod -aG wheel $user
+    fi
+
+    cfgfile="/etc/sudoers.d/${user}-nopasswd"
+    content="${user} ALL=(ALL) NOPASSWD: ALL"
+    #content="%sudo ALL=(ALL) NOPASSWD: ALL"
+
+    if echo "$content" | sudo tee "$cfgfile" > /dev/null; then
+      sudo chmod 0440 $cfgfile
+    fi
+
+    if grep -q "^docker:" /etc/group; then
+      sudo usermod -aG docker $user
+    fi
+}
+
+sudo-command-line() {
+    [[ -z $BUFFER ]] && zle up-history
+    if [[ $BUFFER == sudo\ * ]]; then
+        LBUFFER="${LBUFFER#sudo }"
+    elif [[ $BUFFER == $EDITOR\ * ]]; then
+        LBUFFER="${LBUFFER#$EDITOR }"
+        LBUFFER="sudoedit $LBUFFER"
+    elif [[ $BUFFER == sudoedit\ * ]]; then
+        LBUFFER="${LBUFFER#sudoedit }"
+        LBUFFER="$EDITOR $LBUFFER"
+    else
+        LBUFFER="sudo $LBUFFER"
+    fi
+    
+    zle accept-line
+}
+zle -N sudo-command-line
+# Defined shortcut keys: [Alt] [Enter]
+bindkey -M emacs '^[^M' sudo-command-line
+bindkey -M vicmd '^[^M' sudo-command-line
+bindkey -M viins '^[^M' sudo-command-line
+
+#########################################################################
+# kubectl自动补全加载较慢, 启用延迟加载
+#########################################################################
+function kubectl() {
+  if ! type __start_kubectl >/dev/null 2>&1; then
+    source <(command kubectl completion zsh)
+  fi
+  command kubectl "$@"
+}
+alias k="kubectl"
+
+function kneat() {
+  python3 -c "
+import sys, yaml
+data = yaml.safe_load(sys.stdin)
+def clean(d):
+    if not isinstance(d, dict): return
+    # 移除指定的元数据键
+    meta_to_del = ['managedFields', 'uid', 'resourceVersion', 'creationTimestamp', 'generation', 'generateName', 'selfLink', 'ownerReferences']
+    if 'metadata' in d:
+        for k in meta_to_del: d['metadata'].pop(k, None)
+        if 'annotations' in d['metadata']:
+            d['metadata']['annotations'].pop('kubectl.kubernetes.io/last-applied-configuration', None)
+    # 移除 status
+    d.pop('status', None)
+clean(data)
+print(yaml.dump(data, default_flow_style=False))
+"
+}
+
+#########################################################################
+# nvm加载较慢, 启用延迟加载
+#########################################################################
+#function nvm() {
+#  [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
+#  [ -s "$HOME/.nvm/bash_completion" ] && . "$HOME/.nvm/bash_completion"
+#  command nvm "$@"
+#}
+
+if [ -f /usr/share/nvm/init-nvm.sh ]; then
+  source /usr/share/nvm/init-nvm.sh --no-use
+fi
 
 #########################################################################
 # 推荐工具
@@ -2434,57 +2538,6 @@ function db2() {
 }
 
 #########################################################################
-# 自动执行sudo命令(Alt+Enter)
-#########################################################################
-sd() {
-    if [[ -n "$1" ]]; then
-      user="$1"
-    else
-      user="$USER"
-    fi
-
-    if grep -q "^sudo:" /etc/group; then
-      sudo usermod -aG sudo $user
-    else
-      sudo usermod -aG wheel $user
-    fi
-
-    cfgfile="/etc/sudoers.d/${user}-nopasswd"
-    content="${user} ALL=(ALL) NOPASSWD: ALL"
-    #content="%sudo ALL=(ALL) NOPASSWD: ALL"
-
-    if echo "$content" | sudo tee "$cfgfile" > /dev/null; then
-      sudo chmod 0440 $cfgfile
-    fi
-
-    if grep -q "^docker:" /etc/group; then
-      sudo usermod -aG docker $user
-    fi
-}
-
-sudo-command-line() {
-    [[ -z $BUFFER ]] && zle up-history
-    if [[ $BUFFER == sudo\ * ]]; then
-        LBUFFER="${LBUFFER#sudo }"
-    elif [[ $BUFFER == $EDITOR\ * ]]; then
-        LBUFFER="${LBUFFER#$EDITOR }"
-        LBUFFER="sudoedit $LBUFFER"
-    elif [[ $BUFFER == sudoedit\ * ]]; then
-        LBUFFER="${LBUFFER#sudoedit }"
-        LBUFFER="$EDITOR $LBUFFER"
-    else
-        LBUFFER="sudo $LBUFFER"
-    fi
-    
-    zle accept-line
-}
-zle -N sudo-command-line
-# Defined shortcut keys: [Alt] [Enter]
-bindkey -M emacs '^[^M' sudo-command-line
-bindkey -M vicmd '^[^M' sudo-command-line
-bindkey -M viins '^[^M' sudo-command-line
-
-#########################################################################
 # 远程主机批量执行任务(类似ansible)
 #########################################################################
 function batch() {
@@ -2655,49 +2708,6 @@ function ans() {
     echo "$text" | \grep -Pzo "\[?$host\]?.* => {\n(.*\n)*?}\n?"|sed "s/^\S.* => {/{/g"
   fi
 }
-
-#########################################################################
-# kubectl自动补全加载较慢, 启用延迟加载
-#########################################################################
-function kubectl() {
-  if ! type __start_kubectl >/dev/null 2>&1; then
-    source <(command kubectl completion zsh)
-  fi
-  command kubectl "$@"
-}
-alias k="kubectl"
-
-function kneat() {
-  python3 -c "
-import sys, yaml
-data = yaml.safe_load(sys.stdin)
-def clean(d):
-    if not isinstance(d, dict): return
-    # 移除指定的元数据键
-    meta_to_del = ['managedFields', 'uid', 'resourceVersion', 'creationTimestamp', 'generation', 'generateName', 'selfLink', 'ownerReferences']
-    if 'metadata' in d:
-        for k in meta_to_del: d['metadata'].pop(k, None)
-        if 'annotations' in d['metadata']:
-            d['metadata']['annotations'].pop('kubectl.kubernetes.io/last-applied-configuration', None)
-    # 移除 status
-    d.pop('status', None)
-clean(data)
-print(yaml.dump(data, default_flow_style=False))
-"
-}
-
-#########################################################################
-# nvm加载较慢, 启用延迟加载
-#########################################################################
-#function nvm() {
-#  [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
-#  [ -s "$HOME/.nvm/bash_completion" ] && . "$HOME/.nvm/bash_completion"
-#  command nvm "$@"
-#}
-
-if [ -f /usr/share/nvm/init-nvm.sh ]; then
-  source /usr/share/nvm/init-nvm.sh --no-use
-fi
 
 #########################################################################
 #目录跳转后自动显示目录内容
