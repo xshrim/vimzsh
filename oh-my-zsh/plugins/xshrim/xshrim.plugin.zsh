@@ -1540,8 +1540,9 @@ function di() {
 
   docker inspect "$container" --format '
 容器名称:  {{.Name}}
-容器状态:  {{.State.Status}}
 镜像名称:  {{.Config.Image}}
+容器状态:  {{.State.Status}}
+资源占用:  {{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}
 交互终端:  {{.Config.Tty}} / {{.Config.OpenStdin}}
 入口命令:  {{json .Config.Entrypoint}} {{json .Config.Cmd}}
 工作目录:  {{.Config.WorkingDir}}
