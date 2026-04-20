@@ -1702,6 +1702,48 @@ function h() {
 }
 
 #########################################################################
+# 图标符号
+#########################################################################
+function icon() {
+    # 官方 CSS 数据源
+    local DATA_URL="https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/css/nerd-fonts-generated.css"
+    local CACHE_FILE="$HOME/.cache/nf_icons.txt"
+
+    # 1. 自动初始化/更新缓存
+    if [[ ! -s "$CACHE_FILE" || -n $(find "$CACHE_FILE" -mtime +30) ]]; then
+        echo -n "Syncing official icon library... "
+
+        curl -ksL "$DATA_URL" | grep -A 1 "^\.nf-" | sed -n 'N;s/^\.nf-\(.*\):before.*content:[[:space:]]*"\\\(.*\)".*$/\1 \2/p' > "$CACHE_FILE"
+        #curl -sL "$DATA_URL" | grep -A 1 "^\.nf-" | sed -n 'N;s/^\.nf-\(.*\):before.*content:.*"\\\(.*\)".*$/\1 \2/p' | while read -r line; do
+        #    local name=$(echo "$line" | awk '{print $1}')
+        #    local hex=$(echo "$line" | awk '{print $2}')
+        #
+        #    if [[ -n "$name" && -n "$hex" ]]; then
+        #        echo "$name $hex" > "$CACHE_FILE"
+        #    fi
+        #done
+
+        if [[ -s "$CACHE_FILE" ]]; then
+            echo "[✓]"
+        else
+            echo "[✕]"
+            exit 1
+        fi
+    fi
+
+    local search_term="$1"
+    local matches=$(grep -i "$search_term" "$CACHE_FILE")
+
+    echo -e "ICON\tNAME"
+    echo -e "----\t----"
+    if [[ -n "$matches" ]]; then
+        echo "$matches" | while read -r name hex; do
+            [[ ${#hex} -le 4 ]] && icon=$(printf "\u$hex") || icon=$(printf "\U$hex") printf "%s\t%s\n" "$icon" "$name"
+        done
+    fi
+}
+
+#########################################################################
 # AI词典
 #########################################################################
 function dict() {
