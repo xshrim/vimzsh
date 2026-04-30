@@ -1810,43 +1810,59 @@ import base64, re, time, hmac, hashlib, struct, urllib.parse
 
 def get_totp(secret_b32):
     try:
-        key = base64.b32decode(secret_b32.upper() + '=' * ((8 - len(secret_b32) % 8) % 8))
-        msg = struct.pack('>Q', int(time.time() / 30))
+        now = time.time()
+        remaining = int(30 - (now % 30))
+        
+        missing_padding = len(secret_b32) % 8
+        if missing_padding:
+            secret_b32 += '=' * (8 - missing_padding)
+            
+        key = base64.b32decode(secret_b32.upper())
+        msg = struct.pack('>Q', int(now / 30))
         h = hmac.new(key, msg, hashlib.sha1).digest()
         offset = h[-1] & 0xf
         code = struct.unpack('>I', h[offset:offset+4])[0] & 0x7fffffff
-        return f'{code % 1000000:06d}'
+        return f'{code % 1000000:06d}', remaining
     except:
-        return 'INVALID'
+        return 'INVALID', 0
 
 def main():
     url = '$OTPAUTH_MIGRATION'
     filter_name = '$filter_account'.lower()
     
     parsed = urllib.parse.urlparse(url)
-    data_b64 = urllib.parse.parse_qs(parsed.query).get('data', [''])[0]
-    if not data_b64:
+    data_qs = urllib.parse.parse_qs(parsed.query).get('data', [''])
+    if not data_qs[0]:
+        print('Error: No data found in migration URL.')
         return
 
-    decoded = base64.b64decode(data_b64)
+    try:
+        decoded = base64.b64decode(data_qs[0])
+    except:
+        print('Error: Failed to decode base64 data.')
+        return
     
-    items = re.findall(b'\x0a.\x0a\x0a(.{10})\x12(.)(.*?)(?:\x1a|\x20|$)', decoded, re.DOTALL)
+    items = re.findall(b'\x0a.\x0a\x0a(.*?)\x12.(.*?)(?:\x1a|\x20|$)', decoded, re.DOTALL)
     
-    header = f'{\"ACCOUNT\":<15} | {\"SECRET\":<20} | {\"OTPCODE\":<10}'
+    header = f'{\"ACCOUNT\":<16} | {\"SECRET\":<18} | {\"OTPCODE\":<10} | {\"REMAIN\":<6}'
     print(header)
     print('-' * len(header))
     
     found = False
-    for secret_raw, name_len, name_raw in items:
-        name = name_raw.decode('utf-8', errors='ignore')
-        secret = base64.b32encode(secret_raw).decode().replace('=', '')
-        
-        if filter_name and filter_name not in name.lower():
-            continue
+    for secret_raw, name_raw in items:
+        try:
+            name = name_raw.decode('utf-8', errors='ignore').split('\x1a')[0]
+            secret = base64.b32encode(secret_raw).decode().replace('=', '')
             
-        otp = get_totp(secret)
-        print(f'{name:<15} | {secret:<20} | {otp:<10}')
-        found = True
+            if filter_name and filter_name not in name.lower():
+                continue
+                
+            otp, time_left = get_totp(secret)
+            
+            print(f'{name[:16]:<16} | {secret:<18} | {otp:<10} | {time_left:>3}s')
+            found = True
+        except:
+            continue
 
     if not found and filter_name:
         print(f'No account found matching \"{filter_name}\"')
