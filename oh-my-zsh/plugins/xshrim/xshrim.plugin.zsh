@@ -1781,6 +1781,81 @@ function icon() {
 }
 
 #########################################################################
+# Authenticator
+#########################################################################
+auth() {
+    if ! command -v python3 &> /dev/null; then
+        echo "ERROR: python3 not found. This function requires Python 3 for secure cryptographic calculations."
+        
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            echo "HINT: Run 'sudo apt install python3' (Debian/Ubuntu) or 'sudo yum install python3' (CentOS/RHEL)"
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+            echo "HINT: Run 'brew install python' or download it from python.org"
+        else
+            echo "HINT: Please install Python 3 and ensure it is in your PATH."
+        fi
+        return 1
+    fi
+
+    if [[ -z "$OTPAUTH_MIGRATION" ]]; then
+        echo "ERROR: Environment variable OTPAUTH_MIGRATION is not set."
+        echo "Usage: export OTPAUTH_MIGRATION='otpauth-migration://...'"
+        return 1
+    fi
+
+    local filter_account="$1"
+
+    python3 -c "
+import base64, re, time, hmac, hashlib, struct, urllib.parse
+
+def get_totp(secret_b32):
+    try:
+        key = base64.b32decode(secret_b32.upper() + '=' * ((8 - len(secret_b32) % 8) % 8))
+        msg = struct.pack('>Q', int(time.time() / 30))
+        h = hmac.new(key, msg, hashlib.sha1).digest()
+        offset = h[-1] & 0xf
+        code = struct.unpack('>I', h[offset:offset+4])[0] & 0x7fffffff
+        return f'{code % 1000000:06d}'
+    except:
+        return 'INVALID'
+
+def main():
+    url = '$OTPAUTH_MIGRATION'
+    filter_name = '$filter_account'.lower()
+    
+    parsed = urllib.parse.urlparse(url)
+    data_b64 = urllib.parse.parse_qs(parsed.query).get('data', [''])[0]
+    if not data_b64:
+        return
+
+    decoded = base64.b64decode(data_b64)
+    
+    items = re.findall(b'\x0a.\x0a\x0a(.{10})\x12(.)(.*?)(?:\x1a|\x20|$)', decoded, re.DOTALL)
+    
+    header = f'{\"ACCOUNT\":<20} | {\"SECRET\":<20} | {\"OTP CODE\":<10}'
+    print(header)
+    print('-' * len(header))
+    
+    found = False
+    for secret_raw, name_len, name_raw in items:
+        name = name_raw.decode('utf-8', errors='ignore')
+        secret = base64.b32encode(secret_raw).decode().replace('=', '')
+        
+        if filter_name and filter_name not in name.lower():
+            continue
+            
+        otp = get_totp(secret)
+        print(f'{name:<20} | {secret:<20} | {otp:<10}')
+        found = True
+
+    if not found and filter_name:
+        print(f'No account found matching \"{filter_name}\"')
+
+main()
+"
+}
+
+#########################################################################
 # AI词典
 #########################################################################
 function dict() {
