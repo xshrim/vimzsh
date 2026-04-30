@@ -1832,7 +1832,7 @@ def main():
     
     items = re.findall(b'\x0a.\x0a\x0a(.{10})\x12(.)(.*?)(?:\x1a|\x20|$)', decoded, re.DOTALL)
     
-    header = f'{\"ACCOUNT\":<20} | {\"SECRET\":<20} | {\"OTP CODE\":<10}'
+    header = f'{\"ACCOUNT\":<20} | {\"SECRET\":<20} | {\"OTPCODE\":<10}'
     print(header)
     print('-' * len(header))
     
