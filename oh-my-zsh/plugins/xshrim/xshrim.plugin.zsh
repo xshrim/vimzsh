@@ -1832,7 +1832,7 @@ def main():
     
     items = re.findall(b'\x0a.\x0a\x0a(.{10})\x12(.)(.*?)(?:\x1a|\x20|$)', decoded, re.DOTALL)
     
-    header = f'{\"ACCOUNT\":<20} | {\"SECRET\":<20} | {\"OTPCODE\":<10}'
+    header = f'{\"ACCOUNT\":<15} | {\"SECRET\":<20} | {\"OTPCODE\":<10}'
     print(header)
     print('-' * len(header))
     
@@ -1845,7 +1845,7 @@ def main():
             continue
             
         otp = get_totp(secret)
-        print(f'{name:<20} | {secret:<20} | {otp:<10}')
+        print(f'{name:<15} | {secret:<20} | {otp:<10}')
         found = True
 
     if not found and filter_name:
