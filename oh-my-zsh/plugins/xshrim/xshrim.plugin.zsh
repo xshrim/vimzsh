@@ -740,14 +740,6 @@ alias dpush='docker push'
 #  rsync -ahr --info=progress2 --no-i-r --remove-source-files "$@" && rm -rf "${@:1:${#}-1}"
 #}
 
-function ds() {
-  if [ $# -eq 0 ]; then
-    du -sh .* * 2>/dev/null | sort -hr
-  else
-    du -sh "$@" 2>/dev/null | sort -hr
-  fi
-}
-
 #[Esc][h] man 当前命令时，显示简短说明
 alias run-help >&/dev/null && unalias run-help
 autoload run-help
@@ -1405,9 +1397,50 @@ function wa() {
 }
 
 #########################################################################
+# 本机IP
+#########################################################################
+
+function myip() {
+    local exclude_re="docker|veth|lo|br-|flannel|cni0|cali|tunl0"
+
+    if command -v ip >/dev/null 2>&1; then
+        local default_interface=$(ip route | grep '^default' | awk '{print $5}' | head -n1)
+        
+        if [[ -n "$default_interface" && ! "$default_interface" =~ $exclude_re ]]; then
+            ip -4 addr show dev "$default_interface" | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1
+            return
+        else
+            ip -o -4 addr show scope global | grep -vE "$exclude_re" | awk '{print $4}' | cut -d/ -f1 | head -n1
+            return
+        fi
+    fi
+
+    if command -v ifconfig >/dev/null 2>&1; then
+        ifconfig | awk -v exclude="$exclude_re" '
+            /^[a-z0-9]/ { interface=$1 }
+            /inet / { 
+                if (interface !~ exclude && $2 !~ /127.0.0.1/) {
+                    if ($2 ~ /addr:/) { split($2, a, ":"); print a[2] }
+                    else { print $2 }
+                }
+            }
+        ' | head -n1
+        return
+    fi
+
+    if command -v hostname >/dev/null 2>&1; then
+        hostname -I 2>/dev/null | tr ' ' '\n' | grep -vE '^172\.17\.|^127\.' | head -n1
+        return
+    fi
+
+    echo "Error: Unable to determine a valid host IP." >&2
+    return 1
+}
+
+#########################################################################
 # 磁盘占用
 #########################################################################
-function duh() {
+function ds() {
     local d=""
     [[ "$1" == "-a" ]] && d="D" && shift
 
