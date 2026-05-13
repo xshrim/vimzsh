@@ -1397,6 +1397,38 @@ function wa() {
 }
 
 #########################################################################
+# 证书检测
+#########################################################################
+function cert() {
+    local target="$1"
+
+    if [ -z "$target" ]; then
+        echo "Usage: cert <file_path | domain_or_url>"
+        return 1
+    fi
+
+    if [[ "$target" =~ ^https?:// ]] || [[ "$target" =~ \.[a-z]{2,} && ! -f "$target" ]]; then
+        echo "--- [Remote SSL Certificate: $target] ---"
+        
+        local clean_host=$(echo "$target" | sed -E 's|https?://||; s|/.*||')
+        local host=$(echo "$clean_host" | cut -d: -f1)
+        local port=$(echo "$clean_host" | grep ":" | cut -d: -f2)
+        port=${port:-443}
+
+        timeout 5 openssl s_client -servername "$host" -connect "$host:$port" </dev/null 2>/dev/null | \
+        openssl x509 -noout -text
+
+    elif [ -f "$target" ]; then
+        echo "--- [Local Certificate File: $target] ---"
+        openssl x509 -in "$target" -noout -text
+
+    else
+        echo "Error: '$target' is neither a valid file nor a reachable URL."
+        return 1
+    fi
+}
+
+#########################################################################
 # 本机IP
 #########################################################################
 
