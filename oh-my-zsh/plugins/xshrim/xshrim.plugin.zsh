@@ -668,6 +668,8 @@ elif [ -f ~/.virc ];then
 fi
 alias vi='vim'
 
+alias root='sudo -E zsh &> /dev/null'
+
 if [ $(id -u) -ne 0 ] && type fping &>/dev/null && ! fping -h &>/dev/null 
 then
   sudo chown root:root $(which fping)
