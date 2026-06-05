@@ -306,6 +306,9 @@ build_rprompt() {
 # Settings
 ########################################
 
+# 加载 Zsh 内部调度器模块
+zmodload zsh/sched
+
 #color{{{
 autoload colors zsh/terminfo
 if [[ "$terminfo[colors]" -ge 8 ]]; then
@@ -389,15 +392,32 @@ elif [[ $theme == "compat" ]]; then
     smile="%(?,$GREEN${promptok}%{$reset_color%},$RED${promptko}%{$reset_color%})"
 
     PROMPT="%{${fg_bold[blue]}%}${promptdc} %{${fg_bold[red]}%}%m${promptsp}%n %{${fg_bold[magenta]}%}:: %{${fg_bold[cyan]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) ${smile} %{${fg_bold[blue]}%}${promptpt}%{${reset_color}%} "
-    RPROMPT="%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
+    RPROMPT="%{${fg_bold[yellow]}%}< %w %D{%H:%M:%S} %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
 
     #PROMPT='${smile} %{$fg_bold[yellow]%}%~%{$reset_color%}$(git_prompt_info) %{${fg_bold[magenta]}%}${promptpt}%{${reset_color}%} '
 else
     promptdc="✿"
     #promptpt="»"
     PROMPT="%{${fg_bold[blue]}%}${promptdc} %{${fg_bold[red]}%}%m${promptsp}%n %{${fg_bold[magenta]}%}:: %{${fg_bold[cyan]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) ${smile} %{${fg_bold[blue]}%}${promptpt}%{${reset_color}%} "
-    RPROMPT="%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
+    RPROMPT="%{${fg_bold[yellow]}%}< %w %D{%H:%M:%S} %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
+    #RPROMPT="%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
     # TODO 继续完善
+fi
+
+# 定义一个后台异步刷新的定时器函数
+_zsh_background_clock() {
+    RPROMPT="$RPROMPT"
+    
+    # 核心黑魔法：通知 Zsh 核心异步重绘当前的提示符，不打断用户正在输入的文本
+    zle && zle reset-prompt
+
+    # 递归调度：让这个函数在 1 秒后再次执行，形成完美的无阻塞事件循环
+    sched +1 _zsh_background_clock
+}
+
+# 启动无限事件循环刷新右侧提示符
+if [ -n "$RPROMPT" ]; then
+    _zsh_background_clock
 fi
 
 #在 Emacs终端 中使用 Zsh 的一些设置
@@ -1160,7 +1180,7 @@ function capitalize() {
 #########################################################################
 # 表格展示
 #########################################################################
-table() {
+function table() {
     local sep="${1:-:}"
     if command -v column &> /dev/null; then
         sed "s/${sep}/│/g" | column -t -s '│' | sed "s/^/  /"
