@@ -57,7 +57,7 @@ source /etc/profile
 
 #plugins=(comm zsh-syntax-highlighting zsh-autosuggestions zsh-completions emoji nmap pip nvm npm redis-cli heroku fabric docker docker-compose kubectl oc helm kops)
 
-#plugins=(comm fast-syntax-highlighting zsh-autosuggestions zsh-completions emoji vi-mode nmap pip nvm npm redis-cli heroku fabric docker docker-compose helm kops)
+#plugins=(comm fast-syntax-highlighting zsh-autosuggestions zsh-autopair zsh-completions emoji vi-mode nmap pip nvm npm redis-cli heroku fabric docker docker-compose helm kops)
 plugins=(xshrim zsh-syntax-highlighting zsh-autosuggestions zsh-completions history-substring-search z docker docker-compose)
 
 #ZSH_THEME="powerline"
