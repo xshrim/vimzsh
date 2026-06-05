@@ -320,10 +320,10 @@ FINISH="%{$terminfo[sgr0]%}"
 #}}}
 
 # symbols to choose from:
-# ☀ ✹ ☄ ♆ ♀ ♁ ♐ ♇ ♈ ♉ ✹ ♚ ♛ ♜ ♝ ♞ ♟ ♠ ♣ ▾⚢ ⚲ ⚳ ⚴ ⚥ ☿ ⚤ ⚦ ⚒ ⚑ ⚐ ♺ ♻ ♼ ⓐ ⑃ ᐅ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ 
-# ✡ ✔ ✘ ✗ ✖ ✚ ✱ ✤ ✦ ● ❤ ➜ ➟ ➼ ➤ ☁ ◀▶▲✂ ✎ ✐ 𝝙 ♒ ⑊ # ⑄ # ⓧ ⑂⨍ ⨎ ⨏ ⨷ ◯ ⩚ ⩛ ⩡ ⩱ ⩲ ± ⩵  ⩶ ⨠ ❮ » ‹ ⏎
-# ⬅ ⬆ ⬇ ⬈ ⬉ ⬊ ⬋ ⬒ ⬓ ⬔ ⬕ ⬖ ⬗ ⬘ ⬙ ⬟  ⬤ ☀ ☂ ✭ ⚡ * Ⓞ ⓣ Ⓓ ⓜ ⓤ ⓡ ⑁ 〒 ǀ ǁ ǂ ĭ Ť Ŧ ↵ ⌚ ➦  ⚙  ✖ ⨀ ⨁ ⨂ ☛ ☚ ☎
-# ★ ☯ ☮ ☣ ☢ ❥ ✧ ✪ ♬ ♫ ♪ ♩ ✉ ✯ ✮ ✿ ❀ ❁ ❂ ❉ ❄ ❅ ❆ ✝ ✓ ☑ ☐ ღ ⁂ ☽☾ϟ✢✠✝✛✜☩☨☥✁☊✒✑✏✎✐⌛✇✈
+# ☀ ✹ ☄ ♆ ♀ ♁ ♐ ♇ ♈ ♉ ✹ ♚ ♛ ♜ ♝ ♞ ♟ ♠ ♣ ▾⚢ ⚲ ⚳ ⚴ ⚥ ☿ ⚤ ⚦ ⚒ ⚑ ⚐ ♺ ♻ ♼ ⓐ 📦 ⑃ ᐅ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ 
+# ✡ ✓ ✕ ✔ ✘ ✗ ✖ ✚ ✱ ✤ ✦ ● ❤ ➜ ➟ ➼ ➤ ☁ ◀▶▲✂ ✎ ✐ 𝝙 ♒ ⑊ # ⑄ # ⓧ ⑂⨍ ⨎ ⨏ ⨷ ◯ ⩚ ⩛ ⩡ ⩱ ⩲ ± ⩵  ⩶ ⨠ ❮ » ‹ ⏎
+# ⬅ ⬆ ⬇ ⬈ ⬉ ⬊ ⬋ ⬒ ⬓ ⬔ ⬕ ⬖ ⬗ ⬘ ⬙ ⬟  ⬤ ☀ ☂ ✭ ⚡ * 🔍 ⚠ 🛈 Ⓞ ⓣ Ⓓ ⓜ ⓤ ⓡ ⑁ 〒 ǀ ǁ ǂ ℹ ĭ Ť Ŧ ↵ ⌚ ➦  ⚙  ✖ ⨀ ⨁ ⨂ ☛ ☚ ☎
+# ★ ☯ ☮ ☣ ☢ ❥ ✧ ✪ ♬ ♫ ♪ ♩ ✉ ✯ ✮ ✿ ❀ ❁ ❂ ❉ ❄ ❅ ❆ ✝ ☑ ☐ ღ ⁂ ☽☾ϟ✢✠✝✛✜☩☨☥✁☊✒✑✏✎✐⌛✇✈🛦
 
 # ✄⏎⇧⇪⌂⌘⌫♈♉♋♌☺☹⚢✶⌑➢➣➥➦➪➩➨↰↱↲↳↴↶↷⇕⇖⇗⇘⇙⇚⇛⇧⇨⇦⇩⇪➔➘➙➚➛➜➝➞⏎➟➠➡☇☊☋⇍⇎⇏⇕➳➷➸➹➺➻
 # ⤴⤵↵↔◆◇◢◣◤◥◊❖⎔⊞⊿◁◃◂◄▲△▴▼▾▿◮◭◐◑◒⦿◕◔⊖⊘『』
@@ -1155,7 +1155,7 @@ memo() {
     cat ~/.termemos
   else
     echo "$(date '+%Y-%m-%d %H:%M'): $*" >> ~/.termemos
-    echo "📝 已记录便签"
+    echo "✅ Notes Recorded"
   fi
 }
 
@@ -1231,114 +1231,138 @@ function uuid() {
 #########################################################################
 # 端口开放
 #########################################################################
-# 开放端口
-function popen() {
-  for item in $*; do
-    if [[ "$item" == */* ]]; then
-      port=${item%/*}
-      proto=${item#*/}
-    else
-      port=$item
-      proto="tcp"
+function port() {
+    local action="show"
+    if [[ -n "$1" ]]; then
+        local action=$1
+        shift
     fi
-    if type firewall-cmd 2>&1 >/dev/null; then
-      if [[ "$proto" == "all" ]]; then
-        sudo firewall-cmd --zone=public --add-port={$port/tcp,$port/udp} --permanent
-      else
-        sudo firewall-cmd --zone=public --add-port=$port/$proto --permanent
-      fi
-      sudo firewall-cmd --reload
-    else
-      if [[ "$proto" == "all" ]]; then
-        sudo /sbin/iptables -I INPUT -p tcp --dport $port -j ACCEPT
-        sudo /sbin/iptables -I INPUT -p udp --dport $port -j ACCEPT
-      else
-        sudo /sbin/iptables -I INPUT -p $proto --dport $port -j ACCEPT
-      fi
-    fi
-  done
-}
 
-# 关闭端口
-function pclose() {
-  for item in $*;
-  do
-    if [[ "$item" == */* ]]; then
-      port=${item%/*}
-      proto=${item#*/}
-    else
-      port=$item
-      proto="tcp"
+    if [[ -z "$action" || "$action" == "-h" || "$action" == "--help" ]]; then
+        echo "Usage: port [on|off|ls|open|close|list|show] [port1 port2/protocol ...]"
+        return 0
     fi
-    if type firewall-cmd 2>&1 >/dev/null; then
-      if [[ "$proto" == "all" ]]; then
-        sudo firewall-cmd --zone=public --remove-port={$port/tcp,$port/udp} --permanent
-      else
-        sudo firewall-cmd --zone=public --remove-port=$port/$proto --permanent
-      fi
-      sudo firewall-cmd --reload
-    else
-      if [[ "$proto" == "all" ]]; then
-        sudo /sbin/iptables -I INPUT -p tcp --dport $port -j DROP
-        sudo /sbin/iptables -I INPUT -p udp --dport $port -j DROP
-      else
-        sudo /sbin/iptables -I INPUT -p $proto --dport $port -j DROP
-      fi
+
+    if [[ "$action" == "ls" || "$action" == "list" || "$action" == "show" ]]; then
+        local zone result=()
+        
+        if type firewall-cmd >/dev/null 2>&1; then
+            zone=$(sudo firewall-cmd --get-default-zone)
+            local ports=$(sudo firewall-cmd --zone="$zone" --list-ports)
+            local services=$(sudo firewall-cmd --zone="$zone" --list-services)
+
+            for p in $ports; do
+                result+=("$p")
+            done
+
+            for s in $services; do
+                local port_info=$(getent services "$s" | awk '{print $2}' | head -n 1)
+                [[ -n "$port_info" ]] && result+=("$port_info/$s") || result+=("$s")
+            done
+        else
+            zone="public"
+            local it_ports=$(sudo iptables -L INPUT -n | grep 'ACCEPT' | grep -E 'dpt:[0-9]+|dpts:[0-9]+:[0-9]+' | awk -F'dpt:|dpts:' '{print $2}' | awk '{print $1}')
+            
+            while IFS= read -r p; do
+                [[ -z "$p" ]] && continue
+                local p_num=${p%%:*}
+                local s_name=$(getent services "$p_num"/tcp | awk '{print $1}')
+                [[ -n "$s_name" ]] && result+=("$p/$s_name") || result+=("$p")
+            done <<< "$it_ports"
+        fi
+
+        echo "$zone: ${result[*]}"
+        return 0
     fi
-  done
-}
 
-# 开放端口列表
-function plist() {
-  local zone
-  local result=()
-  if type firewall-cmd 2>&1 >/dev/null; then
-    zone=$(sudo firewall-cmd --get-default-zone)
-    local ports=$(sudo firewall-cmd --zone=$zone --list-ports)
-    local services=$(sudo firewall-cmd --zone=$zone --list-services)
+    if [[ "$action" != "on" && "$action" != "off" && "$action" != "open" && "$action" != "close" ]]; then
+        echo "Error: Unknown action $action. Use 'on', 'off', 'open' or 'close'." >&2
+        return 1
+    fi
+    if [[ "$action" == "on" ]]; then
+        action="open"
+    fi
+    if [[ "$action" == "off" ]]; then
+        action="close"
+    fi
 
-    for p in ${(s: :)ports}; do
-      result+=("$p")
+    if [[ $# -eq 0 ]]; then
+        echo "Error: No ports specified." >&2
+        return 1
+    fi
+
+    for item in "$@"; do
+        local port proto
+        if [[ "$item" == */* ]]; then
+            port=${item%/*}
+            proto=${item#*/}
+        else
+            port=$item
+            proto="tcp"
+        fi
+
+        if type firewall-cmd >/dev/null 2>&1; then
+            local fw_opt="--add-port"
+            [[ "$action" == "close" ]] && fw_opt="--remove-port"
+
+            if [[ "$proto" == "all" ]]; then
+                sudo firewall-cmd --zone=public "$fw_opt"="$port/tcp" --permanent >/dev/null
+                sudo firewall-cmd --zone=public "$fw_opt"="$port/udp" --permanent >/dev/null
+            else
+                sudo firewall-cmd --zone=public "$fw_opt"="$port/$proto" --permanent >/dev/null
+            fi
+            sudo firewall-cmd --reload >/dev/null
+            echo "Firewalld: $action port $port/$proto successfully"
+        else
+            local ip_opt="-I" # Insert rule on open
+            [[ "$action" == "close" ]] && ip_opt="-D" # Delete rule cleanly on close
+
+            if [[ "$proto" == "all" ]]; then
+                sudo /sbin/iptables "$ip_opt" INPUT -p tcp --dport "$port" -j ACCEPT
+                sudo /sbin/iptables "$ip_opt" INPUT -p udp --dport "$port" -j ACCEPT
+            else
+                sudo /sbin/iptables "$ip_opt" INPUT -p "$proto" --dport "$port" -j ACCEPT
+            fi
+            echo "Iptables: $action port $port/$proto successfully"
+        fi
     done
-
-    for s in ${(s: :)services}; do
-      local port_info=$(getent services $s | awk '{print $2}' | head -n 1)
-      [[ -n "$port_info" ]] && result+=("$port_info/$s") || result+=("$s")
-    done
-  else
-    zone="public"
-    local it_ports=$(sudo iptables -L INPUT -n | grep 'ACCEPT' | grep -E 'dpt:[0-9]+|dpts:[0-9]+:[0-9]+' | awk -F'dpt:|dpts:' '{print $2}' | awk '{print $1}')
-     for p in ${(f)it_ports}; do
-      local p_num=${p%%:*}
-      local s_name=$(getent services $p_num/tcp | awk '{print $1}')
-      [[ -n "$s_name" ]] && result+=("$p/$s_name") || result+=("$p")
-    done
-  fi
-
-  echo "$zone: ${(j: :)result}"
 }
 
 #########################################################################
 # 代理切换
 #########################################################################
-# 开启代理
-function proxyon(){
-    port=7897
-    if [ -n "$1" ]; then
-        port=$1
-    fi
-    export ALL_PROXY=socks5://127.0.0.1:$port
-    export http_proxy=http://127.0.0.1:$port
-    export https_proxy=http://127.0.0.1:$port
-    echo -e "已开启代理 <127.0.0.1:$port>"
-}
+function px() {
+  local default_port="7890"
+  local proxy_host="127.0.0.1"
 
-# 关闭代理
-function proxyoff(){
-    unset ALL_PROXY
-    unset http_proxy
-    unset https_proxy
-    echo -e "已关闭代理"
+  if [ "$1" = "off" ]; then
+    unset http_proxy https_proxy all_proxy
+    echo "❀ Proxy Disabled"
+    return 0
+  fi
+
+  if [ "$1" = "show" ]; then
+    if [ -z "$http_proxy" ]; then
+      echo "🛈️ Current Proxy: [NONE]"
+    else
+      echo "🛈 Current Proxy: $http_proxy"
+    fi
+    return 0
+  fi
+
+  local port=$default_port
+  if [[ "$1" =~ ^[0-9]+$ ]]; then
+    port=$1
+  elif [ -n "$1" ] && [ "$1" != "on" ]; then
+    echo "Usage: px [port_number|on|off|show]"
+    return 1
+  fi
+
+  export http_proxy="http://${proxy_host}:${port}"
+  export https_proxy="http://${proxy_host}:${port}"
+  export all_proxy="socks5://${proxy_host}:${port}"
+  
+  echo "✿ Proxy Enabled <${proxy_host}:${port}>"
 }
 
 #########################################################################
@@ -1737,6 +1761,24 @@ function ssk() {
 }
 
 #########################################################################
+# 临时别名
+#########################################################################
+function als() {
+  # 获取上一条执行过的命令（排除 'als' 本身）
+  local last_cmd=$(fc -ln -1 -1)
+
+  # 去除首尾空格
+  last_cmd="${last_cmd#"${last_cmd%%[![:space:]]*}"}"
+  last_cmd="${last_cmd%"${last_cmd##*[![:space:]]}"}"
+
+  # 定义别名
+  local alias_name="${1:-L}"
+  alias "$alias_name"="$last_cmd"
+
+  echo "✅ Temporary Aliased: $alias_name -> $last_cmd"
+}
+
+#########################################################################
 # 高亮指定关键字
 #########################################################################
 # cat xx.txt | hl red kwd
@@ -2132,25 +2174,6 @@ EOF
 
   curl -s -X POST "$url" -H "Content-Type: application/json" -H "Authorization: Bearer $key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败，请检查网络或APIKey"
 }
-
-#########################################################################
-# 临时别名
-#########################################################################
-function als() {
-  # 获取上一条执行过的命令（排除 'als' 本身）
-  local last_cmd=$(fc -ln -1 -1)
-
-  # 去除首尾空格
-  last_cmd="${last_cmd#"${last_cmd%%[![:space:]]*}"}"
-  last_cmd="${last_cmd%"${last_cmd##*[![:space:]]}"}"
-
-  # 定义别名
-  local alias_name="${1:-L}"
-  alias "$alias_name"="$last_cmd"
-
-  echo "✅ 临时别名: $alias_name -> $last_cmd"
-}
-
 
 #########################################################################
 # 自动执行sudo命令(Alt+Enter)
