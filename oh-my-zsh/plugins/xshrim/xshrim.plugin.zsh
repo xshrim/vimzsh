@@ -1513,7 +1513,7 @@ function proc(){
   verbose=false
   if [ $# -eq 0 ]; then
     echo "usage: $0 [-v] port"
-    exit 1
+    return 1
   fi
   if [ $1 = "-v" ]; then
     verbose=true
