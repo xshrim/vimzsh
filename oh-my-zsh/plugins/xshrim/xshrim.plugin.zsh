@@ -1108,23 +1108,6 @@ autoload -U add-zsh-hook
 autoload -U zcalc
 
 #########################################################################
-# zshrc重载
-#########################################################################
-function src() {
-	local cache="$ZSH_CACHE_DIR"
-	autoload -U compinit zrecompile
-	compinit -i -d "$cache/zcomp-$HOST"
-
-	for f in ~/.zshrc "$cache/zcomp-$HOST"; do
-		zrecompile -p $f && command rm -f $f.zwc.old
-	done
-
-	# Use $SHELL if available; remove leading dash if login shell
-	[[ -n "$SHELL" ]] && exec ${SHELL#-} || exec zsh
-}
-alias reload='src'
-
-#########################################################################
 # 计算器
 #########################################################################
 function calc() {
@@ -1173,6 +1156,29 @@ function lower() {
 function capitalize() {
     echo "$*" | tr '[:upper:]' '[:lower:]' | sed 's/^\w\|\s\w/\U&/g'
 }
+
+#########################################################################
+# 表格展示
+#########################################################################
+table() {
+    local sep="${1:-:}"
+    if command -v column &> /dev/null; then
+        sed "s/${sep}/│/g" | column -t -s '│' | sed "s/^/  /"
+    else
+        cat
+    fi
+}
+
+#########################################################################
+# 简易tree
+#########################################################################
+if ! command -v tree &> /dev/null; then
+    function tree() {
+        local target_dir="${1:-.}"
+
+        find "$target_dir" -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
+    }
+fi
 
 #########################################################################
 # 打印颜色
@@ -1985,6 +1991,50 @@ function ex() {
 }
 
 #########################################################################
+# 批量重命名
+#########################################################################
+function rnm() {
+    if [[ -z "$1" || -z "$2" ]]; then
+        echo "❌ Error: Missing arguments!"
+        echo "Usage: mmv '<regex_pattern>' '<replace_template>'"
+        echo "Example: mmv 'prefix_(.*)\.mp4' '2026_\$1.mp4'"
+        return 1
+    fi
+
+    local pattern="$1"
+    local template="$2"
+    local count=0
+
+    echo "🔍 Scanning files matching regex: /${pattern}/ ..."
+    echo "------------------------------------------------"
+
+    for src in *; do
+        if [[ -e "$src" && "$src" =~ ^${pattern}$ ]]; then
+            local dst="$template"
+            local i=1
+            for group in "${match[@]}"; do
+                dst="${dst//\$${i}/$group}"
+                ((i++))
+            done
+
+            [[ "$src" == "$dst" ]] && continue
+
+            if [[ -e "$dst" ]]; then
+                echo "⚠️ Skipped: $dst already exists! Cannot overwrite."
+                continue
+            fi
+
+            echo "✨ '$src'  ->  '$dst'"
+            mv "$src" "$dst"
+            ((count++))
+        fi
+    done
+
+    echo "------------------------------------------------"
+    echo "✅ Done! $count file(s) renamed successfully."
+}
+
+#########################################################################
 # Authenticator
 #########################################################################
 function auth() {
@@ -2257,57 +2307,6 @@ EOF
 
   curl -s -X POST "$url" -H "Content-Type: application/json" -H "Authorization: Bearer $key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败，请检查网络或APIKey"
 }
-
-#########################################################################
-# 自动执行sudo命令(Alt+Enter)
-#########################################################################
-function sd() {
-    if [[ -n "$1" ]]; then
-      user="$1"
-    else
-      user="$USER"
-    fi
-
-    if grep -q "^sudo:" /etc/group; then
-      sudo usermod -aG sudo $user
-    else
-      sudo usermod -aG wheel $user
-    fi
-
-    cfgfile="/etc/sudoers.d/${user}-nopasswd"
-    content="${user} ALL=(ALL) NOPASSWD: ALL"
-    #content="%sudo ALL=(ALL) NOPASSWD: ALL"
-
-    if echo "$content" | sudo tee "$cfgfile" > /dev/null; then
-      sudo chmod 0440 $cfgfile
-    fi
-
-    if grep -q "^docker:" /etc/group; then
-      sudo usermod -aG docker $user
-    fi
-}
-
-sudo-command-line() {
-    [[ -z $BUFFER ]] && zle up-history
-    if [[ $BUFFER == sudo\ * ]]; then
-        LBUFFER="${LBUFFER#sudo }"
-    elif [[ $BUFFER == $EDITOR\ * ]]; then
-        LBUFFER="${LBUFFER#$EDITOR }"
-        LBUFFER="sudoedit $LBUFFER"
-    elif [[ $BUFFER == sudoedit\ * ]]; then
-        LBUFFER="${LBUFFER#sudoedit }"
-        LBUFFER="$EDITOR $LBUFFER"
-    else
-        LBUFFER="sudo $LBUFFER"
-    fi
-    
-    zle accept-line
-}
-zle -N sudo-command-line
-# Defined shortcut keys: [Alt] [Enter]
-bindkey -M emacs '^[^M' sudo-command-line
-bindkey -M vicmd '^[^M' sudo-command-line
-bindkey -M viins '^[^M' sudo-command-line
 
 #########################################################################
 # kubectl自动补全加载较慢, 启用延迟加载
@@ -3156,6 +3155,197 @@ function ans() {
     echo "$text" | \grep -Pzo "\[?$host\]?.* => {\n(.*\n)*?}\n?"|sed "s/^\S.* => {/{/g"
   fi
 }
+
+#########################################################################
+# zshrc重载
+#########################################################################
+function src() {
+	local cache="$ZSH_CACHE_DIR"
+	autoload -U compinit zrecompile
+	compinit -i -d "$cache/zcomp-$HOST"
+
+	for f in ~/.zshrc "$cache/zcomp-$HOST"; do
+		zrecompile -p $f && command rm -f $f.zwc.old
+	done
+
+	# Use $SHELL if available; remove leading dash if login shell
+	[[ -n "$SHELL" ]] && exec ${SHELL#-} || exec zsh
+}
+alias reload='src'
+
+#########################################################################
+# 自动执行sudo命令(Alt+Enter)
+#########################################################################
+function sd() {
+    if [[ -n "$1" ]]; then
+      user="$1"
+    else
+      user="$USER"
+    fi
+
+    if grep -q "^sudo:" /etc/group; then
+      sudo usermod -aG sudo $user
+    else
+      sudo usermod -aG wheel $user
+    fi
+
+    cfgfile="/etc/sudoers.d/${user}-nopasswd"
+    content="${user} ALL=(ALL) NOPASSWD: ALL"
+    #content="%sudo ALL=(ALL) NOPASSWD: ALL"
+
+    if echo "$content" | sudo tee "$cfgfile" > /dev/null; then
+      sudo chmod 0440 $cfgfile
+    fi
+
+    if grep -q "^docker:" /etc/group; then
+      sudo usermod -aG docker $user
+    fi
+}
+
+sudo-command-line() {
+    [[ -z $BUFFER ]] && zle up-history
+    if [[ $BUFFER == sudo\ * ]]; then
+        LBUFFER="${LBUFFER#sudo }"
+    elif [[ $BUFFER == $EDITOR\ * ]]; then
+        LBUFFER="${LBUFFER#$EDITOR }"
+        LBUFFER="sudoedit $LBUFFER"
+    elif [[ $BUFFER == sudoedit\ * ]]; then
+        LBUFFER="${LBUFFER#sudoedit }"
+        LBUFFER="$EDITOR $LBUFFER"
+    else
+        LBUFFER="sudo $LBUFFER"
+    fi
+    
+    zle accept-line
+}
+zle -N sudo-command-line
+# Defined shortcut keys: [Alt] [Enter]
+bindkey -M emacs '^[^M' sudo-command-line
+bindkey -M vicmd '^[^M' sudo-command-line
+bindkey -M viins '^[^M' sudo-command-line
+
+#########################################################################
+#临时冻结
+#########################################################################
+_zsh_freeze_and_do() {
+    zle push-line-or-edit
+}
+zle -N _zsh_freeze_and_do
+bindkey '^Q' _zsh_freeze_and_do
+
+#########################################################################
+#标点符号自动补全
+#########################################################################
+# 1. Core pairing and skipping logic
+_zsh_native_autopair() {
+    local l_char="$KEYS"
+    local r_char=""
+
+    # Define pairs (English & Chinese)
+    case "$l_char" in
+        # English pairs
+        '(') r_char=')' ;;
+        '[') r_char=']' ;;
+        '{') r_char='}' ;;
+        '"') r_char='"' ;;
+        "'") r_char="'" ;;
+        '`') r_char='`' ;;
+        '<') r_char='>' ;;
+        # Chinese pairs
+        '（') r_char='）' ;;
+        '【') r_char='】' ;;
+        '{')  r_char='}' ;;  # Zsh treats Chinese { } same as English if input method maps it
+        '《') r_char='》' ;;
+        '“') r_char='”' ;;
+        '‘') r_char='’' ;;
+        '「') r_char='」' ;;
+    esac
+
+    # SKIPPING LOGIC: If the next character in RBUFFER matches the typed closing char
+    # Use helper comparison to safely handle multi-byte Chinese characters
+    if [[ -n "$r_char" && "${RBUFFER}" == "${l_char}"* ]]; then
+        LBUFFER+="$l_char"
+        RBUFFER="${RBUFFER#?}"
+    elif [[ -n "$r_char" ]]; then
+        # PAIRING LOGIC: Insert both and keep cursor in the middle
+        LBUFFER+="$l_char"
+        RBUFFER="$r_char$RBUFFER"
+    else
+        # Fallback for unmapped keys
+        zle self-insert
+    fi
+}
+
+# Bind keys for pairing (Opening characters)
+zle -N _zsh_native_autopair
+for char in '(' '[' '{' '"' "'" '`' '<' '（' '【' '《' '“' '‘' '「'; do
+    bindkey "$char" _zsh_native_autopair
+done
+
+# Explicitly bind closing characters for the skipping feature
+_zsh_native_skip_close() {
+    local c_char="$KEYS"
+    # Safely check if RBUFFER starts with the pressed closing character
+    if [[ "${RBUFFER}" == "${c_char}"* ]]; then
+        LBUFFER+="$c_char"
+        RBUFFER="${RBUFFER#?}"
+    else
+        zle self-insert
+    fi
+}
+zle -N _zsh_native_skip_close
+for char in ')' ']' '}' '>' '）' '】' '》' '”' '’' '」'; do
+    bindkey "$char" _zsh_native_skip_close
+done
+
+
+# 2. SMART DELETE LOGIC: Delete both if cursor is inside an empty pair (Multi-byte Safe)
+_zsh_native_autodelete() {
+    local matched=0
+    
+    # Check if the text surrounding the cursor forms a known pair
+    # Using array approach to handle multi-byte characters safely
+    local pairs=(
+        "()" "[]" "{}" '""' "''" '``' "<>"
+        "（）" "【】" "《》" "“”" "‘’" "「」"
+    )
+
+    for pair in "${pairs[@]}"; do
+        local left="${pair[1]}"
+        local right="${pair[2]}"
+        
+        if [[ "${LBUFFER}" == *"${left}" && "${RBUFFER}" == "${right}"* ]]; then
+            # Safe deletion of 1 character from left and 1 from right (handles multi-byte)
+            LBUFFER="${LBUFFER%?}"
+            RBUFFER="${RBUFFER#?}"
+            matched=1
+            break
+        fi
+    done
+    
+    if [[ $matched -eq 0 ]]; then
+        # Normal backspace behavior
+        zle backward-delete-char
+    fi
+}
+zle -N _zsh_native_autodelete
+bindkey '^?' _zsh_native_autodelete # ^? represents Backspace
+
+
+# 3. SMART SPACE LOGIC: Expand space inside standard pairs
+_zsh_native_autospace() {
+    if [[ "${LBUFFER}" == *"{" && "${RBUFFER}" == "}"* ]] || \
+       [[ "${LBUFFER}" == *"[" && "${RBUFFER}" == "]"* ]] || \
+       [[ "${LBUFFER}" == *"(" && "${RBUFFER}" == ")"* ]] || \
+       [[ "${LBUFFER}" == *"（" && "${RBUFFER}" == "）"* ]]; then
+        LBUFFER+=" "
+        RBUFFER=" $RBUFFER"
+    else
+        zle self-insert
+    fi
+}
+zle -N _zsh_native_autospace
+bindkey ' ' _zsh_native_autospace
 
 #########################################################################
 #目录跳转后自动显示目录内容
