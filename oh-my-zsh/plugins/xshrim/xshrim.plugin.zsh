@@ -1848,6 +1848,105 @@ function icon() {
 }
 
 #########################################################################
+# 压缩解压
+#########################################################################
+# 自动压缩
+function cx() {
+  if [ -z "$1" ]; then
+    echo "Usage: cx <file1> [file2] [file3] ...)"
+    return 1
+  fi
+
+  for arg in "$@"; do
+    if [ ! -e "$arg" ]; then
+      echo "❌ Error: Path $arg does not exist. Compression aborted"
+      return 1
+    fi
+  done
+
+  local output_name=""
+  
+  if [ "$#" -eq 1 ]; then
+    local target_path="${1%/}"
+    output_name="$(basename "$target_path").tgz"
+  else
+    local first_target="${1%/}"
+    local parent_path=$(cd "$(dirname "$first_target")" && pwd)
+    local parent_name=$(basename "$parent_path")
+
+    if [ "$parent_name" = "/" ] || [ -z "$parent_name" ]; then
+      parent_name="archive"
+    fi
+    output_name="${parent_name}.tgz"
+  fi
+
+  tar -cvzf "$output_name" "$@"
+
+  echo "✅ Compressed $# item(s) to ./${output_name} successfully"
+}
+
+# 自动解压
+function ex() {
+  if [ -z "$1" ]; then
+    echo "Usage: ex <file1> [file2] [file_3] ..."
+    return 1
+  fi
+
+  for n in "$@"; do
+    if [ ! -f "$n" ] ; then
+      echo "❌ Error: $n is not a valid file or does not exist"
+      continue
+    fi
+
+    local file_lower=$(echo "$n" | tr '[:upper:]' '[:lower:]')
+    
+    local base_dir="${n%.*}"
+    if [[ "$file_lower" =~ \.tar\.(gz|bz2|xz)$ ]]; then
+      base_dir="${base_dir%.*}"
+    fi
+
+    local item_count=0
+    
+    case "$file_lower" in
+      *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
+        item_count=$(tar -tf "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l)
+        ;;
+      *.zip)
+        item_count=$(unzip -Z -1 "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l)
+        ;;
+      *.7z|*.rar|*.arj|*.cab|*.deb|*.iso|*.rpm)
+        item_count=$(7z l "$n" 2>/dev/null | awk '/----/ {flag=!flag; next} flag' | awk '{print $NF}' | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l)
+        ;;
+      *)
+        item_count=1
+        ;;
+    esac
+
+    local target_dir="."
+    if [ "$item_count" -gt 1 ]; then
+      target_dir="./$base_dir"
+      mkdir -p "$target_dir"
+    fi
+
+    case "$file_lower" in
+      *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar) 
+                   tar -xvf "$n" -C "$target_dir" ;;
+      *.zip)       unzip "$n" -d "$target_dir" ;;
+      *.7z|*.arj|*.cab|*.deb|*.iso|*.rpm|*.rar)     
+                   7z x "$n" -o"$target_dir" ;;
+      *.lzma)      [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && unlzma -k "$n" && rm "$n" && cd - >/dev/null || unlzma -k "$n" ;;
+      *.bz2)       [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && bunzip2 -k "$n" && rm "$n" && cd - >/dev/null || bunzip2 -k "$n" ;;
+      *.gz)        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && gunzip -k "$n" && rm "$n" && cd - >/dev/null || gunzip -k "$n" ;;
+      *.xz)        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && unxz -k "$n" && rm "$n" && cd - >/dev/null || unxz -k "$n" ;;
+      *)           echo "⚠️ Error: $n - Unsupported archive format"; continue ;;
+    esac
+
+    echo "✅ Extracted $n to $target_dir successfully"
+    echo "-------------------------------------------------------"
+  done
+}
+
+#########################################################################
 # Authenticator
 #########################################################################
 auth() {
@@ -2052,50 +2151,6 @@ function als() {
   echo "✅ 临时别名: $alias_name -> $last_cmd"
 }
 
-#########################################################################
-# 压缩解压
-#########################################################################
-# 自动压缩
-function gz() {
-    local target="${1%/}"
-    tar -cvzf "${target}.tgz" "$target"
-    echo "✅ 已压缩至: ${target}.tgz"
-}
-# 自动解压
-function ex() {
- if [ -z "$1" ]; then
-    # display usage if no parameters given
-    echo "Usage: ex <path/file_name>.<zip|rar|bz2|gz|tar|tbz2|tgz|Z|7z|xz|ex|tar.bz2|tar.gz|tar.xz>"
-    echo "       ex <path/file_name_1.ext> [path/file_name_2.ext] [path/file_name_3.ext]"
- else
-    for n in $@
-    do
-      if [ -f "$n" ] ; then
-          case "${n%,}" in
-            *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar) 
-                         tar xvf "$n"       ;;
-            *.lzma)      unlzma ./"$n"      ;;
-            *.bz2)       bunzip2 ./"$n"     ;;
-            *.rar)       unrar x -ad ./"$n" ;;
-            *.gz)        gunzip ./"$n"      ;;
-            *.zip)       unzip ./"$n"       ;;
-            *.z)         uncompress ./"$n"  ;;
-            *.7z|*.arj|*.cab|*.chm|*.deb|*.dmg|*.iso|*.lzh|*.msi|*.rpm|*.udf|*.wim|*.xar)
-                         7z x ./"$n"        ;;
-            *.xz)        unxz ./"$n"        ;;
-            *.exe)       cabextract ./"$n"  ;;
-            *)
-                         echo "extract: '$n' - unknown archive method"
-                         return 1
-                         ;;
-          esac
-      else
-          echo "'$n' - file does not exist"
-          return 1
-      fi
-    done
-fi
-}
 
 #########################################################################
 # 自动执行sudo命令(Alt+Enter)
