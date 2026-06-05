@@ -1765,6 +1765,48 @@ function pping() {
 }
 
 #########################################################################
+# 端口探测
+#########################################################################
+zmodload zsh/net/tcp 2>/dev/null # 加载原生 TCP 模块
+
+pnet() {
+    local target="$1"
+    local port="$2"
+    
+    if [[ -z "$target" ]]; then
+        echo "Usage: pnet <IP/Domain> [Port]"
+        return 1
+    fi
+
+    (exec 3<>/dev/udp/"$target"/53) &>/dev/null
+    local udp_status=$?
+
+    if [ $udp_status -eq 0 ]; then
+        echo "[PING SUCCESS] Local routing to $target is ACTIVE"
+        exec 3>&-
+    else
+        gethostbyname "$target" &>/dev/null
+        if [ $? -eq 0 ]; then
+            echo "[PING SUCCESS] Host $target resolved successfully (Network Alive)"
+        else
+            echo "[PING UNCERTAIN] Native UDP probe failed (Host may be blocking or down)"
+        fi
+    fi
+
+    if [[ -n "$port" ]]; then
+        ztcp -f 3 "$target" "$port" &>/dev/null
+        local tcp_status=$?
+
+        if [ $tcp_status -eq 0 ]; then
+            echo "[TCP SUCCESS] $target $port port is OPEN and Responding"
+            ztcp -c $reply[1] &>/dev/null
+        else
+            echo "[TCP FAILED] $target $port port is CLOSED or Firewalled"
+        fi
+    fi
+}
+
+#########################################################################
 # 自动免密登录
 #########################################################################
 function sss(){
