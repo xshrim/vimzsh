@@ -1150,7 +1150,7 @@ function clock() {
 #########################################################################
 # 终端便签
 #########################################################################
-memo() {
+function memo() {
   if [[ -z "$1" ]]; then
     cat ~/.termemos
   else
@@ -1455,7 +1455,6 @@ function cert() {
 #########################################################################
 # 本机IP
 #########################################################################
-
 function myip() {
     local exclude_re="docker|veth|lo|br-|flannel|cni0|cali|tunl0"
 
@@ -1764,14 +1763,11 @@ function ssk() {
 # 临时别名
 #########################################################################
 function als() {
-  # 获取上一条执行过的命令（排除 'als' 本身）
   local last_cmd=$(fc -ln -1 -1)
 
-  # 去除首尾空格
   last_cmd="${last_cmd#"${last_cmd%%[![:space:]]*}"}"
   last_cmd="${last_cmd%"${last_cmd##*[![:space:]]}"}"
 
-  # 定义别名
   local alias_name="${1:-L}"
   alias "$alias_name"="$last_cmd"
 
@@ -1991,7 +1987,7 @@ function ex() {
 #########################################################################
 # Authenticator
 #########################################################################
-auth() {
+function auth() {
     if ! command -v python3 &> /dev/null; then
         echo "ERROR: python3 not found. This function requires Python 3 for secure cryptographic calculations."
         
@@ -2077,6 +2073,93 @@ def main():
 
 main()
 "
+}
+
+#########################################################################
+# YouTube下载
+#########################################################################
+function yd() {
+    if ! command -v yt-dlp &> /dev/null; then
+        echo "yt-dlp Tool not found. Please execute this command to install: sudo wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O ./usr/bin/yt-dlp && sudo chmod a+x /usr/bin/yt-dlp"
+        return 1
+    fi
+
+    local url="$1"
+    
+    local default_res="best"
+    local default_proxy="socks5://127.0.0.1:7890"
+    
+    local res=""
+    local proxy=""
+    local resolution="bestvideo*+bestaudio/best"
+
+    if [ -z "$url" ]; then
+        echo "Usage: yd <URL> [Resolution] [Proxy]"
+        return 1
+    fi
+
+    if [ -n "$2" ] && [ -n "$3" ]; then
+        res="$2"
+        proxy="$3"
+    elif [ -n "$2" ]; then
+        if [[ "$2" =~ ^[0-9]+p?$ ]]; then
+            res="$2"
+            proxy="$default_proxy"
+        elif [[ "$2" =~ ^(http|https|socks5):// ]]; then
+            res="$default_res"
+            proxy="$2"
+        else
+            res="$2"
+            proxy="$default_proxy"
+        fi
+    else
+        res="$default_res"
+        proxy="$default_proxy"
+    fi
+
+    if [ "$res" == "-i" ]; then
+        echo "Fetching available formats using proxy: $proxy ..."
+        echo "------------------------------------------------"
+        yt-dlp --proxy "$proxy" --cookies-from-browser chrome --js-runtimes node -F "$url"
+        echo "------------------------------------------------"
+        
+        echo "Choose download mode (Press ENTER for default 1080p):"
+        echo "[1] Smart Resolution Limit  (e.g., 2160, 1080, 720, 480)"
+        echo "[2] Exact Format ID Combin  (e.g., 137+251)"
+        echo "------------------------------------------------"
+        printf "Enter your choice (Resolution or ID): "
+        read choice
+
+        if [ -z "$choice" ]; then
+            res="1080"
+        else
+            res="$choice"
+        fi
+    fi
+
+
+    if [[ "$res" == "best" ]]; then
+        resolution="bestvideo*+bestaudio/best"
+    elif [[ "$res" =~ ^[0-9]+p?$ ]]; then
+        resolution="bestvideo[height<=${res%p}]+bestaudio/best"
+    else
+        resolution="$res"
+    fi
+        
+
+    echo "Downloading $url [$res $proxy]..."
+    echo "------------------------------------------------"
+
+    yt-dlp \
+        --proxy "$proxy" \
+        --cookies-from-browser chrome \
+        -f "$resolution" \
+        -o "%(playlist_index&{}.|)s%(title)s.%(ext)s" \
+        --download-archive videos.txt \
+        --js-runtimes node \
+        --retries 100 \
+        --fragment-retries 100 \
+        "$url"
 }
 
 #########################################################################
