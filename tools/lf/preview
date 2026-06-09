@@ -42,7 +42,7 @@ image() {
   elif command -v feh &> /dev/null; then
     feh "$1"
   else
-    echo "未找到 Chafa, Timg, Feh 或 Überzug 等预览工具" >&2
+    echo "未找到 Chafa, Timg, Termvisage, Feh 或 Überzug 等预览工具" >&2
 	fi
 }
 
