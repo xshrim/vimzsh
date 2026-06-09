@@ -30,7 +30,7 @@ text() {
 }
 
 image() {
-	if [ -n "$DISPLAY" ]; then
+	if [ -n "$DISPLAY" ] && [ -p "$FIFO_UEBERZUG" ]; then
 		declare -p -A cmd=([action]=add [identifier]="PREVIEW" [x]="$2" [y]="$3" [max_width]="$4" [max_height]="$5" [path]="$1") > "$FIFO_UEBERZUG"
 		exit 1
 	else
