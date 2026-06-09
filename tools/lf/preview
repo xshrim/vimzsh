@@ -33,9 +33,16 @@ image() {
 	if [ -n "$DISPLAY" ] && [ -p "$FIFO_UEBERZUG" ]; then
 		declare -p -A cmd=([action]=add [identifier]="PREVIEW" [x]="$2" [y]="$3" [max_width]="$4" [max_height]="$5" [path]="$1") > "$FIFO_UEBERZUG"
 		exit 1
-	else
+	elif command -v chafa &> /dev/null; then
 		chafa "$1" -s "${4}x${5}"
-    #feh "$1"
+  elif command -v timg &> /dev/null; then
+    timg -g "${4}x${5}" "$1"
+  elif command -v termvisage &> /dev/null; then
+    termvisage "$1"
+  elif command -v feh &> /dev/null; then
+    feh "$1"
+  else
+    echo "未找到 Chafa, Timg, Feh 或 Überzug 等预览工具" >&2
 	fi
 }
 
