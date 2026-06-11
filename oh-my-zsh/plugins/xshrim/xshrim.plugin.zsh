@@ -3179,6 +3179,86 @@ function ans() {
 }
 
 #########################################################################
+# 查看指定插件中定义的函数
+#########################################################################
+function func() {
+    if [[ -z "$1" || ! -f "$1" ]]; then
+        echo "Usage: func [zsh plugin file path]"
+        return 1
+    fi
+
+    # Pass the absolute path of the plugin
+    local plugin_path=$1
+
+    # Run in an isolated sub-shell
+    zsh -f -c "
+      # 1. Initialize the completion system (Fixes: command not found: compdef)
+      autoload -Uz compinit && compinit -i
+      
+      # 2. Record functions *after* completion init but *before* loading the plugin
+      before=(\"\${(@k)functions}\")
+      
+      # 3. Source the target plugin
+      source '$plugin_path'
+      
+      # 4. Record functions after loading the plugin
+      after=(\"\${(@k)functions}\")
+      
+      # 5. Calculate the difference
+      diff_funcs=(\${after:|before})
+      
+      # 6. Filter out internal completion functions and native hooks
+      plugin_funcs=()
+      for f in \${diff_funcs[@]}; do
+          local src_path=\"\$functions_source[\$f]\"
+          # Exclude functions starting with '_' or standard Zsh hook names
+          if [[ ! \"\$f\" =~ ^_ && ! \"\$f\" =~ \"^(add-zsh-hook|chpwd|precmd|preexec|periodic|zcalc|zargs|zed|zkbd|zle-keymap-select|zsh_)\" && ! \"\$src_path\" =~ \"/zsh/\" ]]; then
+              plugin_funcs+=(\"\$f\")
+          fi
+      done
+      
+      echo '======================================================================'
+      echo ' 📦 Plugin Path: $plugin_path'
+      echo \" 📊 Functions Count: \${#plugin_funcs} (embed functions filtered)\"
+      echo '======================================================================'
+      printf \"%-30s | %s\n\" '[Function Name]' '[Description (First Comment Line)]'
+      echo '----------------------------------------------------------------------'
+
+      # 7. Loop through clean functions and extract the first comment line
+      for func in \${(o)plugin_funcs}; do
+          # Find the line number of the function definition
+          # local line_num=\$(grep -nE \"^[ \\t]*(function[ \\t]+\"\$func\"([ \\t]+|\\$)|[^#]*\"\$func\"[ \\t]*\\\\([ \\t]*\\\\))\" '$plugin_path' | head -n 1 | cut -d: -f1)
+          # only get function definition with function keyword
+          local line_num=\$(grep -nE \"^[ \\t]*function[ \\t]+\"\$func\"([ \\t]+|\\$|\\()\" '$plugin_path' | head -n 1 | cut -d: -f1)
+
+          local target_comment='(No Description)'
+
+          if [[ -z \"\$line_num\" || \"\$line_num\" -lt 1 ]]; then
+            continue
+          fi
+          
+          # Define range window (Max 3 lines above, stopping at line 1)
+          local start_line=\$((\$line_num - 3))
+          if (( start_line < 1 )) start_line=1
+          local end_line=\$((\$line_num - 1))
+              
+          # Extract the 3 lines and reverse them (bottom-up)
+          local lines_above=\$(sed -n \"\${start_line}, \${end_line}p\" '$plugin_path' | tail -r 2>/dev/null || sed -n \"\${start_line}, \${end_line}p\" '$plugin_path' | tac 2>/dev/null)
+              
+          # FIX: Use grep to instantly pick the first line starting with a #, then trim it
+          local comment_line=\$(echo \"\$lines_above\" | grep -E '^[ \\t]*#[ \\t]*[^ \\t#]+' | head -n 1)
+              
+          if [[ -n \"\$comment_line\" ]]; then
+              target_comment=\$(echo \"\$comment_line\" | sed -E 's/^[ \\t#]*//')
+          fi
+          
+          printf \"%-30s | %s\n\" \"\$func\" \"\$target_comment\"
+      done
+      echo '======================================================================'
+    "
+}
+
+#########################################################################
 # zshrc重载
 #########################################################################
 function src() {
