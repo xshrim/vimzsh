@@ -25,41 +25,8 @@ ZSH_THEME_GIT_PROMPT_UNTRACKED="%{$fg[yellow]%}ǀ%{$fg[white]%}●"
 ZSH_THEME_GIT_PROMPT_UNMERGED="%{$fg[yellow]%}ǀ%{$fg[red]%}✦"
 
 ########################################
-
-
-########################################
 # Powerline
-#
-# vim:ft=zsh ts=2 sw=2 sts=2
-#
-# ZYSzys's Theme - https://github.com/ZYSzys/zys-zsh-theme
-# A Powerline-inspired theme for ZSH
-#
-# # README
-#
-# In order for this theme to render correctly, you will need a
-# [Powerline-patched font](https://github.com/Lokaltog/powerline-fonts).
-# Make sure you have a recent version: the code points that Powerline
-# uses changed in 2012, and older versions will display incorrectly,
-# in confusing ways.
-#
-# In addition, I recommend the
-# [Solarized theme](https://github.com/altercation/solarized/) and, if you're
-# using it on Mac OS X, [iTerm 2](http://www.iterm2.com/) over Terminal.app -
-# it has significantly better color fidelity.
-#
-# # Goals
-#
-# The aim of this theme is to only show you *relevant* information. Like most
-# prompts, it will only show git information when in a git working directory.
-# However, it goes a step further: everything from the current user and
-# hostname to whether the last call exited with an error to whether background
-# jobs are running in this shell will all be displayed automatically when
-# appropriate.
-
-### Segment drawing
-# A few utility functions to make it easy and re-usable to draw segmented prompts
-###########################################
+########################################
 
 CURRENT_BG='NONE'
 RCURRENT_BG='NONE'
@@ -188,25 +155,25 @@ prompt_git() {
 }
 
 prompt_bzr() {
-    (( $+commands[bzr] )) || return
-    if (bzr status >/dev/null 2>&1); then
-        status_mod=`bzr status | head -n1 | grep "modified" | wc -m`
-        status_all=`bzr status | head -n1 | wc -m`
-        revision=`bzr log | head -n2 | tail -n1 | sed 's/^revno: //'`
-        if [[ $status_mod -gt 0 ]] ; then
-            prompt_segment yellow black
-            echo -n "bzr@"$revision "✚ "
-        else
-            if [[ $status_all -gt 0 ]] ; then
-                prompt_segment yellow black
-                echo -n "bzr@"$revision
+  (( $+commands[bzr] )) || return
+  if (bzr status >/dev/null 2>&1); then
+    status_mod=`bzr status | head -n1 | grep "modified" | wc -m`
+    status_all=`bzr status | head -n1 | wc -m`
+    revision=`bzr log | head -n2 | tail -n1 | sed 's/^revno: //'`
+    if [[ $status_mod -gt 0 ]] ; then
+      prompt_segment yellow black
+      echo -n "bzr@"$revision "✚ "
+    else
+      if [[ $status_all -gt 0 ]] ; then
+        prompt_segment yellow black
+        echo -n "bzr@"$revision
 
-            else
-                prompt_segment green black
-                echo -n "bzr@"$revision
-            fi
-        fi
+      else
+        prompt_segment green black
+        echo -n "bzr@"$revision
+      fi
     fi
+  fi
 }
 
 prompt_hg() {
@@ -280,7 +247,7 @@ rprompt_dtime() {
 
 # status
 rprompt_status() {
-rprompt_segment yellow black '%?'
+  rprompt_segment yellow black '%?'
 }
 
 ## Main prompt
@@ -309,18 +276,16 @@ build_rprompt() {
 # 加载 Zsh 内部调度器模块
 zmodload zsh/sched
 
-#color{{{
 autoload colors zsh/terminfo
 if [[ "$terminfo[colors]" -ge 8 ]]; then
-colors
+    colors
 fi
 for color in RED GREEN YELLOW BLUE MAGENTA CYAN WHITE; do
-eval _$color='%{$terminfo[bold]$fg[${(L)color}]%}'
-eval $color='%{$fg[${(L)color}]%}'
-(( count = $count + 1 ))
+    eval _$color='%{$terminfo[bold]$fg[${(L)color}]%}'
+    eval $color='%{$fg[${(L)color}]%}'
+    (( count = $count + 1 ))
 done
 FINISH="%{$terminfo[sgr0]%}"
-#}}}
 
 # symbols to choose from:
 # ☀ ✹ ☄ ♆ ♀ ♁ ♐ ♇ ♈ ♉ ✹ ♚ ♛ ♜ ♝ ♞ ♟ ♠ ♣ ▾⚢ ⚲ ⚳ ⚴ ⚥ ☿ ⚤ ⚦ ⚒ ⚑ ⚐ ♺ ♻ ♼ ⓐ 📦 ⑃ ᐅ ☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷ 
@@ -333,34 +298,35 @@ FINISH="%{$terminfo[sgr0]%}"
 # ﹃﹄【】︼︻︽︾︿﹀﹃﹄╽╾╼╿╏╍╌┅┄┆┇┈┉⋓⋒⋑⋐┊┋┥┤┴┵┶┧┷┸┨┲┱┰┠┟┞┝├┬┫├┍┎┏┐┑┒┓└└┕┖┗┘┙┚┛
 
 # http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
-#命令提示符 {{{
+########################################
+# 命令提示符
+########################################
+[[ -z "$ZSH_THEME_CHOICE" ]] && ZSH_THEME_CHOICE="default"
 precmd () {
-#local gitprompt=$(git_super_status)
-local gitprompt=$(git_prompt_info)
-local zero='%([BSUbfksu]|([FK]|){*})'
-local gitpromptsize=${#${(S%%)gitprompt//$~zero/}}
+  local theme="$ZSH_THEME_CHOICE"
+  #local gitprompt=$(git_super_status)
+  local gitprompt=$(git_prompt_info)
+  local zero='%([BSUbfksu]|([FK]|){*})'
+  local gitpromptsize=${#${(S%%)gitprompt//$~zero/}}
 
-local promptok="☀"
-local promptko="☂"
-local promptdc="♆"
-local promptsp="%(!.☢.❖)"
-local promptpt="%(!.➤.»)"
-local smile="%(?,$GREEN${promptok}%{$reset_color%},$RED${promptko}%{$reset_color%})"
-local count_db_wth_char=${#${${(%):-%/}//[[:ascii:]]/}}
-local HBAR=" -"
+  local promptok="☀"
+  local promptko="☂"
+  local promptdc="♆"
+  local promptsp="%(!.☢.❖)"
+  local promptpt="%(!.➤.»)"
+  local smile="%(?,$GREEN${promptok}%{$reset_color%},$RED${promptko}%{$reset_color%})"
+  local count_db_wth_char=${#${${(%):-%/}//[[:ascii:]]/}}
+  local HBAR=" -"
 
-local theme="default"
-
-if [[ $theme == "complex" ]]; then
+  if [[ $theme == "complex" ]]; then
     local leftsize=${#${(%):-${promptdc}<%M %/}}+$gitpromptsize+$count_db_wth_char
     local rightsize=${#${(%):-%D %T>${promptdc}}}
 
     FILLBAR="\${(l.(($COLUMNS - ($leftsize + $rightsize +2)))..${HBAR}.)}"
 
     #RPROMPT=$(echo "%(?..$RED%?$FINISH)")
-    PROMPT=$(echo "$_BLUE${promptdc}<$_CYAN%M $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} $_MAGENTA%D %T$_BLUE>${promptdc}$FINISH
-$fg_bold[yellow][ $MAGENTA%n $BLUE%h ${smile}$fg_bold[yellow] ] $_RED${promptpt}$FINISH")
-elif [[ $theme == "simple" ]]; then
+    PROMPT=$(echo "$_BLUE${promptdc}<$_CYAN%M $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} $_MAGENTA%D %T$_BLUE>${promptdc}$FINISH$fg_bold[yellow][ $MAGENTA%n $BLUE%h ${smile}$fg_bold[yellow] ] $_RED${promptpt}$FINISH")
+  elif [[ $theme == "simple" ]]; then
     promptsp="✦"
     local leftsize=${#${(%):-${promptdc}<%M${promptsp}%n %/}}+$gitpromptsize+$count_db_wth_char
     local rightsize=${#${(%):-%D %T %h>${promptdc}}}+2
@@ -368,22 +334,21 @@ elif [[ $theme == "simple" ]]; then
     FILLBAR="\${(l.(($COLUMNS - ($leftsize + $rightsize +2)))..${HBAR}.)}"
 
     #RPROMPT=$(echo "%(?..$RED%?$FINISH)")
-    PROMPT=$(echo "$_BLUE${promptdc}<$_CYAN%M$YELLOW${promptsp}$MAGENTA%n $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} ${smile} $_MAGENTA%D %T %h$_BLUE>${promptdc}$FINISH
-$_RED${promptpt}$FINISH")
-elif [[ $theme == "classic" ]]; then
+    PROMPT=$(echo "$_BLUE${promptdc}<$_CYAN%M$YELLOW${promptsp}$MAGENTA%n $_GREEN%/${gitprompt} $_YELLOW${(e)FILLBAR} ${smile} $_MAGENTA%D %T %h$_BLUE>${promptdc}$FINISH$_RED${promptpt}$FINISH")
+  elif [[ $theme == "classic" ]]; then
     promptdc="✿"
     #promptpt="»"
     PROMPT="%{${fg_bold[blue]}%}${promptdc} %{${fg_bold[red]}%}%m${promptsp}%n %{${fg_bold[magenta]}%}:: %{${fg_bold[yellow]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) ${smile} %{${fg_bold[blue]}%}${promptpt}%{${reset_color}%} "
-elif [[ $theme == "power" ]]; then
+  elif [[ $theme == "power" ]]; then
     PROMPT="%{%f%b%k%}$(build_prompt) "
     #RPROMPT='%{%F{yellow}%}[%*]'
     RPROMPT="%{%f%b%k%}$(build_rprompt) "
     #echo $(build_prompt)
     #echo $(build_rprompt)
     # TODO 继续完善
-elif [[ $theme == "minimal" ]]; then
+  elif [[ $theme == "minimal" ]]; then
     PROMPT="${smile} %{$fg_bold[yellow]%}%~%{$reset_color%}$(git_prompt_info) %{${fg_bold[magenta]}%}${promptpt}%{${reset_color}%} "
-elif [[ $theme == "compat" ]]; then
+  elif [[ $theme == "compat" ]]; then
     promptok="*"
     promptko="*"
     promptdc="$"
@@ -395,58 +360,269 @@ elif [[ $theme == "compat" ]]; then
     RPROMPT="%{${fg_bold[yellow]}%}< %w %D{%H:%M:%S} %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
 
     #PROMPT='${smile} %{$fg_bold[yellow]%}%~%{$reset_color%}$(git_prompt_info) %{${fg_bold[magenta]}%}${promptpt}%{${reset_color}%} '
-else
+  else
     promptdc="✿"
     #promptpt="»"
     PROMPT="%{${fg_bold[blue]}%}${promptdc} %{${fg_bold[red]}%}%m${promptsp}%n %{${fg_bold[magenta]}%}:: %{${fg_bold[cyan]}%}%~%{${fg_bold[cyan]}%}$(git_prompt_info) ${smile} %{${fg_bold[blue]}%}${promptpt}%{${reset_color}%} "
     RPROMPT="%{${fg_bold[yellow]}%}< %w %D{%H:%M:%S} %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
     #RPROMPT="%{${fg_bold[yellow]}%}< %w %T %! > %{${fg_bold[blue]}%}${promptdc}%{${reset_color}%}"
     # TODO 继续完善
-fi
+  fi
 
-# 定义一个后台异步刷新的定时器函数
-_zsh_background_clock() {
+  # 定义一个后台异步刷新的定时器函数
+  _zsh_background_clock() {
     RPROMPT="$RPROMPT"
-    
     # 核心黑魔法：通知 Zsh 核心异步重绘当前的提示符，不打断用户正在输入的文本
     zle && zle reset-prompt
-
     # 递归调度：让这个函数在 1 秒后再次执行，形成完美的无阻塞事件循环
     sched +1 _zsh_background_clock
-}
+  }
 
-# 启动无限事件循环刷新右侧提示符
-if [ -n "$RPROMPT" ]; then
+  # 启动无限事件循环刷新右侧提示符
+  if [ -n "$RPROMPT" ]; then
     _zsh_background_clock
-fi
+  fi
 
-#在 Emacs终端 中使用 Zsh 的一些设置
-if [[ "$TERM" == "dumb" ]]; then
-setopt No_zle
-PROMPT='%n@%M %/
->>'
-fi
+  # 在 Emacs终端 中使用 Zsh 的一些设置
+  if [[ "$TERM" == "dumb" ]]; then
+    setopt No_zle
+    # 让提示符更紧凑，并确保 Emacs 的 dirtrack 能够正确解析路径
+    PROMPT='%n@%m:%/ >>> '
+  fi
 }
+
+########################################
+# 通用配置
+########################################
+# 允许在交互模式中使用注释 例如：
+# cmd #这是注释
+setopt INTERACTIVE_COMMENTS
+
+# 启用自动 cd，输入目录名回车进入目录
+# 稍微有点混乱，不如 cd 补全实用
+# setopt AUTO_CD
+
+#禁用自动解析通配符
+setopt no_nomatch
+
+# 扩展路径
+# /v/c/p/p => /var/cache/pacman/pkg
+setopt complete_in_word
+
+# 禁用 core dumps
+limit coredumpsize 0
+
+# Emacs风格 键绑定
+bindkey -e
+# 设置 [DEL]键 为向后删除
+bindkey "\e[3~" delete-char
+
+# 以下字符视为单词的一部分
+WORDCHARS='*?_-[]~=&;!#$%^(){}<>'
 
 # 终端开启256色支持
 if [ -e /usr/share/terminfo/x/xterm-256color ]; then
   export TERM='xterm-256color'
 fi
 
-#}}}
-
-#清空历史记录
-#cat /dev/null > ${HOME}/.zhistory
-#cat /dev/null > ${HOME}/.zsh_history
-
-#标题栏、任务栏样式{{{
-#case $TERM in (*xterm*|*rxvt*|(dt|k|E)term)
+# 标题栏、任务栏样式{{{
+# case $TERM in (*xterm*|*rxvt*|(dt|k|E)term)
 # preexec () { print -Pn "\e]0;%n@%M//%/\ $1\a" }
-#;;
-#esac
-#}}}
+# ;;
+# esac
 
-#关于历史纪录的配置 {{{
+# 快捷键自动sudo
+sudo-command-line() {
+[[ -z $BUFFER ]] && zle up-history
+[[ $BUFFER != sudo\ * ]] && BUFFER="sudo $BUFFER"
+zle end-of-line #光标移动到行末
+}
+zle -N sudo-command-line
+# 定义快捷键为： [Esc] [Esc]
+bindkey "\e\e" sudo-command-line
+
+# 检查命令是否存在
+checkcommand() {
+  if type $1 &>/dev/null; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+#显示 path-directories ，避免候选项唯一时直接选中
+cdpath="/home"
+
+# 默认编辑器
+export EDITOR=vim
+
+# 本地二进制路径
+# export PATH=$PATH:$cdir/bin
+
+#[Esc][h] man 当前命令时，显示简短说明
+alias run-help >&/dev/null && unalias run-help
+autoload run-help
+
+#路径别名
+#进入相应的路径时只要 cd ~xxx
+hash -d HIST="$HISTDIR"
+
+# def pacman-color completion as pacman
+# compdef pacman-color=pacman
+# }}}
+
+# F1 计算器
+arith-eval-echo() {
+LBUFFER="${LBUFFER}echo \$(( "
+RBUFFER=" ))$RBUFFER"
+}
+zle -N arith-eval-echo
+bindkey "^[[11~" arith-eval-echo
+
+# 时间转换
+timeconv() {
+  # 检查是否存在 gdate (Mac 上通过 brew install coreutils 安装的 GNU date)
+  if command -v gdate &> /dev/null; then
+    gdate -d @"$1" +"%Y-%m-%d %T"
+  elif date --version &> /dev/null; then
+    # 如果原生 date 支持 --version，说明是 Linux 的 GNU date
+    date -d @"$1" +"%Y-%m-%d %T"
+  else
+    # 否则使用 Mac BSD 版 date 的语法
+    date -r "$1" +"%Y-%m-%d %T"
+  fi
+}
+
+# 命令未找到处理
+command_not_found_handler () {      #if the command is not found, let bash show the message and advice(zsh could only show "command not found").
+  runcnf=1 
+  retval=127 
+  [ ! -S /var/run/dbus/system_bus_socket ] && runcnf=0 
+  [ ! -x /usr/libexec/packagekitd ] && runcnf=0 
+  if [ $runcnf -eq 1 ]; then
+    /usr/libexec/pk-command-not-found $@
+    retval=$? 
+  fi
+  return 0                   #if return $retval, both the bash and zsh messages will be shown in the terminal, if return 0, only the bash massage will be shown.
+}
+
+# zmodload zsh/mathfunc
+# autoload -U zsh-mime-setup
+# zsh-mime-setup
+# setopt EXTENDED_GLOB
+# autoload -U promptinit
+# promptinit
+# prompt redhat
+
+# setopt correctall
+# autoload compinstall
+
+########################################
+# 自动补全配置
+########################################
+setopt AUTO_LIST
+setopt AUTO_MENU
+# 开启此选项，补全时会直接选中菜单项
+# setopt MENU_COMPLETE
+
+# 自动补全缓存
+zstyle ':completion::complete:*' use-cache on
+zstyle ':completion::complete:*' cache-path .zcache
+zstyle ':completion:*:cd:*' ignore-parents parent pwd
+
+# 自动补全选项
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*' menu select
+zstyle ':completion:*:*:default' force-list always
+zstyle ':completion:*' select-prompt '%SSelect: lines: %L matches: %M [%p]'
+
+zstyle ':completion:*:match:*' original only
+zstyle ':completion::prefix-1:*' completer _complete
+zstyle ':completion:predict:*' completer _complete
+zstyle ':completion:incremental:*' completer _complete _correct
+zstyle ':completion:*' completer _complete _prefix _correct _prefix _match _approximate
+
+# 路径补全
+zstyle ':completion:*' expand 'yes'
+zstyle ':completion:*' squeeze-slashes 'yes'
+zstyle ':completion::complete:*' '\\'
+
+
+# 修正大小写
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
+# 错误校正   坑爹功能
+# zstyle ':completion:*' completer _complete _match _approximate
+# zstyle ':completion:*:match:*' original only
+# zstyle ':completion:*:approximate:*' max-errors 1 numeric
+
+# kill 命令补全
+compdef pkill=killall
+zstyle ':completion:*:*:kill:*' menu yes select
+zstyle ':completion:*:*:*:*:processes' force-list always
+zstyle ':completion:*:processes' command 'ps -au$USER'
+
+# 补全类型提示分组
+zstyle ':completion:*:matches' group 'yes'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:options' description 'yes'
+zstyle ':completion:*:options' auto-description '%d'
+zstyle ':completion:*:descriptions' format $'\e[01;33m -- %d --\e[0m'
+zstyle ':completion:*:messages' format $'\e[01;35m -- %d --\e[0m'
+zstyle ':completion:*:warnings' format $'\e[01;31m -- No Matches Found --\e[0m'
+zstyle ':completion:*:corrections' format $'\e[01;32m -- %d (errors: %e) --\e[0m'
+
+# cd ~ 补全顺序
+zstyle ':completion:*:-tilde-:*' group-order 'named-directories' 'path-directories' 'users' 'expand'
+
+# 自定义补全
+# 补全 ping
+zstyle ':completion:*:ping:*' hosts g.cn facebook.com
+
+########################################
+# 行编辑高亮模式
+########################################
+# Ctrl+@ 设置标记，标记和光标点之间为 region
+zle_highlight=(region:bg=magenta #选中区域
+special:bold # 特殊字符
+isearch:underline) # 搜索时使用的关键字
+
+user-complete(){
+  case $BUFFER in
+  "" ) # 空行填入 "cd "
+    BUFFER="cd "
+    zle end-of-line
+    zle expand-or-complete
+    ;;
+  "cd " ) # TAB + 空格 替换为 "cd ~"
+    BUFFER="cd ~"
+    zle end-of-line
+    zle expand-or-complete
+    ;;
+  " " )
+    BUFFER="!?"
+    zle end-of-line
+    ;;
+"cd --" ) # "cd --" 替换为 "cd +"
+    BUFFER="cd +"
+    zle end-of-line
+    zle expand-or-complete
+    ;;
+  "cd +-" ) # "cd +-" 替换为 "cd -"
+    BUFFER="cd -"
+    zle end-of-line
+    zle expand-or-complete
+    ;;
+  * )
+    zle expand-or-complete
+  ;;
+  esac
+}
+zle -N user-complete
+bindkey "\t" user-complete
+
+########################################
+# 历史记录配置
+########################################
 #历史纪录条目数量
 export HISTSIZE=100000
 #注销后保存的历史纪录条目数量
@@ -467,9 +643,8 @@ setopt PUSHD_IGNORE_DUPS
 
 #在命令前添加空格，不将此命令添加到纪录文件中
 setopt HIST_IGNORE_SPACE
-#}}}
 
-#每个目录使用独立的历史纪录{{{
+#每个目录使用独立的历史纪录
 #cd() {
 #builtin cd "$@"                             # do actual cd
 #fc -W                                       # write current history  file
@@ -486,7 +661,7 @@ setopt HIST_IGNORE_SPACE
 #}
 #mkdir -p $HOME/.zsh_history$PWD
 #export HISTFILE="$HOME/.zsh_history$PWD/zhistory"
- 
+
 #function allhistory { cat $(find $HOME/.zsh_history -name zhistory) }
 #function convhistory {
 #sort $1 | uniq |
@@ -498,169 +673,17 @@ setopt HIST_IGNORE_SPACE
 #sed '/^.\{20\} *cd/i\\' }
 #使用 hist 查看当前目录历史纪录
 #function hist { convhistory $HISTFILE }
- 
+
 #全部历史纪录 top50
 #function top50 { allhistory | awk -F':[ 0-9]*:[0-9]*;' '{ $1="" ; print }' | sed 's/ /\n/g' | sed '/^$/d' | sort | uniq -c | sort -nr | head -n 50 }
- 
-#}}}
 
-#杂项 {{{
-#允许在交互模式中使用注释 例如：
-#cmd #这是注释
-setopt INTERACTIVE_COMMENTS
+#清空历史记录
+#cat /dev/null > ${HOME}/.zhistory
+#cat /dev/null > ${HOME}/.zsh_history
 
-#启用自动 cd，输入目录名回车进入目录
-#稍微有点混乱，不如 cd 补全实用
-#setopt AUTO_CD
-
-#禁用自动解析通配符
-setopt no_nomatch
-
-#扩展路径
-#/v/c/p/p => /var/cache/pacman/pkg
-setopt complete_in_word
-
-#禁用 core dumps
-limit coredumpsize 0
-
-#Emacs风格 键绑定
-bindkey -e
-#设置 [DEL]键 为向后删除
-bindkey "\e[3~" delete-char
-
-#以下字符视为单词的一部分
-WORDCHARS='*?_-[]~=&;!#$%^(){}<>'
-#}}}
-
-#自动补全功能 {{{
-setopt AUTO_LIST
-setopt AUTO_MENU
-#开启此选项，补全时会直接选中菜单项
-#setopt MENU_COMPLETE
-
-#自动补全缓存
-zstyle ':completion::complete:*' use-cache on
-zstyle ':completion::complete:*' cache-path .zcache
-zstyle ':completion:*:cd:*' ignore-parents parent pwd
-
-#自动补全选项
-zstyle ':completion:*' verbose yes
-zstyle ':completion:*' menu select
-zstyle ':completion:*:*:default' force-list always
-zstyle ':completion:*' select-prompt '%SSelect: lines: %L matches: %M [%p]'
-
-zstyle ':completion:*:match:*' original only
-zstyle ':completion::prefix-1:*' completer _complete
-zstyle ':completion:predict:*' completer _complete
-zstyle ':completion:incremental:*' completer _complete _correct
-zstyle ':completion:*' completer _complete _prefix _correct _prefix _match _approximate
-
-#路径补全
-zstyle ':completion:*' expand 'yes'
-zstyle ':completion:*' squeeze-slashes 'yes'
-zstyle ':completion::complete:*' '\\'
-
-
-#修正大小写
-zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
-#错误校正   坑爹功能
-#zstyle ':completion:*' completer _complete _match _approximate
-#zstyle ':completion:*:match:*' original only
-#zstyle ':completion:*:approximate:*' max-errors 1 numeric
-
-#kill 命令补全
-compdef pkill=killall
-zstyle ':completion:*:*:kill:*' menu yes select
-zstyle ':completion:*:*:*:*:processes' force-list always
-zstyle ':completion:*:processes' command 'ps -au$USER'
-
-#补全类型提示分组
-zstyle ':completion:*:matches' group 'yes'
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*:options' description 'yes'
-zstyle ':completion:*:options' auto-description '%d'
-zstyle ':completion:*:descriptions' format $'\e[01;33m -- %d --\e[0m'
-zstyle ':completion:*:messages' format $'\e[01;35m -- %d --\e[0m'
-zstyle ':completion:*:warnings' format $'\e[01;31m -- No Matches Found --\e[0m'
-zstyle ':completion:*:corrections' format $'\e[01;32m -- %d (errors: %e) --\e[0m'
-
-# cd ~ 补全顺序
-zstyle ':completion:*:-tilde-:*' group-order 'named-directories' 'path-directories' 'users' 'expand'
-#}}}
-
-##行编辑高亮模式 {{{
-# Ctrl+@ 设置标记，标记和光标点之间为 region
-zle_highlight=(region:bg=magenta #选中区域
-special:bold #特殊字符
-isearch:underline) #搜索时使用的关键字
-#}}}
-
-##空行(光标在行首)补全 "cd " {{{
-user-complete(){
-case $BUFFER in
-"" ) # 空行填入 "cd "
-BUFFER="cd "
-zle end-of-line
-zle expand-or-complete
-;;
-"cd " ) # TAB + 空格 替换为 "cd ~"
-BUFFER="cd ~"
-zle end-of-line
-zle expand-or-complete
-;;
-" " )
-BUFFER="!?"
-zle end-of-line
-;;
-"cd --" ) # "cd --" 替换为 "cd +"
-BUFFER="cd +"
-zle end-of-line
-zle expand-or-complete
-;;
-"cd +-" ) # "cd +-" 替换为 "cd -"
-BUFFER="cd -"
-zle end-of-line
-zle expand-or-complete
-;;
-* )
-zle expand-or-complete
-;;
-esac
-}
-zle -N user-complete
-bindkey "\t" user-complete
-
-#显示 path-directories ，避免候选项唯一时直接选中
-cdpath="/home"
-#}}}
-
-##在命令前插入 sudo {{{
-#定义功能
-sudo-command-line() {
-[[ -z $BUFFER ]] && zle up-history
-[[ $BUFFER != sudo\ * ]] && BUFFER="sudo $BUFFER"
-zle end-of-line #光标移动到行末
-}
-zle -N sudo-command-line
-#定义快捷键为： [Esc] [Esc]
-bindkey "\e\e" sudo-command-line
-#}}}
-
-checkcommand() {
-  if type $1 &>/dev/null; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-# 默认编辑器
-export EDITOR=vim
-
-# 本地二进制路径
-# export PATH=$PATH:$cdir/bin
-
-#命令别名 {{{
+########################################
+# 命令别名
+########################################
 if [ -f ~/.vimrc ];then
   alias vim='vim -u ~/.vimrc'
 elif [ -f ~/.virc ];then
@@ -748,6 +771,10 @@ alias daddr='docker inspect --format="{{json .NetworkSettings.Networks}}"'
 alias dport='docker inspect --format="{{json .NetworkSettings.Ports}}"'
 alias dpull='docker pull'
 alias dpush='docker push'
+
+#历史命令 top10
+alias hist10='print -l ${(o)history%% *} | uniq -c | sort -nr | head -n 10'
+
 #alias jobs='jobs -l'
 #alias ping='fping -e'
 #alias sudo='sudo env PATH=$PATH'
@@ -758,237 +785,48 @@ alias dpush='docker push'
 #alias mv='rsync -avP --progress --remove-source-files'
 #alias rs='rsync -ahr --info=progress2 --no-i-r'
 #alias rcp="rs"
-#function rmv() {
+#rmv() {
 #  rsync -ahr --info=progress2 --no-i-r --remove-source-files "$@" && rm -rf "${@:1:${#}-1}"
 #}
 
-#[Esc][h] man 当前命令时，显示简短说明
-alias run-help >&/dev/null && unalias run-help
-autoload run-help
-
-#历史命令 top10
-alias hist10='print -l ${(o)history%% *} | uniq -c | sort -nr | head -n 10'
-#}}}
-
-#路径别名 {{{
-#进入相应的路径时只要 cd ~xxx
-hash -d HIST="$HISTDIR"
-#}}}
-
-#{{{自定义补全
-#补全 ping
-zstyle ':completion:*:ping:*' hosts g.cn facebook.com
-
-# def pacman-color completion as pacman
-# compdef pacman-color=pacman
-# }}}
-
-#{{{ F1 计算器
-arith-eval-echo() {
-LBUFFER="${LBUFFER}echo \$(( "
-RBUFFER=" ))$RBUFFER"
-}
-zle -N arith-eval-echo
-bindkey "^[[11~" arith-eval-echo
-#}}}
-
-####{{{
-#function timeconv { date -d @$1 +"%Y-%m-%d %T" }
-
-# }}}
-
-command_not_found_handler () {      #if the command is not found, let bash show the message and advice(zsh could only show "command not found").
-        runcnf=1 
-        retval=127 
-        [ ! -S /var/run/dbus/system_bus_socket ] && runcnf=0 
-        [ ! -x /usr/libexec/packagekitd ] && runcnf=0 
-        if [ $runcnf -eq 1 ]
-        then
-                /usr/libexec/pk-command-not-found $@
-                retval=$? 
-        fi
-        return 0                   #if return $retval, both the bash and zsh messages will be shown in the terminal, if return 0, only the bash massage will be shown.
-}
-
-#zmodload zsh/mathfunc
-#autoload -U zsh-mime-setup
-#zsh-mime-setup
-#setopt EXTENDED_GLOB
-#autoload -U promptinit
-#promptinit
-#prompt redhat
- 
-#setopt correctall
-#autoload compinstall
-
-## END OF FILE #################################################################
 # vim:filetype=zsh foldmethod=marker autoindent expandtab shiftwidth=4
 
-#autojump
-if [ $commands[autojump] ]; then # check if autojump is installed
-  if [ -f $HOME/.autojump/etc/profile.d/autojump.zsh ]; then # manual user-local installation
-    . $HOME/.autojump/etc/profile.d/autojump.zsh
-  elif [ -f /usr/share/autojump/autojump.zsh ]; then # debian and ubuntu package
-    . /usr/share/autojump/autojump.zsh
-  elif [ -f /etc/profile.d/autojump.zsh ]; then # manual installation
-    . /etc/profile.d/autojump.zsh
-  elif [ -f /etc/profile.d/autojump.sh ]; then # gentoo installation
-    . /etc/profile.d/autojump.sh
-  elif [ -f /usr/local/share/autojump/autojump.zsh ]; then # freebsd installation
-    . /usr/local/share/autojump/autojump.zsh
-  elif [ -f /opt/local/etc/profile.d/autojump.zsh ]; then # mac os x with ports
-    . /opt/local/etc/profile.d/autojump.zsh
-  elif [ $commands[brew] -a -f `brew --prefix`/etc/autojump.zsh ]; then # mac os x with brew
-    . `brew --prefix`/etc/autojump.zsh
-  fi
-fi
 
-# web_search from terminal
-function web_search() {
-  # get the open command
-  local open_cmd
-  if [[ "$OSTYPE" = darwin* ]]; then
-    open_cmd='open'
-  else
-    open_cmd='xdg-open'
-  fi
+########################################
+# 命令高亮
+########################################
+setopt extended_glob
+TOKENS_FOLLOWED_BY_COMMANDS=('|' '||' ';' '&' '&&' 'sudo' 'do' 'time' 'strace')
 
-  # check whether the search engine is supported
-  if [[ ! $1 =~ '(google|bing|baidu|pan115|zhongzilou)' ]];
-  then
-    echo "Search engine $1 not supported."
-    return 1
-  fi
-
-  local url="https://www.$1.com"
-
-  # no keyword provided, simply open the search engine homepage
-  if [[ $# -le 1 ]]; then
-    $open_cmd "$url"
-    return
-  fi
-  local kwd=($@)
-  unset kwd[1]
-  kwd=$(echo $kwd)
-  case $1 in
-    "baidu")
-        url="${url}/s?wd=$kwd"
-        ;;
-    "pan115")
-        url="${url/https/http}/search?key=$kwd"
-        ;;
-     "zhongzilou")
-        url="${url}/list/$kwd""/1"
-        ;;
-    *)
-        url="${url}/search?q=$kwd"
-  esac
-
-  #shift   # shift out $1
-
-  #url="${url%?}" # remove the last '+'
-  nohup $open_cmd "$url" &> /dev/null 
-}
-
-alias baidu='web_search baidu'
-alias bing='web_search bing'
-alias google='web_search google'
-alias pan='web_search pan115'
-alias zzl='web_search zhongzilou'
-# add your own !bang searches here
-
-# 打印256色输出效果
-format_number() {
-  local c=$'\u254F'
-  if [ $1 -lt 10 ]; then
-    printf "$c %d" $1
-  else
-    printf "$c%02d" $(($1%100))
-  fi
-}
-
-somecolors() {
-  local from="$1"
-  local to="$2"
-  local prefix="$3"
-  local line
-
-  for line in \
-      "\e[2mdim      " \
-      "normal   " \
-      "\e[1mbold     " \
-      "\e[1;2mbold+dim "; do
-    echo -ne "$line"
-    i=$from
-    while [ $i -le $to ]; do
-      echo -ne "\e[$prefix${i}m"
-      format_number $i
-      i=$((i+1))
-    done
-    echo $'\e[0m\e[K'
+recolor-cmd() {
+  region_highlight=()
+  colorize=true
+  start_pos=0
+  for arg in ${(z)BUFFER}; do
+    ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]## #}}))
+    ((end_pos=$start_pos+${#arg}))
+    if $colorize; then
+      colorize=false
+      res=$(LC_ALL=C builtin type $arg 2>/dev/null)
+      case $res in
+        *'reserved word'*)   style="fg=magenta,bold";;
+        *'alias for'*)       style="fg=cyan,bold";;
+        *'shell builtin'*)   style="fg=yellow,bold";;
+        *'shell function'*)  style='fg=green,bold';;
+        *"$arg is"*)        [[ $arg = 'sudo' ]] && style="fg=red,bold" || style="fg=blue,bold";;
+        *)                  style="fg=cyan,bold";;
+      esac
+      region_highlight+=("$start_pos $end_pos $style")
+    fi
+    [[ ${${TOKENS_FOLLOWED_BY_COMMANDS[(r)${arg//|/\|}]}:+yes} = 'yes' ]] && colorize=true
+    start_pos=$end_pos
   done
 }
 
-allcolors() {
-  echo "-- 8 standard colors: SGR ${1}0..${1}7 --"
-  somecolors 0 7 "$1"
-  echo
-  echo "-- 8 bright colors: SGR ${2}0..${2}7 --"
-  somecolors 0 7 "$2"
-  echo
-  echo "-- 256 colors: SGR ${1}8;5;0..255 --"
-  somecolors 0 15 "${1}8;5;"
-  echo
-  somecolors  16  51 "${1}8;5;"
-  somecolors  52  87 "${1}8;5;"
-  somecolors  88 123 "${1}8;5;"
-  somecolors 124 159 "${1}8;5;"
-  somecolors 160 195 "${1}8;5;"
-  somecolors 196 231 "${1}8;5;"
-  echo
-  somecolors 232 255 "${1}8;5;"
-}
-
-function printcolor() {
-  allcolors 3 9
-  echo
-  allcolors 4 10
-}
-
-#漂亮又实用的命令高亮界面
-setopt extended_glob
- TOKENS_FOLLOWED_BY_COMMANDS=('|' '||' ';' '&' '&&' 'sudo' 'do' 'time' 'strace')
- 
-recolor-cmd() {
-    region_highlight=()
-    colorize=true
-    start_pos=0
-    for arg in ${(z)BUFFER}; do
-        ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]## #}}))
-        ((end_pos=$start_pos+${#arg}))
-        if $colorize; then
-            colorize=false
-            res=$(LC_ALL=C builtin type $arg 2>/dev/null)
-            case $res in
-                *'reserved word'*)   style="fg=magenta,bold";;
-                *'alias for'*)       style="fg=cyan,bold";;
-                *'shell builtin'*)   style="fg=yellow,bold";;
-                *'shell function'*)  style='fg=green,bold';;
-                *"$arg is"*)
-                    [[ $arg = 'sudo' ]] && style="fg=red,bold" || style="fg=blue,bold";;
-                *)                   style="fg=cyan,bold";;
-            esac
-            region_highlight+=("$start_pos $end_pos $style")
-        fi
-        [[ ${${TOKENS_FOLLOWED_BY_COMMANDS[(r)${arg//|/\|}]}:+yes} = 'yes' ]] && colorize=true
-        start_pos=$end_pos
-    done
-}
- 
 #高亮命令和自动补全命令的插件均注册了self-insert和backward-delete-char事件，一次后注册的会覆盖前注册的，所以直接在后注册的函数中调用命令高亮的函数即可
 check-cmd-self-insert() { zle .self-insert && recolor-cmd }
 check-cmd-backward-delete-char() { zle .backward-delete-char && recolor-cmd }
- 
+
 zle -N self-insert check-cmd-self-insert
 zle -N backward-delete-char check-cmd-backward-delete-char
 
@@ -1069,9 +907,11 @@ ZSH_HIGHLIGHT_STYLES[assign]=fg=magenta,bold
 
 ZSH_HIGHLIGHT_REGEXP+=('\bsudo\b' fg=123,bold)
 
-# vi mode
+########################################
+# vi模式
+########################################
 # Updates editor information when the keymap changes.
-function zle-keymap-select() {
+zle-keymap-select() {
   zle reset-prompt
   zle -R
 }
@@ -1114,7 +954,7 @@ if [[ "$MODE_INDICATOR" == "" ]]; then
   MODE_INDICATOR="%{$fg_bold[red]%}<%{$fg[red]%}<<%{$reset_color%}"
 fi
 
-function vi_mode_prompt_info() {
+vi_mode_prompt_info() {
   echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
 }
 
@@ -1123,7 +963,11 @@ if [[ "$RPS1" == "" && "$RPROMPT" == "" ]]; then
   RPS1='$(vi_mode_prompt_info)'
 fi
 
-# 加载额外功能
+#########################################################################
+# 额外功能函数
+#########################################################################
+
+# 加载额外组件
 autoload -U compinit && compinit
 autoload -U promptinit && promptinit
 autoload -U add-zsh-hook
@@ -1132,14 +976,15 @@ autoload -U zcalc
 #########################################################################
 # 计算器
 #########################################################################
+# 计算器
 function calc() {
-    zcalc -e "$*"
+  zcalc -e "$*"
 }
 
-function c() 
-{ 
-   local in="$(echo " $*" | sed -e 's/\[/(/g' | sed -e 's/\]/)/g')";
-   awk "BEGIN {printf $in}"
+# 计算器
+function c() { 
+  local in="$(echo " $*" | sed -e 's/\[/(/g' | sed -e 's/\]/)/g')";
+  awk "BEGIN {printf $in}"
 }
 
 #########################################################################
@@ -1167,63 +1012,128 @@ function memo() {
 #########################################################################
 # 大小写转换
 #########################################################################
+# 转大写
 function upper() {
-    echo "$*" | tr '[:lower:]' '[:upper:]'
+  echo "$*" | tr '[:lower:]' '[:upper:]'
 }
 
+# 转小写
 function lower() {
-    echo "$*" | tr '[:upper:]' '[:lower:]'
+  echo "$*" | tr '[:upper:]' '[:lower:]'
 }
 
+# 首字母大写
 function capitalize() {
-    echo "$*" | tr '[:upper:]' '[:lower:]' | sed 's/^\w\|\s\w/\U&/g'
+  echo "$*" | tr '[:upper:]' '[:lower:]' | sed 's/^\w\|\s\w/\U&/g'
+}
+
+#########################################################################
+# 颜色打印
+#########################################################################
+# 数字格式化
+format_number() {
+  local c=$'\u254F'
+  if [ $1 -lt 10 ]; then
+    printf "$c %d" $1
+  else
+    printf "$c%02d" $(($1%100))
+  fi
+}
+
+somecolors() {
+  local from="$1"
+  local to="$2"
+  local prefix="$3"
+  local line
+
+  for line in \
+      "\e[2mdim      " \
+      "normal   " \
+      "\e[1mbold     " \
+      "\e[1;2mbold+dim "; do
+    echo -ne "$line"
+    i=$from
+    while [ $i -le $to ]; do
+      echo -ne "\e[$prefix${i}m"
+      format_number $i
+      i=$((i+1))
+    done
+    echo $'\e[0m\e[K'
+  done
+}
+
+allcolors() {
+  echo "-- 8 standard colors: SGR ${1}0..${1}7 --"
+  somecolors 0 7 "$1"
+  echo
+  echo "-- 8 bright colors: SGR ${2}0..${2}7 --"
+  somecolors 0 7 "$2"
+  echo
+  echo "-- 256 colors: SGR ${1}8;5;0..255 --"
+  somecolors 0 15 "${1}8;5;"
+  echo
+  somecolors  16  51 "${1}8;5;"
+  somecolors  52  87 "${1}8;5;"
+  somecolors  88 123 "${1}8;5;"
+  somecolors 124 159 "${1}8;5;"
+  somecolors 160 195 "${1}8;5;"
+  somecolors 196 231 "${1}8;5;"
+  echo
+  somecolors 232 255 "${1}8;5;"
+}
+
+# 打印所有颜色
+function printcolor() {
+  allcolors 3 9
+  echo
+  allcolors 4 10
 }
 
 #########################################################################
 # 表格展示
 #########################################################################
 function table() {
-    local sep="${1:-:}"
-    if command -v column &> /dev/null; then
-        sed "s/${sep}/│/g" | column -t -s '│' | sed "s/^/  /"
-    else
-        cat
-    fi
+  local sep="${1:-:}"
+  if command -v column &> /dev/null; then
+    sed "s/${sep}/│/g" | column -t -s '│' | sed "s/^/  /"
+  else
+    cat
+  fi
 }
 
 #########################################################################
 # 简易tree
 #########################################################################
 if ! command -v tree &> /dev/null; then
-    function tree() {
-        local target_dir="${1:-.}"
+  function tree() {
+    local target_dir="${1:-.}"
 
-        find "$target_dir" -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
-    }
+    find "$target_dir" -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
+  }
 fi
 
 #########################################################################
 # 打印颜色
 #########################################################################
 function color() {
-    echo -e "\e[1m--- echo -e \"\\\\e[颜色模式;颜色码m 你的文字 \\\\e[0m\" ---\e[0m"
-    echo -ne "\e[32;47m 8位模式: 绿字 + 白底 \e[0m\t\t"
-    echo 'echo -e "\\e[32;47m 8位模式：绿字 + 白底 \\e[0m"'
-    echo -ne "\e[1;31;46m 16位模式：高亮红字 + 青底 \e[0m\t"
-    echo 'echo -e "\\e[1;31;46m 16位模式：高亮红字 + 青底 \\e[0m"'
-    echo -ne "\e[38;5;208;48;5;154m 256位模式：橙字 + 浅绿底 \e[0m\t"
-    echo 'echo -e "\\e[38;5;208;48;5;154m 256位模式：橙字 + 浅绿底 \\e[0m"'
+  echo -e "\e[1m--- echo -e \"\\\\e[颜色模式;颜色码m 你的文字 \\\\e[0m\" ---\e[0m"
+  echo -ne "\e[32;47m 8位模式: 绿字 + 白底 \e[0m\t\t"
+  echo 'echo -e "\\e[32;47m 8位模式：绿字 + 白底 \\e[0m"'
+  echo -ne "\e[1;31;46m 16位模式：高亮红字 + 青底 \e[0m\t"
+  echo 'echo -e "\\e[1;31;46m 16位模式：高亮红字 + 青底 \\e[0m"'
+  echo -ne "\e[38;5;208;48;5;154m 256位模式：橙字 + 浅绿底 \e[0m\t"
+  echo 'echo -e "\\e[38;5;208;48;5;154m 256位模式：橙字 + 浅绿底 \\e[0m"'
 
-    echo -e "\n\e[1m--- Terminal Color Matrix (256 Colors) ---\e[0m"
-    for i in {0..255}; do
-        printf "\e[48;5;%sm  %3s  \e[0m" "$i" "$i"
-        # 布局逻辑：前16个系统色分两行，之后每12个颜色换行
-        if (( i < 16 )); then
-            [[ $(( (i + 1) % 8 )) -eq 0 ]] && echo
-        else
-            [[ $(( (i - 15) % 12 )) -eq 0 ]] && echo
-        fi
-    done
+  echo -e "\n\e[1m--- Terminal Color Matrix (256 Colors) ---\e[0m"
+  for i in {0..255}; do
+    printf "\e[48;5;%sm  %3s  \e[0m" "$i" "$i"
+    # 布局逻辑：前16个系统色分两行，之后每12个颜色换行
+    if (( i < 16 )); then
+      [[ $(( (i + 1) % 8 )) -eq 0 ]] && echo
+    else
+      [[ $(( (i - 15) % 12 )) -eq 0 ]] && echo
+    fi
+  done
 }
 
 #########################################################################
@@ -1234,12 +1144,12 @@ function uuid() {
     local seed="$1"
     
     if command -v md5sum &> /dev/null; then
-        local hash=$(echo -n "$seed" | md5sum | awk '{print $1}')
+      local hash=$(echo -n "$seed" | md5sum | awk '{print $1}')
     elif command -v md5 &> /dev/null; then
-        local hash=$(echo -n "$seed" | md5 | awk '{print $NF}')
+      local hash=$(echo -n "$seed" | md5 | awk '{print $NF}')
     else
-        echo "error: md5sum or md5 command is required" >&2
-        return 1
+      echo "error: md5sum or md5 command is required" >&2
+      return 1
     fi
 
     local pseudo_uuid="${hash:0:8}-${hash:8:4}-${hash:12:4}-${hash:16:4}-${hash:20:12}"
@@ -1260,100 +1170,100 @@ function uuid() {
 # 端口开放
 #########################################################################
 function port() {
-    local action="show"
-    if [[ -n "$1" ]]; then
-        local action=$1
-        shift
-    fi
+  local action="show"
+  if [[ -n "$1" ]]; then
+    local action=$1
+    shift
+  fi
 
-    if [[ -z "$action" || "$action" == "-h" || "$action" == "--help" ]]; then
-        echo "Usage: port [on|off|ls|open|close|list|show] [port1 port2/protocol ...]"
-        return 0
-    fi
+  if [[ -z "$action" || "$action" == "-h" || "$action" == "--help" ]]; then
+    echo "Usage: port [on|off|ls|open|close|list|show] [port1 port2/protocol ...]"
+    return 0
+  fi
 
-    if [[ "$action" == "ls" || "$action" == "list" || "$action" == "show" ]]; then
-        local zone result=()
+  if [[ "$action" == "ls" || "$action" == "list" || "$action" == "show" ]]; then
+    local zone result=()
         
-        if type firewall-cmd >/dev/null 2>&1; then
-            zone=$(sudo firewall-cmd --get-default-zone)
-            local ports=$(sudo firewall-cmd --zone="$zone" --list-ports)
-            local services=$(sudo firewall-cmd --zone="$zone" --list-services)
+    if type firewall-cmd >/dev/null 2>&1; then
+      zone=$(sudo firewall-cmd --get-default-zone)
+      local ports=$(sudo firewall-cmd --zone="$zone" --list-ports)
+      local services=$(sudo firewall-cmd --zone="$zone" --list-services)
 
-            for p in $ports; do
-                result+=("$p")
-            done
+      for p in $ports; do
+        result+=("$p")
+      done
 
-            for s in $services; do
-                local port_info=$(getent services "$s" | awk '{print $2}' | head -n 1)
-                [[ -n "$port_info" ]] && result+=("$port_info/$s") || result+=("$s")
-            done
-        else
-            zone="public"
-            local it_ports=$(sudo iptables -L INPUT -n | grep 'ACCEPT' | grep -E 'dpt:[0-9]+|dpts:[0-9]+:[0-9]+' | awk -F'dpt:|dpts:' '{print $2}' | awk '{print $1}')
+      for s in $services; do
+        local port_info=$(getent services "$s" | awk '{print $2}' | head -n 1)
+        [[ -n "$port_info" ]] && result+=("$port_info/$s") || result+=("$s")
+      done
+    else
+      zone="public"
+      local it_ports=$(sudo iptables -L INPUT -n | grep 'ACCEPT' | grep -E 'dpt:[0-9]+|dpts:[0-9]+:[0-9]+' | awk -F'dpt:|dpts:' '{print $2}' | awk '{print $1}')
             
-            while IFS= read -r p; do
-                [[ -z "$p" ]] && continue
-                local p_num=${p%%:*}
-                local s_name=$(getent services "$p_num"/tcp | awk '{print $1}')
-                [[ -n "$s_name" ]] && result+=("$p/$s_name") || result+=("$p")
-            done <<< "$it_ports"
-        fi
-
-        echo "$zone: ${result[*]}"
-        return 0
+      while IFS= read -r p; do
+        [[ -z "$p" ]] && continue
+        local p_num=${p%%:*}
+        local s_name=$(getent services "$p_num"/tcp | awk '{print $1}')
+        [[ -n "$s_name" ]] && result+=("$p/$s_name") || result+=("$p")
+      done <<< "$it_ports"
     fi
 
-    if [[ "$action" != "on" && "$action" != "off" && "$action" != "open" && "$action" != "close" ]]; then
-        echo "Error: Unknown action $action. Use 'on', 'off', 'open' or 'close'." >&2
-        return 1
+    echo "$zone: ${result[*]}"
+    return 0
+  fi
+
+  if [[ "$action" != "on" && "$action" != "off" && "$action" != "open" && "$action" != "close" ]]; then
+    echo "Error: Unknown action $action. Use 'on', 'off', 'open' or 'close'." >&2
+    return 1
+  fi
+  if [[ "$action" == "on" ]]; then
+    action="open"
+  fi
+  if [[ "$action" == "off" ]]; then
+    action="close"
+  fi
+
+  if [[ $# -eq 0 ]]; then
+    echo "Error: No ports specified." >&2
+    return 1
+  fi
+
+  for item in "$@"; do
+    local port proto
+    if [[ "$item" == */* ]]; then
+      port=${item%/*}
+      proto=${item#*/}
+    else
+      port=$item
+      proto="tcp"
     fi
-    if [[ "$action" == "on" ]]; then
-        action="open"
+
+    if type firewall-cmd >/dev/null 2>&1; then
+      local fw_opt="--add-port"
+      [[ "$action" == "close" ]] && fw_opt="--remove-port"
+
+      if [[ "$proto" == "all" ]]; then
+        sudo firewall-cmd --zone=public "$fw_opt"="$port/tcp" --permanent >/dev/null
+        sudo firewall-cmd --zone=public "$fw_opt"="$port/udp" --permanent >/dev/null
+      else
+        sudo firewall-cmd --zone=public "$fw_opt"="$port/$proto" --permanent >/dev/null
+      fi
+      sudo firewall-cmd --reload >/dev/null
+      echo "Firewalld: $action port $port/$proto successfully"
+    else
+      local ip_opt="-I" # Insert rule on open
+      [[ "$action" == "close" ]] && ip_opt="-D" # Delete rule cleanly on close
+
+      if [[ "$proto" == "all" ]]; then
+        sudo /sbin/iptables "$ip_opt" INPUT -p tcp --dport "$port" -j ACCEPT
+        sudo /sbin/iptables "$ip_opt" INPUT -p udp --dport "$port" -j ACCEPT
+      else
+        sudo /sbin/iptables "$ip_opt" INPUT -p "$proto" --dport "$port" -j ACCEPT
+      fi
+      echo "Iptables: $action port $port/$proto successfully"
     fi
-    if [[ "$action" == "off" ]]; then
-        action="close"
-    fi
-
-    if [[ $# -eq 0 ]]; then
-        echo "Error: No ports specified." >&2
-        return 1
-    fi
-
-    for item in "$@"; do
-        local port proto
-        if [[ "$item" == */* ]]; then
-            port=${item%/*}
-            proto=${item#*/}
-        else
-            port=$item
-            proto="tcp"
-        fi
-
-        if type firewall-cmd >/dev/null 2>&1; then
-            local fw_opt="--add-port"
-            [[ "$action" == "close" ]] && fw_opt="--remove-port"
-
-            if [[ "$proto" == "all" ]]; then
-                sudo firewall-cmd --zone=public "$fw_opt"="$port/tcp" --permanent >/dev/null
-                sudo firewall-cmd --zone=public "$fw_opt"="$port/udp" --permanent >/dev/null
-            else
-                sudo firewall-cmd --zone=public "$fw_opt"="$port/$proto" --permanent >/dev/null
-            fi
-            sudo firewall-cmd --reload >/dev/null
-            echo "Firewalld: $action port $port/$proto successfully"
-        else
-            local ip_opt="-I" # Insert rule on open
-            [[ "$action" == "close" ]] && ip_opt="-D" # Delete rule cleanly on close
-
-            if [[ "$proto" == "all" ]]; then
-                sudo /sbin/iptables "$ip_opt" INPUT -p tcp --dport "$port" -j ACCEPT
-                sudo /sbin/iptables "$ip_opt" INPUT -p udp --dport "$port" -j ACCEPT
-            else
-                sudo /sbin/iptables "$ip_opt" INPUT -p "$proto" --dport "$port" -j ACCEPT
-            fi
-            echo "Iptables: $action port $port/$proto successfully"
-        fi
-    done
+  done
 }
 
 #########################################################################
@@ -1452,85 +1362,85 @@ function wa() {
 # 证书检测
 #########################################################################
 function cert() {
-    local target="$1"
+  local target="$1"
 
-    if [ -z "$target" ]; then
-        echo "Usage: cert <file_path | domain_or_url>"
-        return 1
-    fi
+  if [ -z "$target" ]; then
+    echo "Usage: cert <file_path | domain_or_url>"
+    return 1
+  fi
 
-    if [[ "$target" =~ ^https?:// ]] || [[ "$target" =~ \.[a-z]{2,} && ! -f "$target" ]]; then
-        echo "--- [Remote SSL Certificate: $target] ---"
+  if [[ "$target" =~ ^https?:// ]] || [[ "$target" =~ \.[a-z]{2,} && ! -f "$target" ]]; then
+    echo "--- [Remote SSL Certificate: $target] ---"
         
-        local clean_host=$(echo "$target" | sed -E 's|https?://||; s|/.*||')
-        local host=$(echo "$clean_host" | cut -d: -f1)
-        local port=$(echo "$clean_host" | grep ":" | cut -d: -f2)
-        port=${port:-443}
+    local clean_host=$(echo "$target" | sed -E 's|https?://||; s|/.*||')
+    local host=$(echo "$clean_host" | cut -d: -f1)
+    local port=$(echo "$clean_host" | grep ":" | cut -d: -f2)
+    port=${port:-443}
 
-        timeout 5 openssl s_client -servername "$host" -connect "$host:$port" </dev/null 2>/dev/null | \
-        openssl x509 -noout -text
+    timeout 5 openssl s_client -servername "$host" -connect "$host:$port" </dev/null 2>/dev/null | \
+    openssl x509 -noout -text
 
-    elif [ -f "$target" ]; then
-        echo "--- [Local Certificate File: $target] ---"
-        openssl x509 -in "$target" -noout -text
+  elif [ -f "$target" ]; then
+    echo "--- [Local Certificate File: $target] ---"
+    openssl x509 -in "$target" -noout -text
 
-    else
-        echo "Error: '$target' is neither a valid file nor a reachable URL."
-        return 1
-    fi
+  else
+    echo "Error: '$target' is neither a valid file nor a reachable URL."
+    return 1
+  fi
 }
 
 #########################################################################
 # 本机IP
 #########################################################################
 function myip() {
-    local exclude_re="docker|veth|lo|br-|flannel|cni0|cali|tunl0"
+  local exclude_re="docker|veth|lo|br-|flannel|cni0|cali|tunl0"
 
-    if command -v ip >/dev/null 2>&1; then
-        local default_interface=$(ip route | grep '^default' | awk '{print $5}' | head -n1)
+  if command -v ip >/dev/null 2>&1; then
+    local default_interface=$(ip route | grep '^default' | awk '{print $5}' | head -n1)
         
-        if [[ -n "$default_interface" && ! "$default_interface" =~ $exclude_re ]]; then
-            ip -4 addr show dev "$default_interface" | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1
-            return
-        else
-            ip -o -4 addr show scope global | grep -vE "$exclude_re" | awk '{print $4}' | cut -d/ -f1 | head -n1
-            return
-        fi
+    if [[ -n "$default_interface" && ! "$default_interface" =~ $exclude_re ]]; then
+      ip -4 addr show dev "$default_interface" | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1
+      return
+    else
+      ip -o -4 addr show scope global | grep -vE "$exclude_re" | awk '{print $4}' | cut -d/ -f1 | head -n1
+      return
     fi
+  fi
 
-    if command -v ifconfig >/dev/null 2>&1; then
-        ifconfig | awk -v exclude="$exclude_re" '
-            /^[a-z0-9]/ { interface=$1 }
-            /inet / { 
-                if (interface !~ exclude && $2 !~ /127.0.0.1/) {
-                    if ($2 ~ /addr:/) { split($2, a, ":"); print a[2] }
-                    else { print $2 }
-                }
-            }
-        ' | head -n1
-        return
-    fi
+  if command -v ifconfig >/dev/null 2>&1; then
+    ifconfig | awk -v exclude="$exclude_re" '
+      /^[a-z0-9]/ { interface=$1 }
+      /inet / { 
+        if (interface !~ exclude && $2 !~ /127.0.0.1/) {
+          if ($2 ~ /addr:/) { split($2, a, ":"); print a[2] }
+          else { print $2 }
+        }
+      }
+      ' | head -n1
+    return
+  fi
 
-    if command -v hostname >/dev/null 2>&1; then
-        hostname -I 2>/dev/null | tr ' ' '\n' | grep -vE '^172\.17\.|^127\.' | head -n1
-        return
-    fi
+  if command -v hostname >/dev/null 2>&1; then
+    hostname -I 2>/dev/null | tr ' ' '\n' | grep -vE '^172\.17\.|^127\.' | head -n1
+    return
+  fi
 
-    echo "Error: Unable to determine a valid host IP." >&2
-    return 1
+  echo "Error: Unable to determine a valid host IP." >&2
+  return 1
 }
 
 #########################################################################
 # 磁盘占用
 #########################################################################
 function ds() {
-    local d=""
-    [[ "$1" == "-a" ]] && d="D" && shift
+  local d=""
+  [[ "$1" == "-a" ]] && d="D" && shift
 
-    {
-      du -sh "${1:-.}"
-      du -sh "${1:-.}"/*(N$d)
-    } 2>/dev/null | sort -rh
+  {
+    du -sh "${1:-.}"
+    du -sh "${1:-.}"/*(N$d)
+  } 2>/dev/null | sort -rh
 }
 
 #########################################################################
@@ -1558,60 +1468,60 @@ function proc(){
   fi
   pids=($(echo "$tpids" | tr '\n' ' '))
   for pid in ${pids[@]}; do
-      #puser=${pps%~*}
-      #pid=${pps#*~}
-      puser=$(ps -p $pid -o user=)
-      pusage=$(ps -eo pid,pcpu,pmem | awk '$1=="'$pid'" {print $2"/"$3}')
+    # puser=${pps%~*}
+    # pid=${pps#*~}
+    puser=$(ps -p $pid -o user=)
+    pusage=$(ps -eo pid,pcpu,pmem | awk '$1=="'$pid'" {print $2"/"$3}')
     if type netstat 2>&1 >/dev/null; then
-          port=$(sudo netstat -tunlp 2> /dev/null | \grep " $pid/" | \grep LISTEN | \grep -E "tcp|udp" | awk '{print $4}')
-      else
-          port=$(sudo ss -tunlp 2> /dev/null | \grep "=$pid," | \grep LISTEN | \grep -E "tcp|udp" | awk '{print $5}')
-      fi
-      ports=$(echo "$port" | tr '\n' ' ')
-      etime=$(ps -p $pid -o etime= | awk '$1=$1')
-      cwd=$(sudo ls -l /proc/$pid/cwd 2> /dev/null | awk '{print $NF}')
-      bin=$(sudo readlink -f /proc/$pid/exe 2> /dev/null)
-      exe=$(ps -p $pid -o cmd=|awk '{print $1}')
-      exe=${exe##*/}
-      #bin=$exe
-      pkg=""
-      if [ -f "$bin" ]; then
-          md5=$(md5sum $bin 2> /dev/null | awk '{print $1}')
-      fi
-      isjava=false
-      if echo $exe | \grep -qE "java$"; then
-        tmp=$(ps -p $pid -o cmd=|awk '{for(i=1;i<=NF;i++) if ($i ~ /\.jar/) print $i}'|\grep -v javaagent)
-        if [ -n "$tmp" ]; then
-          isjava=true
-          pkg=${tmp##*/}
-          if [ -f "$cwd/$pkg" ]; then
-              md5=$(md5sum $cwd/$pkg 2> /dev/null | awk '{print $1}')
-          fi
+      port=$(sudo netstat -tunlp 2> /dev/null | \grep " $pid/" | \grep LISTEN | \grep -E "tcp|udp" | awk '{print $4}')
+    else
+      port=$(sudo ss -tunlp 2> /dev/null | \grep "=$pid," | \grep LISTEN | \grep -E "tcp|udp" | awk '{print $5}')
+    fi
+    ports=$(echo "$port" | tr '\n' ' ')
+    etime=$(ps -p $pid -o etime= | awk '$1=$1')
+    cwd=$(sudo ls -l /proc/$pid/cwd 2> /dev/null | awk '{print $NF}')
+    bin=$(sudo readlink -f /proc/$pid/exe 2> /dev/null)
+    exe=$(ps -p $pid -o cmd=|awk '{print $1}')
+    exe=${exe##*/}
+    # bin=$exe
+    pkg=""
+    if [ -f "$bin" ]; then
+      md5=$(md5sum $bin 2> /dev/null | awk '{print $1}')
+    fi
+    isjava=false
+    if echo $exe | \grep -qE "java$"; then
+      tmp=$(ps -p $pid -o cmd=|awk '{for(i=1;i<=NF;i++) if ($i ~ /\.jar/) print $i}'|\grep -v javaagent)
+      if [ -n "$tmp" ]; then
+        isjava=true
+        pkg=${tmp##*/}
+        if [ -f "$cwd/$pkg" ]; then
+          md5=$(md5sum $cwd/$pkg 2> /dev/null | awk '{print $1}')
         fi
       fi
-      echo ">>> $exe $pid($puser $pusage $etime $md5): $pkg <$cwd> [$ports]"
-      if [ $verbose = true ]; then
-          ps -fp $pid -o 'user,pid,ppid,stat,etime,time,tty,pcpu,pmem,rsz,vsz,start,cmd'
-          echo ""
-          echo "进程名称: $exe $pkg"
-          echo "进程ID: $pid (父ID: $(ps -p $pid -o ppid= | awk '$1=$1'))"
-          echo "打开文件数: $(lsof -p $pid 2>/dev/null | wc -l)/$(ulimit -n)"
-          echo "打开线程数: $(ps -Hhup $pid | wc -l)/$(ulimit -u)"
-          echo "网络连接数: $(sudo netstat -anp 2>/dev/null | sed 's/: /:/g' | \grep " $pid/" | awk '/^tcp/ {++S[$((NF-1))]} END {  for(a in S) print a, S[a]}' | tr '\n' '|' | sed 's/|$//')"
-          echo "运行用户: $puser"
-          echo "运行程序: $bin $pkg"
-          echo "运行路径: $cwd"
-          echo "程序MD5: $md5"
-          echo "监听端口: $ports"
-          echo "CPU使用率: $(ps -p $pid -o pcpu=)%"
-          echo "内存使用率: $(ps -p $pid -o pmem=)%"
-          echo "内存占用: $(ps -p $pid -o rsz=) rsz | $(ps -p $pid -o vsz=) vsz"
-          echo "启动时间: $(ps -p $pid -o start= | awk '$1=$1')"
-          echo "运行时长: $etime"
-          echo "CPU时间片: $(ps -p $pid -o time=)"
-          echo "进程状态: $(ps -p $pid -o stat=)"
-          echo "运行命令: $(ps -p $pid -o cmd=)"
-      fi
+    fi
+    echo ">>> $exe $pid($puser $pusage $etime $md5): $pkg <$cwd> [$ports]"
+    if [ $verbose = true ]; then
+      ps -fp $pid -o 'user,pid,ppid,stat,etime,time,tty,pcpu,pmem,rsz,vsz,start,cmd'
+      echo ""
+      echo "进程名称: $exe $pkg"
+      echo "进程ID: $pid (父ID: $(ps -p $pid -o ppid= | awk '$1=$1'))"
+      echo "打开文件数: $(lsof -p $pid 2>/dev/null | wc -l)/$(ulimit -n)"
+      echo "打开线程数: $(ps -Hhup $pid | wc -l)/$(ulimit -u)"
+      echo "网络连接数: $(sudo netstat -anp 2>/dev/null | sed 's/: /:/g' | \grep " $pid/" | awk '/^tcp/ {++S[$((NF-1))]} END {  for(a in S) print a, S[a]}' | tr '\n' '|' | sed 's/|$//')"
+      echo "运行用户: $puser"
+      echo "运行程序: $bin $pkg"
+      echo "运行路径: $cwd"
+      echo "程序MD5: $md5"
+      echo "监听端口: $ports"
+      echo "CPU使用率: $(ps -p $pid -o pcpu=)%"
+      echo "内存使用率: $(ps -p $pid -o pmem=)%"
+      echo "内存占用: $(ps -p $pid -o rsz=) rsz | $(ps -p $pid -o vsz=) vsz"
+      echo "启动时间: $(ps -p $pid -o start= | awk '$1=$1')"
+      echo "运行时长: $etime"
+      echo "CPU时间片: $(ps -p $pid -o time=)"
+      echo "进程状态: $(ps -p $pid -o stat=)"
+      echo "运行命令: $(ps -p $pid -o cmd=)"
+    fi
   done
 }
 
@@ -1719,51 +1629,51 @@ function di() {
 # 批量ping主机
 #########################################################################
 function pping() {
-    trap "exit 1" SIGINT SIGQUIT
+  trap "exit 1" SIGINT SIGQUIT
 
-    for target in "$@"; do
-        if [[ "$target" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}-[0-9]{1,3}$ ]]; then
-            ipd=${target%.*}
-            ipr=${target##*.}
-            
-            ipstart=${ipr%-*}
-            ipend=${ipr##*-}
-        elif [[ "$target" =~ "[0-9.]+|[a-zA-Z]" ]]; then
-            ipd="$target"
-            ipstart=1
-            ipend=1
-            
+  for target in "$@"; do
+    if [[ "$target" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}-[0-9]{1,3}$ ]]; then
+      ipd=${target%.*}
+      ipr=${target##*.}
+
+      ipstart=${ipr%-*}
+      ipend=${ipr##*-}
+    elif [[ "$target" =~ "[0-9.]+|[a-zA-Z]" ]]; then
+      ipd="$target"
+      ipstart=1
+      ipend=1
+
+    else
+      echo -e "\e[1;33m Warning: Skipped invalid target: $target \e[0m"
+      continue
+    fi
+
+    for ((i = $ipstart; i <= $ipend; i++)); do
+      if [ $ipstart -eq 1 ] && [ $ipend -eq 1 ]; then
+        cip="$target"
+      else
+        cip="$ipd.$i"
+      fi
+
+      if [[ "$cip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        if [ ${cip##*.} -le 9 ]; then
+          sip="$cip   "
+        elif [ ${cip##*.} -le 99 ]; then
+          sip="$cip  "
         else
-            echo -e "\e[1;33m Warning: Skipped invalid target: $target \e[0m"
-            continue
+          sip="$cip "
         fi
-        
-        for ((i = $ipstart; i <= $ipend; i++)); do
-            if [ $ipstart -eq 1 ] && [ $ipend -eq 1 ]; then
-                cip="$target"
-            else
-                cip="$ipd.$i"
-            fi
+      else
+        sip="$cip"
+      fi
             
-            if [[ "$cip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-                if [ ${cip##*.} -le 9 ]; then
-                    sip="$cip   "
-                elif [ ${cip##*.} -le 99 ]; then
-                    sip="$cip  "
-                else
-                    sip="$cip "
-                fi
-            else
-                sip="$cip"
-            fi
-            
-            if ping -c 1 -w 1 "$cip" &>/dev/null; then
-                echo -e "\e[1;32m $sip is up \e[0m"
-            else
-                echo -e "\e[1;31m $sip is down \e[0m"
-            fi
-        done
+      if ping -c 1 -w 1 "$cip" &>/dev/null; then
+        echo -e "\e[1;32m $sip is up \e[0m"
+      else
+        echo -e "\e[1;31m $sip is down \e[0m"
+      fi
     done
+  done
 }
 
 #########################################################################
@@ -1772,7 +1682,7 @@ function pping() {
 function sss(){
 	if [ ! -f ~/.ssh/id_rsa ]; then
 		\ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa -q
-    fi
+  fi
 	\ssh-copy-id $* 2>/dev/null
 	\ssh $*
 }
@@ -1782,9 +1692,9 @@ function sss(){
 #########################################################################
 function ssk() {
 	local host="${1#*@}" ports=(${@[2,-1]:-1111 2222 3333})
-    echo "Knocking $host: $ports"
-    for p in $ports; do (echo >/dev/tcp/$host/$p) >/dev/null 2>&1; done
-    sleep 1 && \ssh "$1"
+  echo "Knocking $host: $ports"
+  for p in $ports; do (echo >/dev/tcp/$host/$p) >/dev/null 2>&1; done
+  sleep 1 && \ssh "$1"
 }
 
 #########################################################################
@@ -1803,9 +1713,8 @@ function als() {
 }
 
 #########################################################################
-# 高亮指定关键字
+# 高亮指定关键字 (cat xx.txt | hl red kwd)
 #########################################################################
-# cat xx.txt | hl red kwd
 function hl() {
 	declare -A fg_color_map
 	fg_color_map[black]=30
@@ -1815,59 +1724,67 @@ function hl() {
 	fg_color_map[blue]=34
 	fg_color_map[magenta]=35
 	fg_color_map[cyan]=36
-	 
-	fg_c=$(echo -e "\e[1;${fg_color_map[$1]}m")
+
+  if [[ $# -lt 2 ]]; then
+    cat
+    return 0
+  fi
+
+  local clname="$1"
+  local pattern="$2"
+  shift 2 # 彈出前兩個參數
+
+  pattern="${pattern//,/|}"
+
+	fg_c=$(echo -e "\e[1;${fg_color_map[$clname]}m")
 	c_rs=$'\e[0m'
-	sed -u s"/$2/$fg_c\0$c_rs/g"
+	\sed -uE s"/$pattern/$fg_c\0$c_rs/g" | hl "$@"
 }
 
 #########################################################################
 # 高亮输出
 #########################################################################
 function h() {
-  if [ ! -t 1 ]
-  then
+  if [ ! -t 1 ]; then
     \cat $@
   else
-    #local sn=()
+    # local sn=()
     declare -a sn
-    while [ $# -gt 0 ] && [[ "$1" == -* ]]
-    do
-        sn+=("$1")
-        shift
+    while [ $# -gt 0 ] && [[ "$1" == -* ]]; do
+      sn+=("$1")
+      shift
     done
-    if [ $# -eq 0 ]
-    then
-        #CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
-        #highlight -O xterm256 -t 4 -s $style -S $syntax
-        if type highlight &>/dev/null;then
-            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar --force
-        elif type bat &>/dev/null;then
-            bat ${sn[*]} -Pp
-        elif type ccat &>/dev/null;then
-            ccat $${sn[*]}
-        else
-            \cat ${sn[*]}
-        fi
+    if [ $# -eq 0 ]; then
+      # CAT="highlight -O xterm256 -t 4 -s bipolar -S sh"
+      # highlight -O xterm256 -t 4 -s $style -S $syntax
+      if type highlight &>/dev/null; then
+        highlight ${sn[*]} -O xterm256 -t 4 -s bipolar --force
+      elif type bat &>/dev/null; then
+        bat ${sn[*]} -Pp
+      elif type ccat &>/dev/null; then
+        ccat $${sn[*]}
+      else
+        \cat ${sn[*]}
+      fi
     else
-        if [[ $(file "$1" | grep -o "text" | wc -l ) -lt 1 ]];then
-            echo -en "\033[1m"
-            \cat ${sn[*]} $@
-            echo -en "\033[0m"
+      if [[ $(file "$1" | grep -o "text" | wc -l ) -lt 1 ]]; then
+        echo -en "\033[1m"
+        \cat ${sn[*]} $@
+        echo -en "\033[0m"
+      else
+        if type highlight &>/dev/null; then
+          highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || \cat ${sn[*]} $@
+        elif type bat &>/dev/null; then
+          bat ${sn[*]} -Pp $@ 2> /dev/null || \cat ${sn[*]} $@
+        elif type ccat &>/dev/null; then
+          ccat ${sn[*]} $@ 2> /dev/null || \cat ${sn[*]} $@
         else
-        if type highlight &>/dev/null;then
-            highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || highlight ${sn[*]} -O xterm256 -t 4 -s bipolar $@ 2> /dev/null || \cat ${sn[*]} $@
-        elif type bat &>/dev/null;then
-            bat ${sn[*]} -Pp $@ 2> /dev/null || \cat ${sn[*]} $@
-        elif type ccat &>/dev/null;then
-            ccat ${sn[*]} $@ 2> /dev/null || \cat ${sn[*]} $@
-        else
-            echo -en "\033[1m"
-            \cat ${sn[*]} $@
-            echo -en "\033[0m"
+          echo -en "\033[1m"
+          \cat ${sn[*]} $@
+          echo -en "\033[0m"
         fi
+      fi
     fi
-  fi
   fi
 }
 
@@ -1875,42 +1792,42 @@ function h() {
 # 图标符号
 #########################################################################
 function icon() {
-    # 官方 CSS 数据源
-    local DATA_URL="https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/css/nerd-fonts-generated.css"
-    local CACHE_FILE="$HOME/.cache/nf_icons.txt"
+  # 官方 CSS 数据源
+  local DATA_URL="https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/css/nerd-fonts-generated.css"
+  local CACHE_FILE="$HOME/.cache/nf_icons.txt"
 
-    # 1. 自动初始化/更新缓存
-    if [[ ! -s "$CACHE_FILE" || -n $(find "$CACHE_FILE" -mtime +30) ]]; then
-        echo -n "Syncing official icon library... "
+  # 1. 自动初始化/更新缓存
+  if [[ ! -s "$CACHE_FILE" || -n $(find "$CACHE_FILE" -mtime +30) ]]; then
+    echo -n "Syncing official icon library... "
 
-        curl -ksL "$DATA_URL" | grep -A 1 "^\.nf-" | sed -n 'N;s/^\.nf-\(.*\):before.*content:[[:space:]]*"\\\(.*\)".*$/\1 \2/p' > "$CACHE_FILE"
-        #curl -sL "$DATA_URL" | grep -A 1 "^\.nf-" | sed -n 'N;s/^\.nf-\(.*\):before.*content:.*"\\\(.*\)".*$/\1 \2/p' | while read -r line; do
-        #    local name=$(echo "$line" | awk '{print $1}')
-        #    local hex=$(echo "$line" | awk '{print $2}')
-        #
-        #    if [[ -n "$name" && -n "$hex" ]]; then
-        #        echo "$name $hex" > "$CACHE_FILE"
-        #    fi
-        #done
+    curl -ksL "$DATA_URL" | grep -A 1 "^\.nf-" | sed -n 'N;s/^\.nf-\(.*\):before.*content:[[:space:]]*"\\\(.*\)".*$/\1 \2/p' > "$CACHE_FILE"
+    # curl -sL "$DATA_URL" | grep -A 1 "^\.nf-" | sed -n 'N;s/^\.nf-\(.*\):before.*content:.*"\\\(.*\)".*$/\1 \2/p' | while read -r line; do
+    #    local name=$(echo "$line" | awk '{print $1}')
+    #    local hex=$(echo "$line" | awk '{print $2}')
+    #
+    #    if [[ -n "$name" && -n "$hex" ]]; then
+    #        echo "$name $hex" > "$CACHE_FILE"
+    #    fi
+    # done
 
-        if [[ -s "$CACHE_FILE" ]]; then
-            echo "[✓]"
-        else
-            echo "[✕]"
-            exit 1
-        fi
+    if [[ -s "$CACHE_FILE" ]]; then
+      echo "[✓]"
+    else
+      echo "[✕]"
+      exit 1
     fi
+  fi
 
-    local search_term="$1"
-    local matches=$(grep -i "$search_term" "$CACHE_FILE")
+  local search_term="$1"
+  local matches=$(grep -i "$search_term" "$CACHE_FILE")
 
-    echo -e "ICON\tNAME"
-    echo -e "----\t----"
-    if [[ -n "$matches" ]]; then
-        echo "$matches" | while read -r name hex; do
-            [[ ${#hex} -le 4 ]] && icon=$(printf "\u$hex") || icon=$(printf "\U$hex") printf "%s\t%s\n" "$icon" "$name"
-        done
-    fi
+  echo -e "ICON\tNAME"
+  echo -e "----\t----"
+  if [[ -n "$matches" ]]; then
+    echo "$matches" | while read -r name hex; do
+      [[ ${#hex} -le 4 ]] && icon=$(printf "\u$hex") || icon=$(printf "\U$hex") printf "%s\t%s\n" "$icon" "$name"
+    done
+  fi
 }
 
 #########################################################################
@@ -1975,17 +1892,13 @@ function ex() {
     
     case "$file_lower" in
       *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
-        item_count=$(tar -tf "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l)
-        ;;
+        item_count=$(tar -tf "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l) ;;
       *.zip)
-        item_count=$(unzip -Z -1 "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l)
-        ;;
+        item_count=$(unzip -Z -1 "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l) ;;
       *.7z|*.rar|*.arj|*.cab|*.deb|*.iso|*.rpm)
-        item_count=$(7z l "$n" 2>/dev/null | awk '/----/ {flag=!flag; next} flag' | awk '{print $NF}' | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l)
-        ;;
+        item_count=$(7z l "$n" 2>/dev/null | awk '/----/ {flag=!flag; next} flag' | awk '{print $NF}' | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l) ;;
       *)
-        item_count=1
-        ;;
+        item_count=1 ;;
     esac
 
     local target_dir="."
@@ -1996,15 +1909,21 @@ function ex() {
 
     case "$file_lower" in
       *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar) 
-                   tar -xvf "$n" -C "$target_dir" ;;
-      *.zip)       unzip "$n" -d "$target_dir" ;;
+        tar -xvf "$n" -C "$target_dir" ;;
+      *.zip)
+        unzip "$n" -d "$target_dir" ;;
       *.7z|*.arj|*.cab|*.deb|*.iso|*.rpm|*.rar)     
-                   7z x "$n" -o"$target_dir" ;;
-      *.lzma)      [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && unlzma -k "$n" && rm "$n" && cd - >/dev/null || unlzma -k "$n" ;;
-      *.bz2)       [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && bunzip2 -k "$n" && rm "$n" && cd - >/dev/null || bunzip2 -k "$n" ;;
-      *.gz)        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && gunzip -k "$n" && rm "$n" && cd - >/dev/null || gunzip -k "$n" ;;
-      *.xz)        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && unxz -k "$n" && rm "$n" && cd - >/dev/null || unxz -k "$n" ;;
-      *)           echo "⚠️ Error: $n - Unsupported archive format"; continue ;;
+        7z x "$n" -o"$target_dir" ;;
+      *.lzma)
+        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && unlzma -k "$n" && rm "$n" && cd - >/dev/null || unlzma -k "$n" ;;
+      *.bz2)
+        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && bunzip2 -k "$n" && rm "$n" && cd - >/dev/null || bunzip2 -k "$n" ;;
+      *.gz)
+        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && gunzip -k "$n" && rm "$n" && cd - >/dev/null || gunzip -k "$n" ;;
+      *.xz)
+        [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && unxz -k "$n" && rm "$n" && cd - >/dev/null || unxz -k "$n" ;;
+      *)
+        echo "⚠️ Error: $n - Unsupported archive format"; continue ;;
     esac
 
     echo "✅ Extracted $n to $target_dir successfully"
@@ -2016,72 +1935,72 @@ function ex() {
 # 批量重命名
 #########################################################################
 function rnm() {
-    if [[ -z "$1" || -z "$2" ]]; then
-        echo "❌ Error: Missing arguments!"
-        echo "Usage: mmv '<regex_pattern>' '<replace_template>'"
-        echo "Example: mmv 'prefix_(.*)\.mp4' '2026_\$1.mp4'"
-        return 1
+  if [[ -z "$1" || -z "$2" ]]; then
+    echo "❌ Error: Missing arguments!"
+    echo "Usage: rnm '<regex_pattern>' '<replace_template>'"
+    echo "Example: rnm 'prefix_(.*)\.mp4' '2026_\$1.mp4'"
+    return 1
+  fi
+
+  local pattern="$1"
+  local template="$2"
+  local count=0
+
+  echo "🔍 Scanning files matching regex: /${pattern}/ ..."
+  echo "------------------------------------------------"
+
+  for src in *; do
+    if [[ -e "$src" && "$src" =~ ^${pattern}$ ]]; then
+      local dst="$template"
+      local i=1
+      for group in "${match[@]}"; do
+        dst="${dst//\$${i}/$group}"
+        ((i++))
+      done
+
+      [[ "$src" == "$dst" ]] && continue
+
+      if [[ -e "$dst" ]]; then
+        echo "⚠️ Skipped: $dst already exists! Cannot overwrite."
+        continue
+      fi
+
+      echo "✨ '$src'  ->  '$dst'"
+      mv "$src" "$dst"
+      ((count++))
     fi
+  done
 
-    local pattern="$1"
-    local template="$2"
-    local count=0
-
-    echo "🔍 Scanning files matching regex: /${pattern}/ ..."
-    echo "------------------------------------------------"
-
-    for src in *; do
-        if [[ -e "$src" && "$src" =~ ^${pattern}$ ]]; then
-            local dst="$template"
-            local i=1
-            for group in "${match[@]}"; do
-                dst="${dst//\$${i}/$group}"
-                ((i++))
-            done
-
-            [[ "$src" == "$dst" ]] && continue
-
-            if [[ -e "$dst" ]]; then
-                echo "⚠️ Skipped: $dst already exists! Cannot overwrite."
-                continue
-            fi
-
-            echo "✨ '$src'  ->  '$dst'"
-            mv "$src" "$dst"
-            ((count++))
-        fi
-    done
-
-    echo "------------------------------------------------"
-    echo "✅ Done! $count file(s) renamed successfully."
+  echo "------------------------------------------------"
+  echo "✅ Done! $count file(s) renamed successfully."
 }
 
 #########################################################################
-# Authenticator
+# Authenticator认证器
 #########################################################################
 function auth() {
-    if ! command -v python3 &> /dev/null; then
-        echo "ERROR: python3 not found. This function requires Python 3 for secure cryptographic calculations."
+  if ! command -v python3 &> /dev/null; then
+    echo "ERROR: python3 not found. This function requires Python 3 for secure cryptographic calculations."
         
-        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            echo "HINT: Run 'sudo apt install python3' (Debian/Ubuntu) or 'sudo yum install python3' (CentOS/RHEL)"
-        elif [[ "$OSTYPE" == "darwin"* ]]; then
-            echo "HINT: Run 'brew install python' or download it from python.org"
-        else
-            echo "HINT: Please install Python 3 and ensure it is in your PATH."
-        fi
-        return 1
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      echo "HINT: Run 'sudo apt install python3' (Debian/Ubuntu) or 'sudo yum install python3' (CentOS/RHEL)"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      echo "HINT: Run 'brew install python' or download it from python.org"
+    else
+      echo "HINT: Please install Python 3 and ensure it is in your PATH."
     fi
+    return 1
+  fi
 
-    if [[ -z "$OTPAUTH_MIGRATION" ]]; then
-        echo "ERROR: Environment variable OTPAUTH_MIGRATION is not set."
-        echo "Usage: export OTPAUTH_MIGRATION='otpauth-migration://...'"
-        return 1
-    fi
+  if [[ -z "$OTPAUTH_MIGRATION" ]]; then
+    echo "ERROR: Environment variable OTPAUTH_MIGRATION is not set."
+    echo "Usage: export OTPAUTH_MIGRATION='otpauth-migration://...'"
+    return 1
+  fi
 
-    local filter_account="$1"
+  local filter_account="$1"
 
-    python3 -c "
+  python3 -c "
 import base64, re, time, hmac, hashlib, struct, urllib.parse
 
 def get_totp(secret_b32):
@@ -2147,104 +2066,145 @@ main()
 "
 }
 
+########################################
+# WEB搜索
+########################################
+function web() {
+  # get the open command
+  local open_cmd
+  if [[ "$OSTYPE" = darwin* ]]; then
+    open_cmd='open'
+  else
+    open_cmd='xdg-open'
+  fi
+
+  # check whether the search engine is supported
+  if [[ ! $1 =~ '(google|bing|baidu|pan115|zhongzilou)' ]]; then
+    echo "Search engine $1 not supported."
+    return 1
+  fi
+
+  local url="https://www.$1.com"
+
+  # no keyword provided, simply open the search engine homepage
+  if [[ $# -le 1 ]]; then
+    $open_cmd "$url"
+    return
+  fi
+  local kwd=($@)
+  unset kwd[1]
+  kwd=$(echo $kwd)
+  case $1 in
+    "baidu")
+      url="${url}/s?wd=$kwd" ;;
+    "pan115")
+      url="${url/https/http}/search?key=$kwd" ;;
+    "zhongzilou")
+      url="${url}/list/$kwd""/1" ;;
+    *)
+      url="${url}/search?q=$kwd"
+  esac
+
+  # shift   # shift out $1
+
+  # url="${url%?}" # remove the last '+'
+  nohup $open_cmd "$url" &> /dev/null 
+}
+
+alias baidu='web baidu'
+alias bing='web bing'
+alias google='web google'
+alias pan='web pan115'
+alias zzl='web zhongzilou'
+# add your own !bang searches here
+
 #########################################################################
 # YouTube下载
 #########################################################################
 function yd() {
-    if ! command -v yt-dlp &> /dev/null; then
-        echo "yt-dlp Tool not found. Please execute this command to install: sudo wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O ./usr/bin/yt-dlp && sudo chmod a+x /usr/bin/yt-dlp"
-        return 1
-    fi
+  if ! command -v yt-dlp &> /dev/null; then
+    echo "yt-dlp Tool not found. Please execute this command to install: sudo wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O ./usr/bin/yt-dlp && sudo chmod a+x /usr/bin/yt-dlp"
+    return 1
+  fi
 
-    local url="$1"
+  local url="$1"
     
-    local default_res="best"
-    local default_proxy="socks5://127.0.0.1:7890"
+  local default_res="best"
+  local default_proxy="socks5://127.0.0.1:7890"
     
-    local res=""
-    local proxy=""
-    local resolution="bestvideo*+bestaudio/best"
+  local res=""
+  local proxy=""
+  local resolution="bestvideo*+bestaudio/best"
 
-    if [ -z "$url" ]; then
-        echo "Usage: yd <URL> [Resolution] [Proxy]"
-        return 1
-    fi
+  if [ -z "$url" ]; then
+    echo "Usage: yd <URL> [Resolution] [Proxy]"
+    return 1
+  fi
 
-    if [ -n "$2" ] && [ -n "$3" ]; then
-        res="$2"
-        proxy="$3"
-    elif [ -n "$2" ]; then
-        if [[ "$2" =~ ^[0-9]+p?$ ]]; then
-            res="$2"
-            proxy="$default_proxy"
-        elif [[ "$2" =~ ^(http|https|socks5):// ]]; then
-            res="$default_res"
-            proxy="$2"
-        else
-            res="$2"
-            proxy="$default_proxy"
-        fi
+  if [ -n "$2" ] && [ -n "$3" ]; then
+    res="$2"
+    proxy="$3"
+  elif [ -n "$2" ]; then
+    if [[ "$2" =~ ^[0-9]+p?$ ]]; then
+      res="$2"
+      proxy="$default_proxy"
+    elif [[ "$2" =~ ^(http|https|socks5):// ]]; then
+      res="$default_res"
+      proxy="$2"
     else
-        res="$default_res"
-        proxy="$default_proxy"
+      res="$2"
+      proxy="$default_proxy"
     fi
+  else
+    res="$default_res"
+    proxy="$default_proxy"
+  fi
 
-    if [ "$res" == "-i" ]; then
-        echo "Fetching available formats using proxy: $proxy ..."
-        echo "------------------------------------------------"
-        yt-dlp --proxy "$proxy" --cookies-from-browser chrome --js-runtimes node -F "$url"
-        echo "------------------------------------------------"
-        
-        echo "Choose download mode (Press ENTER for default 1080p):"
-        echo "[1] Smart Resolution Limit  (e.g., 2160, 1080, 720, 480)"
-        echo "[2] Exact Format ID Combin  (e.g., 137+251)"
-        echo "------------------------------------------------"
-        printf "Enter your choice (Resolution or ID): "
-        read choice
-
-        if [ -z "$choice" ]; then
-            res="1080"
-        else
-            res="$choice"
-        fi
-    fi
-
-
-    if [[ "$res" == "best" ]]; then
-        resolution="bestvideo*+bestaudio/best"
-    elif [[ "$res" =~ ^[0-9]+p?$ ]]; then
-        resolution="bestvideo[height<=${res%p}]+bestaudio/best"
-    else
-        resolution="$res"
-    fi
-        
-
-    echo "Downloading $url [$res $proxy]..."
+  if [ "$res" == "-i" ]; then
+    echo "Fetching available formats using proxy: $proxy ..."
     echo "------------------------------------------------"
+    yt-dlp --proxy "$proxy" --cookies-from-browser chrome --js-runtimes node -F "$url"
+    echo "------------------------------------------------"
+        
+    echo "Choose download mode (Press ENTER for default 1080p):"
+    echo "[1] Smart Resolution Limit  (e.g., 2160, 1080, 720, 480)"
+    echo "[2] Exact Format ID Combin  (e.g., 137+251)"
+    echo "------------------------------------------------"
+    printf "Enter your choice (Resolution or ID): "
+    read choice
 
-    yt-dlp \
-        --proxy "$proxy" \
-        --cookies-from-browser chrome \
-        -f "$resolution" \
-        -o "%(playlist_index&{}.|)s%(title)s.%(ext)s" \
-        --download-archive videos.txt \
-        --js-runtimes node \
-        --retries 100 \
-        --fragment-retries 100 \
-        "$url"
+    if [ -z "$choice" ]; then
+      res="1080"
+    else
+      res="$choice"
+    fi
+  fi
+
+  if [[ "$res" == "best" ]]; then
+    resolution="bestvideo*+bestaudio/best"
+  elif [[ "$res" =~ ^[0-9]+p?$ ]]; then
+    resolution="bestvideo[height<=${res%p}]+bestaudio/best"
+  else
+    resolution="$res"
+  fi
+
+  echo "Downloading $url [$res $proxy]..."
+  echo "------------------------------------------------"
+
+  yt-dlp --proxy "$proxy" --cookies-from-browser chrome -f "$resolution" -o "%(playlist_index&{}.|)s%(title)s.%(ext)s" --download-archive videos.txt --js-runtimes node --retries 100 --fragment-retries 100 "$url"
 }
 
 #########################################################################
 # AI词典
 #########################################################################
 function dict() {
-    local key="xxxx"
-    local url="https://open.bigmodel.cn/api/paas/v4/chat/completions"
-    local model="glm-4-flash"
+  local key="xxxx"
+  local url="https://open.bigmodel.cn/api/paas/v4/chat/completions"
+  local model="glm-4-flash"
 
-    if [[ -z "$1" ]]; then echo "Usage: dict word/sentence"; return; fi
+  if [[ -z "$1" ]]; then echo "Usage: dict word/sentence"; return; fi
 
-    local system_content=$(cat <<EOF
+  local system_content=$(cat <<EOF
 # Role
 你是一个极度严谨的中英双语语言专家，擅长将复杂的词汇和句子转化为简洁的结构化的学习笔记。
 
@@ -2319,19 +2279,19 @@ EOF
 )
 
   local payload=$(python3 -c "import sys, json; print(json.dumps({
-        'model': sys.argv[1],
-        'messages': [
-            {'role': 'system', 'content': sys.argv[2]},
-            {'role': 'user', 'content': sys.argv[3]}
-        ],
-        'temperature': 0.1
-    }))" "$model" "$system_content" "$*")
+    'model': sys.argv[1],
+    'messages': [
+      {'role': 'system', 'content': sys.argv[2]},
+      {'role': 'user', 'content': sys.argv[3]}
+    ],
+    'temperature': 0.1
+  }))" "$model" "$system_content" "$*")
 
-  curl -s -X POST "$url" -H "Content-Type: application/json" -H "Authorization: Bearer $key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败，请检查网络或APIKey"
+  curl -s -X POST "$url" -H "Content-Type: application/json" -H "Authorization: Bearer $key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败, 请检查网络或APIKey"
 }
 
 #########################################################################
-# kubectl自动补全加载较慢, 启用延迟加载
+# kubectl自动补全延迟加载
 #########################################################################
 function kubectl() {
   if ! type __start_kubectl >/dev/null 2>&1; then
@@ -2341,6 +2301,9 @@ function kubectl() {
 }
 alias k="kubectl"
 
+#########################################################################
+# kubectl精简yaml
+#########################################################################
 function kneat() {
   python3 -c "
 import sys, yaml
@@ -2363,11 +2326,11 @@ print(yaml.dump(data, default_flow_style=False))
 #########################################################################
 # nvm加载较慢, 启用延迟加载
 #########################################################################
-#function nvm() {
+# function nvm() {
 #  [ -s "$HOME/.nvm/nvm.sh" ] && . "$HOME/.nvm/nvm.sh"
 #  [ -s "$HOME/.nvm/bash_completion" ] && . "$HOME/.nvm/bash_completion"
 #  command nvm "$@"
-#}
+# }
 
 if [ -f /usr/share/nvm/init-nvm.sh ]; then
   source /usr/share/nvm/init-nvm.sh --no-use
@@ -2377,632 +2340,638 @@ fi
 # 推荐工具
 #########################################################################
 function awesome(){
-    echo "fping: https://github.com/schweikert/fping (A high performance ping tool)"
-    echo "coreutils: https://github.com/uutils/coreutils (A cross-platform rust rewrite of the GNU coreutils)"
-    echo "bat: https://github.com/sharkdp/bat (A cat clone with wings)"
-    echo "fd: https://github.com/sharkdp/fd (A modern replacement for find)"
-    echo "exa: https://github.com/ogham/exa (A modern replacement for ls)"
-    echo "procs: https://github.com/dalance/procs (A modern replacement for ps)"
-    echo "dust: https://github.com/bootandy/dust ( A modern replacement for du)"
-    echo "duf: https://github.com/muesli/duf (A modern replacement for df)"
-    echo "zoxide: https://github.com/ajeetdsouza/zoxide (A smarter cd command)"
-    echo "ripgrep: https://github.com/BurntSushi/ripgrep (A modern replacement for grep)"
-    echo "peco: https://github.com/peco/peco (A simplistic interactive filtering tool)"
-    echo "highlight: http://andre-simon.de/zip/download.php (A text highlight cli tool)"
-    echo "htop: https://github.com/htop-dev/htop (An interactive process viewer)"
-    echo "btop: https://github.com/aristocratos/btop (A monitor of resources)"
-    echo "bottom: https://github.com/ClementTsang/bottom (Another cross-platform graphical monitor)"
-    echo "nmap: https://github.com/nmap/nmap (The network mapper)"
-    echo "usql: https://github.com/xo/usql (Universal command-line interface for sql databases)"
-    echo "jq: https://github.com/jqlang/jq (A command-line JSON processor)"
-    echo "jid: https://github.com/simeji/jid (A JSON incremental digger)"
-    echo "fx: https://github.com/antonmedv/fx (A terminal JSON viewer and processor)"
-    echo "yq: https://github.com/mikefarah/yq (A command-line YAML processor)"
-    echo "grex: https://github.com/pemistahl/grex (A command-line tool for generating regular expressions)"
-    echo "vegeta: https://github.com/tsenart/vegeta (A http load testing tool and library)"
-    echo "k6: https://github.com/grafana/k6 (A modern load testing tool)"
-    echo "gore: https://github.com/x-motemen/gore (Another Go REPL)"
-    echo "gomacro: https://github.com/cosmos72/gomacro (An interactive Go interpreter and debugger with REPL)"
-    echo "gonb: https://github.com/janpfeifer/gonb (A go notebook kernel for jupyter)"
-    echo "tmux: https://github.com/tmux/tmux (A terminal multiplexer)"
-    echo "trzsz: https://github.com/trzsz/trzsz-go (A simple file transfer tool as alternative to lrzsz)"
-    echo "lf: https://github.com/gokcehan/lf (A terminal file manager)"
-    echo "goproxy: https://github.com/snail007/goproxy (A high performance multiproxy)"
-    echo "wuzz: https://github.com/asciimoo/wuzz (An interactive cli tool for http inspection)"
-    echo "websocketd: https://github.com/joewalnes/websocketd (Turn any program into a websocket server)"
-    echo "claws: https://github.com/thehowl/claws (Awesome websocket client)"
-    echo "gohttpserver: https://github.com/codeskyblue/gohttpserver (The best http static file server)"
-    echo "gofs: https://github.com/xshrim/gofs (A simple http file server)"
-    echo "zookeepercli: https://github.com/openark/zookeepercli (A lightweight dependable cli for zookeeper)"
-    echo "kaf: https://github.com/birdayz/kaf (A modern cli for apache kafka)"
-    echo "iredis: https://github.com/laixintao/iredis (A terminal client for redis)"
-    echo "redis-cli: https://github.com/holys/redis-cli (A pure go implementation of redis-cli)"
-    echo "redis-tui: https://github.com/mylxsw/redis-tui (A redis text-based UI client in cli)"
-    echo "lazygit: https://github.com/jesseduffield/lazygit (A simple terminal UI for git commands)"
-    echo "lazydocker: https://github.com/jesseduffield/lazydocker (The lazier way to manage everthing docker)"
-    echo "ctop: https://github.com/bcicen/ctop (Top-like interface for container metrics)"
-    echo "k9s: https://github.com/derailed/k9s (A kubernetes cli to manager cluster)"
-    echo "kube-explorer: https://github.com/cnrancher/kube-explorer (A portable explorer for kubernetes)"
-    echo "kind: https://github.com/kubernetes-sigs/kind (Kubernetes In Docker)"
-    echo "rbac-tool: https://github.com/alcideio/rbac-tool (A collection of kubernetes rbac tools)"
-    echo "gemini-cli: https://github.com/google-gemini/gemini-cli (An open-source AI agent for gemini) "
-    echo "awesome: https://github.com/uhub/awesome-shell https://github.com/alebcay/awesome-shell https://github.com/agarr  harr/awesome-cli-apps https://terminalsare.sexy (Awesome shell tool collection)"
+  echo "fping: https://github.com/schweikert/fping (A high performance ping tool)"
+  echo "coreutils: https://github.com/uutils/coreutils (A cross-platform rust rewrite of the GNU coreutils)"
+  echo "bat: https://github.com/sharkdp/bat (A cat clone with wings)"
+  echo "fd: https://github.com/sharkdp/fd (A modern replacement for find)"
+  echo "exa: https://github.com/ogham/exa (A modern replacement for ls)"
+  echo "procs: https://github.com/dalance/procs (A modern replacement for ps)"
+  echo "dust: https://github.com/bootandy/dust ( A modern replacement for du)"
+  echo "duf: https://github.com/muesli/duf (A modern replacement for df)"
+  echo "zoxide: https://github.com/ajeetdsouza/zoxide (A smarter cd command)"
+  echo "ripgrep: https://github.com/BurntSushi/ripgrep (A modern replacement for grep)"
+  echo "peco: https://github.com/peco/peco (A simplistic interactive filtering tool)"
+  echo "highlight: http://andre-simon.de/zip/download.php (A text highlight cli tool)"
+  echo "htop: https://github.com/htop-dev/htop (An interactive process viewer)"
+  echo "btop: https://github.com/aristocratos/btop (A monitor of resources)"
+  echo "bottom: https://github.com/ClementTsang/bottom (Another cross-platform graphical monitor)"
+  echo "nmap: https://github.com/nmap/nmap (The network mapper)"
+  echo "usql: https://github.com/xo/usql (Universal command-line interface for sql databases)"
+  echo "jq: https://github.com/jqlang/jq (A command-line JSON processor)"
+  echo "jid: https://github.com/simeji/jid (A JSON incremental digger)"
+  echo "fx: https://github.com/antonmedv/fx (A terminal JSON viewer and processor)"
+  echo "yq: https://github.com/mikefarah/yq (A command-line YAML processor)"
+  echo "grex: https://github.com/pemistahl/grex (A command-line tool for generating regular expressions)"
+  echo "vegeta: https://github.com/tsenart/vegeta (A http load testing tool and library)"
+  echo "k6: https://github.com/grafana/k6 (A modern load testing tool)"
+  echo "gore: https://github.com/x-motemen/gore (Another Go REPL)"
+  echo "gomacro: https://github.com/cosmos72/gomacro (An interactive Go interpreter and debugger with REPL)"
+  echo "gonb: https://github.com/janpfeifer/gonb (A go notebook kernel for jupyter)"
+  echo "tmux: https://github.com/tmux/tmux (A terminal multiplexer)"
+  echo "trzsz: https://github.com/trzsz/trzsz-go (A simple file transfer tool as alternative to lrzsz)"
+  echo "lf: https://github.com/gokcehan/lf (A terminal file manager)"
+  echo "goproxy: https://github.com/snail007/goproxy (A high performance multiproxy)"
+  echo "wuzz: https://github.com/asciimoo/wuzz (An interactive cli tool for http inspection)"
+  echo "websocketd: https://github.com/joewalnes/websocketd (Turn any program into a websocket server)"
+  echo "claws: https://github.com/thehowl/claws (Awesome websocket client)"
+  echo "gohttpserver: https://github.com/codeskyblue/gohttpserver (The best http static file server)"
+  echo "gofs: https://github.com/xshrim/gofs (A simple http file server)"
+  echo "zookeepercli: https://github.com/openark/zookeepercli (A lightweight dependable cli for zookeeper)"
+  echo "kaf: https://github.com/birdayz/kaf (A modern cli for apache kafka)"
+  echo "iredis: https://github.com/laixintao/iredis (A terminal client for redis)"
+  echo "redis-cli: https://github.com/holys/redis-cli (A pure go implementation of redis-cli)"
+  echo "redis-tui: https://github.com/mylxsw/redis-tui (A redis text-based UI client in cli)"
+  echo "lazygit: https://github.com/jesseduffield/lazygit (A simple terminal UI for git commands)"
+  echo "lazydocker: https://github.com/jesseduffield/lazydocker (The lazier way to manage everthing docker)"
+  echo "ctop: https://github.com/bcicen/ctop (Top-like interface for container metrics)"
+  echo "k9s: https://github.com/derailed/k9s (A kubernetes cli to manager cluster)"
+  echo "kube-explorer: https://github.com/cnrancher/kube-explorer (A portable explorer for kubernetes)"
+  echo "kind: https://github.com/kubernetes-sigs/kind (Kubernetes In Docker)"
+  echo "rbac-tool: https://github.com/alcideio/rbac-tool (A collection of kubernetes rbac tools)"
+  echo "gemini-cli: https://github.com/google-gemini/gemini-cli (An open-source AI agent for gemini) "
+  echo "awesome: https://github.com/uhub/awesome-shell https://github.com/alebcay/awesome-shell https://github.com/agarr  harr/awesome-cli-apps https://terminalsare.sexy (Awesome shell tool collection)"
 }
 
 #########################################################################
 # 数据库连接
 #########################################################################
+# SQLite 连接
 function sqlite() {
-    # 检查 usql 命令是否存在
-    if ! command -v usql &> /dev/null; then
-        echo -e "\e[1;31mError: usql command not found\e[0m"
-        return 1
-    fi
+  # 检查 usql 命令是否存在
+  if ! command -v usql &> /dev/null; then
+    echo -e "\e[1;31mError: usql command not found\e[0m"
+    return 1
+  fi
 
-    # 初始化变量
-    local DB_FILE="" # SQLite 只需要一个文件路径
-     local ARGS=()
+  # 初始化变量
+  local DB_FILE="" # SQLite 只需要一个文件路径
+  local ARGS=()
 
-    # 1. 解析命令行参数
+  # 1. 解析命令行参数
 	while [ "$#" -gt 0 ]; do
     case "$1" in
-        -f)
-            if [ -n "$2" ]; then
-                DB_FILE="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -d)
-            if [ -n "$2" ]; then
-                DB_FILE="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        *)
-            ARGS+=("$1")
-            shift 1
-            ;;
+      -f)
+        if [ -n "$2" ]; then
+          DB_FILE="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -d)
+        if [ -n "$2" ]; then
+          DB_FILE="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      *)
+        ARGS+=("$1")
+        shift 1
+        ;;
     esac
-    done
-    set -- "${ARGS[@]}"
+  done
+  set -- "${ARGS[@]}"
 
-    # 默认使用内存数据库
-    if [ -z "$DB_FILE" ]; then
-        DB_FILE=":memory:"
-    fi
+  # 默认使用内存数据库
+  if [ -z "$DB_FILE" ]; then
+    DB_FILE=":memory:"
+  fi
 
-    # 2. 构造连接 URI ( usql format: sqlite://file_path )
-    local URI="sqlite://$DB_FILE"
+  # 2. 构造连接 URI ( usql format: sqlite://file_path )
+  local URI="sqlite://$DB_FILE"
     
-    echo -e "\e[1;36mConnect: $URI\e[0m"
+  echo -e "\e[1;36mConnect: $URI\e[0m"
 
-    # 3. 调用 usql
+  # 3. 调用 usql
 	usql "$URI" $@
 }
 
+# MySQL 连接
 function mysql() {
-    # 检查 usql 命令是否存在
-    if ! command -v usql &> /dev/null; then
-        echo -e "\e[1;31mError: usql command not found\e[0m"
-        return 1
-    fi
+  # 检查 usql 命令是否存在
+  if ! command -v usql &> /dev/null; then
+    echo -e "\e[1;31mError: usql command not found\e[0m"
+    return 1
+  fi
 
-    # 初始化变量，设置默认值
-    local HOST="127.0.0.1"
-    local PORT="3306"
-    local USER="root"
-    local PASS=""
-    local DB=""
-    local ARGS=()
+  # 初始化变量，设置默认值
+  local HOST="127.0.0.1"
+  local PORT="3306"
+  local USER="root"
+  local PASS=""
+  local DB=""
+  local ARGS=()
 
-    # 1. 解析命令行参数
+  # 1. 解析命令行参数
 	while [ "$#" -gt 0 ]; do
     case "$1" in
-        -h)
-            if [ -n "$2" ]; then
-                HOST="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -P)
-            if [ -n "$2" ]; then
-                PORT="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -u)
-            if [ -n "$2" ]; then
-                USER="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -p)
-            if [ -n "$2" ]; then
-                PASS="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -d)
-            if [ -n "$2" ]; then
-                DB="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        *)
-            ARGS+=("$1")
-            shift 1
-            ;;
-    esac
-    done
-    set -- "${ARGS[@]}"
-
-    # 2. 构造连接 URI ( usql format: mysql://user:pass@host:port/database )
-    local URI="mysql://"
-
-    # 添加用户和密码
-    if [ -n "$USER" ]; then
-        URI+="$USER"
-        if [ -n "$PASS" ]; then
-            # URL编码密码，防止特殊字符干扰URI
-            local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
-            URI+=":$ENCODED_PASS"
+      -h)
+        if [ -n "$2" ]; then
+          HOST="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
         fi
-        URI+="@"
-    fi
+        ;;
+      -P)
+        if [ -n "$2" ]; then
+          PORT="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -u)
+        if [ -n "$2" ]; then
+          USER="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -p)
+        if [ -n "$2" ]; then
+          PASS="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -d)
+        if [ -n "$2" ]; then
+          DB="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      *)
+        ARGS+=("$1")
+        shift 1
+        ;;
+    esac
+  done
+  set -- "${ARGS[@]}"
 
-    # 添加主机和端口
-    URI+="$HOST"
-    if [ -n "$PORT" ]; then
-        URI+=":$PORT"
-    fi
+  # 2. 构造连接 URI ( usql format: mysql://user:pass@host:port/database )
+  local URI="mysql://"
 
-    # 添加数据库
-    if [ -n "$DB" ]; then
-        URI+="/$DB"
+  # 添加用户和密码
+  if [ -n "$USER" ]; then
+    URI+="$USER"
+    if [ -n "$PASS" ]; then
+      # URL编码密码，防止特殊字符干扰URI
+      local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
+      URI+=":$ENCODED_PASS"
     fi
+    URI+="@"
+  fi
+
+  # 添加主机和端口
+  URI+="$HOST"
+  if [ -n "$PORT" ]; then
+    URI+=":$PORT"
+  fi
+
+  # 添加数据库
+  if [ -n "$DB" ]; then
+    URI+="/$DB"
+  fi
     
-    echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DB\e[0m"
+  echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DB\e[0m"
 	
-    # 3. 调用 usql
+  # 3. 调用 usql
 	usql "$URI" $@
 }
 
-function postgres() {
-    # 检查 usql 命令是否存在
-    if ! command -v usql &> /dev/null; then
-        echo -e "\e[1;31mError: usql command not found\e[0m"
-        return 1
-    fi
+# PostgreSQL 连接
+function pgsql() {
+  # 检查 usql 命令是否存在
+  if ! command -v usql &> /dev/null; then
+    echo -e "\e[1;31mError: usql command not found\e[0m"
+    return 1
+  fi
 
-    # 初始化变量，设置默认值
-    local HOST="127.0.0.1"
-    local PORT="5432"
-    local USER="postgres"
-    local PASS=""
-    local DB=""
-    local ARGS=()
+  # 初始化变量，设置默认值
+  local HOST="127.0.0.1"
+  local PORT="5432"
+  local USER="postgres"
+  local PASS=""
+  local DB=""
+  local ARGS=()
 
-    # 1. 解析命令行参数
+  # 1. 解析命令行参数
 	while [ "$#" -gt 0 ]; do
     case "$1" in
-        -h)
-            if [ -n "$2" ]; then
-                HOST="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -P)
-            if [ -n "$2" ]; then
-                PORT="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -u)
-            if [ -n "$2" ]; then
-                USER="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -p)
-            if [ -n "$2" ]; then
-                PASS="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -d)
-            if [ -n "$2" ]; then
-                DB="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        *)
-            ARGS+=("$1")
-            shift 1
-            ;;
-    esac
-    done
-    set -- "${ARGS[@]}"
-
-    # 2. 构造连接 URI ( usql format: postgresql://user:pass@host:port/database )
-    local URI="postgresql://"
-
-    # 添加用户和密码
-    if [ -n "$USER" ]; then
-        URI+="$USER"
-        if [ -n "$PASS" ]; then
-            # URL编码密码，防止特殊字符干扰URI
-            local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
-            URI+=":$ENCODED_PASS"
+      -h)
+        if [ -n "$2" ]; then
+          HOST="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
         fi
-        URI+="@"
-    fi
+        ;;
+      -P)
+        if [ -n "$2" ]; then
+          PORT="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -u)
+        if [ -n "$2" ]; then
+          USER="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -p)
+        if [ -n "$2" ]; then
+          PASS="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -d)
+        if [ -n "$2" ]; then
+          DB="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      *)
+        ARGS+=("$1")
+        shift 1
+        ;;
+    esac
+  done
+  set -- "${ARGS[@]}"
 
-    # 添加主机和端口
-    URI+="$HOST"
-    if [ -n "$PORT" ]; then
-        URI+=":$PORT"
-    fi
+  # 2. 构造连接 URI ( usql format: postgresql://user:pass@host:port/database )
+  local URI="postgresql://"
 
-    # 添加数据库
-    # PostgreSQL中如果未指定数据库名，通常连接到与用户名同名的数据库。
-    if [ -z "$DB" ]; then
-        DB="$USER"
+  # 添加用户和密码
+  if [ -n "$USER" ]; then
+    URI+="$USER"
+    if [ -n "$PASS" ]; then
+      # URL编码密码，防止特殊字符干扰URI
+      local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
+      URI+=":$ENCODED_PASS"
     fi
-    URI+="/$DB"
+    URI+="@"
+  fi
+
+  # 添加主机和端口
+  URI+="$HOST"
+  if [ -n "$PORT" ]; then
+    URI+=":$PORT"
+  fi
+
+  # 添加数据库
+  # PostgreSQL中如果未指定数据库名，通常连接到与用户名同名的数据库。
+  if [ -z "$DB" ]; then
+    DB="$USER"
+  fi
+  URI+="/$DB"
     
-    echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DB\e[0m"
+  echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DB\e[0m"
 
-    # 3. 调用 usql
+  # 3. 调用 usql
 	usql "$URI" $@
 }
 
+# Oracle 连接
 function oracle() {
-    # 检查 usql 命令是否存在
-    if ! command -v usql &> /dev/null; then
-        echo -e "\e[1;31mError: usql command not found\e[0m"
-        return 1
-    fi
+  # 检查 usql 命令是否存在
+  if ! command -v usql &> /dev/null; then
+    echo -e "\e[1;31mError: usql command not found\e[0m"
+    return 1
+  fi
 
-    # 初始化变量，设置默认值
-    local HOST="127.0.0.1"
-    local PORT="1521"
-    local USER="system"
-    local PASS=""
-    local SERVICE_NAME=""
-    local ARGS=()
+  # 初始化变量，设置默认值
+  local HOST="127.0.0.1"
+  local PORT="1521"
+  local USER="system"
+  local PASS=""
+  local SERVICE_NAME=""
+  local ARGS=()
 
-    # 1. 解析命令行参数
+  # 1. 解析命令行参数
 	while [ "$#" -gt 0 ]; do
     case "$1" in
-        -h)
-            if [ -n "$2" ]; then
-                HOST="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -P)
-            if [ -n "$2" ]; then
-                PORT="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -u)
-            if [ -n "$2" ]; then
-                USER="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -p)
-            if [ -n "$2" ]; then
-                PASS="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -d)
-            if [ -n "$2" ]; then
-                SERVICE_NAME="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        *)
-            ARGS+=("$1")
-            shift 1
-            ;;
-    esac
-    done
-    set -- "${ARGS[@]}"
-
-    # 检查 SERVICE_NAME 是否缺失
-    if [ -z "$SERVICE_NAME" ]; then
-        echo -e "\e[1;31mError: Missing Service Name or SID. Use -d <service/sid>.\e[0m" >&2
-        return 1
-    fi
-
-    # 2. 构造连接 URI ( usql format: oracle://user:pass@host:port/service_name )
-    local URI="oracle://" # Oracle 协议
-
-    # 添加用户和密码
-    if [ -n "$USER" ]; then
-        URI+="$USER"
-        if [ -n "$PASS" ]; then
-            local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
-            URI+=":$ENCODED_PASS"
+      -h)
+        if [ -n "$2" ]; then
+          HOST="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
         fi
-        URI+="@"
+        ;;
+      -P)
+        if [ -n "$2" ]; then
+          PORT="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -u)
+        if [ -n "$2" ]; then
+          USER="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -p)
+        if [ -n "$2" ]; then
+          PASS="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -d)
+        if [ -n "$2" ]; then
+          SERVICE_NAME="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      *)
+        ARGS+=("$1")
+        shift 1
+        ;;
+    esac
+  done
+  set -- "${ARGS[@]}"
+
+  # 检查 SERVICE_NAME 是否缺失
+  if [ -z "$SERVICE_NAME" ]; then
+    echo -e "\e[1;31mError: Missing Service Name or SID. Use -d <service/sid>.\e[0m" >&2
+    return 1
+  fi
+
+  # 2. 构造连接 URI ( usql format: oracle://user:pass@host:port/service_name )
+  local URI="oracle://" # Oracle 协议
+
+  # 添加用户和密码
+  if [ -n "$USER" ]; then
+    URI+="$USER"
+    if [ -n "$PASS" ]; then
+      local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
+      URI+=":$ENCODED_PASS"
     fi
+    URI+="@"
+  fi
 
-    # 添加主机和端口
-    URI+="$HOST"
-    if [ -n "$PORT" ]; then
-        URI+=":$PORT"
-    fi
+  # 添加主机和端口
+  URI+="$HOST"
+  if [ -n "$PORT" ]; then
+      URI+=":$PORT"
+  fi
 
-    # 添加 Service Name/SID
-    URI+="/$SERVICE_NAME"
-    
-    echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$SERVICE_NAME\e[0m"
+  # 添加 Service Name/SID
+  URI+="/$SERVICE_NAME"
+  
+  echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$SERVICE_NAME\e[0m"
 
-    # 3. 调用 usql
+  # 3. 调用 usql
 	usql "$URI" $@
 }
 
-function sqlserver() {
-    # 检查 usql 命令是否存在
-    if ! command -v usql &> /dev/null; then
-        echo -e "\e[1;31mError: usql command not found\e[0m"
-        return 1
-    fi
+# SQL Server 连接
+function mssql() {
+  # 检查 usql 命令是否存在
+  if ! command -v usql &> /dev/null; then
+      echo -e "\e[1;31mError: usql command not found\e[0m"
+      return 1
+  fi
 
-    # 初始化变量，设置默认值
-    local HOST="127.0.0.1"
-    local PORT="1433"
-    local USER="sa"
-    local PASS=""
-    local DB="" 
-    local ARGS=()
-
-    # 1. 解析命令行参数
-	while [ "$#" -gt 0 ]; do
-    case "$1" in
-        -h)
-            if [ -n "$2" ]; then
-                HOST="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -P)
-            if [ -n "$2" ]; then
-                PORT="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -u)
-            if [ -n "$2" ]; then
-                USER="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -p)
-            if [ -n "$2" ]; then
-                PASS="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -d)
-            if [ -n "$2" ]; then
-                DB="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        *)
-            ARGS+=("$1")
-            shift 1
-            ;;
-    esac
-    done
-    set -- "${ARGS[@]}"
-
-    # 2. 构造连接 URI ( usql format: sqlserver://user:pass@host:port/database )
-    local URI="sqlserver://"
-
-    # 添加用户和密码
-    if [ -n "$USER" ]; then
-        URI+="$USER"
-        if [ -n "$PASS" ]; then
-            local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
-            URI+=":$ENCODED_PASS"
-        fi
-        URI+="@"
-    fi
-
-    # 添加主机和端口
-    URI+="$HOST"
-    if [ -n "$PORT" ]; then
-        URI+=":$PORT"
-    fi
-
-    # 添加数据库 (如果未指定，通常连接到默认或 master 数据库)
-    if [ -n "$DB" ]; then
-        URI+="/$DB"
-    fi
-    
-    # 构造显示的连接字符串
-    local DISPLAY_DB=${DB:-"<default>"}
-    echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DISPLAY_DB\e[0m"
-
-    # 3. 调用 usql
-	usql "$URI" $@
-}
-
-function db2() {
-    # 检查 usql 命令是否存在
-    if ! command -v usql &> /dev/null; then
-        echo -e "\e[1;31mError: usql command not found\e[0m"
-        return 1
-    fi
-
-    # 初始化变量，设置默认值
-    local HOST="127.0.0.1"
-    local PORT="50000"
-    local USER="db2user"
-    local PASS=""
-    local DB=""
-    local ARGS=()
+  # 初始化变量，设置默认值
+  local HOST="127.0.0.1"
+  local PORT="1433"
+  local USER="sa"
+  local PASS=""
+  local DB="" 
+  local ARGS=()
 
     # 1. 解析命令行参数
 	while [ "$#" -gt 0 ]; do
     case "$1" in
-        -h)
-            if [ -n "$2" ]; then
-                HOST="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -P)
-            if [ -n "$2" ]; then
-                PORT="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -u)
-            if [ -n "$2" ]; then
-                USER="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -p)
-            if [ -n "$2" ]; then
-                PASS="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        -d)
-            if [ -n "$2" ]; then
-                DB="$2"
-                shift 2
-            else
-                echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
-                return 1
-            fi
-            ;;
-        *)
-            ARGS+=("$1")
-            shift 1
-            ;;
-    esac
-    done
-    set -- "${ARGS[@]}"
-
-    # 检查数据库名是否缺失 (连接 DB2 通常需要指定数据库名)
-    if [ -z "$DB" ]; then
-		echo -e "\e[1;31mError: Missing Database Name. Use -d <database_name>.\e[0m" >&2
-        return 1
-    fi
-
-    # 2. 构造连接 URI ( usql 格式: db2://user:pass@host:port/database )
-    local URI="db2://"
-
-# 添加用户和密码
-    if [ -n "$USER" ]; then
-        URI+="$USER"
-        if [ -n "$PASS" ]; then
-            # 使用原始 awk 编码逻辑 (注意: 此编码方式并非标准 URL 编码，可能不适用于所有特殊字符)
-            local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
-            URI+=":$ENCODED_PASS"
+      -h)
+        if [ -n "$2" ]; then
+          HOST="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
         fi
-        URI+="@"
-    fi
+        ;;
+      -P)
+        if [ -n "$2" ]; then
+          PORT="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -u)
+        if [ -n "$2" ]; then
+          USER="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -p)
+        if [ -n "$2" ]; then
+          PASS="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -d)
+        if [ -n "$2" ]; then
+          DB="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      *)
+        ARGS+=("$1")
+        shift 1
+        ;;
+    esac
+  done
+  set -- "${ARGS[@]}"
 
-    # 添加主机和端口
-    URI+="$HOST"
-    if [ -n "$PORT" ]; then
-        URI+=":$PORT"
-    fi
+  # 2. 构造连接 URI ( usql format: sqlserver://user:pass@host:port/database )
+  local URI="sqlserver://"
 
-    # 添加数据库名
+  # 添加用户和密码
+  if [ -n "$USER" ]; then
+    URI+="$USER"
+    if [ -n "$PASS" ]; then
+      local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
+      URI+=":$ENCODED_PASS"
+    fi
+    URI+="@"
+  fi
+
+  # 添加主机和端口
+  URI+="$HOST"
+  if [ -n "$PORT" ]; then
+    URI+=":$PORT"
+  fi
+
+  # 添加数据库 (如果未指定，通常连接到默认或 master 数据库)
+  if [ -n "$DB" ]; then
     URI+="/$DB"
-    
-    echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DB\e[0m"
+  fi
+  
+  # 构造显示的连接字符串
+  local DISPLAY_DB=${DB:-"<default>"}
+  echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DISPLAY_DB\e[0m"
 
-    # 3. 调用 usql
+  # 3. 调用 usql
+	usql "$URI" $@
+}
+
+# DB2 连接
+function db2() {
+  # 检查 usql 命令是否存在
+  if ! command -v usql &> /dev/null; then
+    echo -e "\e[1;31mError: usql command not found\e[0m"
+    return 1
+  fi
+
+  # 初始化变量，设置默认值
+  local HOST="127.0.0.1"
+  local PORT="50000"
+  local USER="db2user"
+  local PASS=""
+  local DB=""
+  local ARGS=()
+
+  # 1. 解析命令行参数
+	while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -h)
+        if [ -n "$2" ]; then
+          HOST="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -P)
+        if [ -n "$2" ]; then
+          PORT="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -u)
+        if [ -n "$2" ]; then
+          USER="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -p)
+        if [ -n "$2" ]; then
+          PASS="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      -d)
+        if [ -n "$2" ]; then
+          DB="$2"
+          shift 2
+        else
+          echo -e "\e[1;31mError: option $1 requires an argument\e[0m" >&2
+          return 1
+        fi
+        ;;
+      *)
+        ARGS+=("$1")
+        shift 1
+        ;;
+    esac
+  done
+  set -- "${ARGS[@]}"
+
+  # 检查数据库名是否缺失 (连接 DB2 通常需要指定数据库名)
+  if [ -z "$DB" ]; then
+    echo -e "\e[1;31mError: Missing Database Name. Use -d <database_name>.\e[0m" >&2
+    return 1
+  fi
+
+  # 2. 构造连接 URI ( usql 格式: db2://user:pass@host:port/database )
+  local URI="db2://"
+
+  # 添加用户和密码
+  if [ -n "$USER" ]; then
+    URI+="$USER"
+    if [ -n "$PASS" ]; then
+      # 使用原始 awk 编码逻辑 (注意: 此编码方式并非标准 URL 编码，可能不适用于所有特殊字符)
+      local ENCODED_PASS=$(echo "$PASS" | awk '{ gsub(/[^a-zA-Z0-9-._~]/, "\\&"); print }')
+      URI+=":$ENCODED_PASS"
+    fi
+    URI+="@"
+  fi
+
+  # 添加主机和端口
+  URI+="$HOST"
+  if [ -n "$PORT" ]; then
+    URI+=":$PORT"
+  fi
+
+  # 添加数据库名
+  URI+="/$DB"
+    
+  echo -e "\e[1;36mConnect: $USER@$HOST:$PORT/$DB\e[0m"
+
+  # 3. 调用 usql
 	usql "$URI" $@
 }
 
@@ -3122,35 +3091,6 @@ EXAMPLES: \n
 }
 
 #########################################################################
-# lf终端文件管理器(类ranger)
-#########################################################################
-# lfcleanup() {
-#   exec 3>&-
-#   rm -rf "$FIFO_UEBERZUG"
-# }
-    
-function ff() {
-  if [ -n "$1" ]; then
-    cd "$1"
-  fi
-  
-  if type lf &>/dev/null &&  type ueberzug &>/dev/null; then
-    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
-      lf "$@"
-    else
-      rm -rf "$HOME/.cache/lf"
-      [ ! -d "$HOME/.cache/lf" ] && mkdir --parents "$HOME/.cache/lf"
-      export FIFO_UEBERZUG="$HOME/.cache/lf/ueberzug-$RANDOM"
-      mkfifo "$FIFO_UEBERZUG" &> /dev/null
-      (ueberzug layer -s <"$FIFO_UEBERZUG" -p bash &) &> /dev/null
-      exec 3>"$FIFO_UEBERZUG"
-      # trap lfcleanup EXIT
-      lf "$@" 3>&-
-    fi
-  fi
-}
-
-#########################################################################
 # ansible输出json提取
 #########################################################################
 function ans() {
@@ -3182,80 +3122,80 @@ function ans() {
 # 查看指定插件中定义的函数
 #########################################################################
 function func() {
-    if [[ -z "$1" || ! -f "$1" ]]; then
-        echo "Usage: func [zsh plugin file path]"
-        return 1
-    fi
+  if [[ -z "$1" || ! -f "$1" ]]; then
+    echo "Usage: func [zsh plugin file path]"
+    return 1
+  fi
 
-    # Pass the absolute path of the plugin
-    local plugin_path=$1
+  # Pass the absolute path of the plugin
+  local plugin_path=$1
 
-    # Run in an isolated sub-shell
-    zsh -f -c "
-      # 1. Initialize the completion system (Fixes: command not found: compdef)
-      autoload -Uz compinit && compinit -i
+  # Run in an isolated sub-shell
+  zsh -f -c "
+    # 1. Initialize the completion system (Fixes: command not found: compdef)
+    autoload -Uz compinit && compinit -i
       
-      # 2. Record functions *after* completion init but *before* loading the plugin
-      before=(\"\${(@k)functions}\")
+    # 2. Record functions *after* completion init but *before* loading the plugin
+    before=(\"\${(@k)functions}\")
       
-      # 3. Source the target plugin
-      source '$plugin_path'
+    # 3. Source the target plugin
+    source '$plugin_path'
       
-      # 4. Record functions after loading the plugin
-      after=(\"\${(@k)functions}\")
+    # 4. Record functions after loading the plugin
+    after=(\"\${(@k)functions}\")
       
-      # 5. Calculate the difference
-      diff_funcs=(\${after:|before})
+    # 5. Calculate the difference
+    diff_funcs=(\${after:|before})
       
-      # 6. Filter out internal completion functions and native hooks
-      plugin_funcs=()
-      for f in \${diff_funcs[@]}; do
-          local src_path=\"\$functions_source[\$f]\"
-          # Exclude functions starting with '_' or standard Zsh hook names
-          if [[ ! \"\$f\" =~ ^_ && ! \"\$f\" =~ \"^(add-zsh-hook|chpwd|precmd|preexec|periodic|zcalc|zargs|zed|zkbd|zle-keymap-select|zsh_)\" && ! \"\$src_path\" =~ \"/zsh/\" ]]; then
-              plugin_funcs+=(\"\$f\")
-          fi
-      done
+    # 6. Filter out internal completion functions and native hooks
+    plugin_funcs=()
+    for f in \${diff_funcs[@]}; do
+      local src_path=\"\$functions_source[\$f]\"
+      # Exclude functions starting with '_' or standard Zsh hook names
+      if [[ ! \"\$f\" =~ ^_ && ! \"\$f\" =~ \"^(add-zsh-hook|chpwd|precmd|preexec|periodic|zcalc|zargs|zed|zkbd|zle-keymap-select|zsh_)\" && ! \"\$src_path\" =~ \"/zsh/\" ]]; then
+        plugin_funcs+=(\"\$f\")
+      fi
+    done
       
-      echo '======================================================================'
-      echo ' 📦 Plugin Path: $plugin_path'
-      echo \" 📊 Functions Count: \${#plugin_funcs} (embed functions filtered)\"
-      echo '======================================================================'
-      printf \"%-30s | %s\n\" '[Function Name]' '[Description (First Comment Line)]'
-      echo '----------------------------------------------------------------------'
+    echo '======================================================================'
+    echo ' 📦 Plugin Path: $plugin_path'
+    echo \" 📊 Functions Count: \${#plugin_funcs} (embed functions filtered)\"
+    echo '======================================================================'
+    printf \"%-30s | %s\n\" '[Function Name]' '[Description (First Comment Line)]'
+    echo '----------------------------------------------------------------------'
 
-      # 7. Loop through clean functions and extract the first comment line
-      for func in \${(o)plugin_funcs}; do
-          # Find the line number of the function definition
-          # local line_num=\$(grep -nE \"^[ \\t]*(function[ \\t]+\"\$func\"([ \\t]+|\\$)|[^#]*\"\$func\"[ \\t]*\\\\([ \\t]*\\\\))\" '$plugin_path' | head -n 1 | cut -d: -f1)
-          # only get function definition with function keyword
-          local line_num=\$(grep -nE \"^[ \\t]*function[ \\t]+\"\$func\"([ \\t]+|\\$|\\()\" '$plugin_path' | head -n 1 | cut -d: -f1)
+    # 7. Loop through clean functions and extract the first comment line
+    for func in \${(o)plugin_funcs}; do
+      # Find the line number of the function definition
+      # local line_num=\$(grep -nE \"^[ \\t]*(function[ \\t]+\"\$func\"([ \\t]+|\\$)|[^#]*\"\$func\"[ \\t]*\\\\([ \\t]*\\\\))\" '$plugin_path' | head -n 1 | cut -d: -f1)
+      # only get function definition with function keyword
+      local line_num=\$(grep -nE \"^[ \\t]*function[ \\t]+\"\$func\"([ \\t]+|\\$|\\()\" '$plugin_path' | head -n 1 | cut -d: -f1)
 
-          local target_comment='(No Description)'
+      local target_comment='(No Description)'
 
-          if [[ -z \"\$line_num\" || \"\$line_num\" -lt 1 ]]; then
-            continue
-          fi
+      if [[ -z \"\$line_num\" || \"\$line_num\" -lt 1 ]]; then
+        continue
+      fi
           
-          # Define range window (Max 3 lines above, stopping at line 1)
-          local start_line=\$((\$line_num - 3))
-          if (( start_line < 1 )) start_line=1
-          local end_line=\$((\$line_num - 1))
+      # Define range window (Max 3 lines above, stopping at line 1)
+      local start_line=\$((\$line_num - 3))
+      if (( start_line < 1 )) start_line=1
+      local end_line=\$((\$line_num - 1))
               
-          # Extract the 3 lines and reverse them (bottom-up)
-          local lines_above=\$(sed -n \"\${start_line}, \${end_line}p\" '$plugin_path' | tail -r 2>/dev/null || sed -n \"\${start_line}, \${end_line}p\" '$plugin_path' | tac 2>/dev/null)
+      # Extract the 3 lines and reverse them (bottom-up)
+      local lines_above=\$(sed -n \"\${start_line}, \${end_line}p\" '$plugin_path' | tail -r 2>/dev/null || sed -n \"\${start_line}, \${end_line}p\" '$plugin_path' | tac 2>/dev/null)
               
-          # FIX: Use grep to instantly pick the first line starting with a #, then trim it
-          local comment_line=\$(echo \"\$lines_above\" | grep -E '^[ \\t]*#[ \\t]*[^ \\t#]+' | head -n 1)
+      # Use grep to instantly pick the first line starting with a #, then trim it
+      local comment_line=\$(echo \"\$lines_above\" | grep -E '^[ \\t]*#[ \\t]*[^ \\t#]+' | head -n 1)
               
-          if [[ -n \"\$comment_line\" ]]; then
-              target_comment=\$(echo \"\$comment_line\" | sed -E 's/^[ \\t#]*//')
-          fi
+      if [[ -n \"\$comment_line\" ]]; then
+        target_comment=\$(echo \"\$comment_line\" | sed -E 's/^[ \\t#]*//')
+      fi
           
-          printf \"%-30s | %s\n\" \"\$func\" \"\$target_comment\"
-      done
-      echo '======================================================================'
-    "
+      printf \"%-30s | %s\n\" \"\$func\" \"\$target_comment\"
+    done
+    echo '======================================================================'
+  "
 }
 
 #########################################################################
@@ -3278,47 +3218,21 @@ alias reload='src'
 #########################################################################
 # 自动执行sudo命令(Alt+Enter)
 #########################################################################
-function sd() {
-    if [[ -n "$1" ]]; then
-      user="$1"
-    else
-      user="$USER"
-    fi
-
-    if grep -q "^sudo:" /etc/group; then
-      sudo usermod -aG sudo $user
-    else
-      sudo usermod -aG wheel $user
-    fi
-
-    cfgfile="/etc/sudoers.d/${user}-nopasswd"
-    content="${user} ALL=(ALL) NOPASSWD: ALL"
-    #content="%sudo ALL=(ALL) NOPASSWD: ALL"
-
-    if echo "$content" | sudo tee "$cfgfile" > /dev/null; then
-      sudo chmod 0440 $cfgfile
-    fi
-
-    if grep -q "^docker:" /etc/group; then
-      sudo usermod -aG docker $user
-    fi
-}
-
 sudo-command-line() {
-    [[ -z $BUFFER ]] && zle up-history
-    if [[ $BUFFER == sudo\ * ]]; then
-        LBUFFER="${LBUFFER#sudo }"
-    elif [[ $BUFFER == $EDITOR\ * ]]; then
-        LBUFFER="${LBUFFER#$EDITOR }"
-        LBUFFER="sudoedit $LBUFFER"
-    elif [[ $BUFFER == sudoedit\ * ]]; then
-        LBUFFER="${LBUFFER#sudoedit }"
-        LBUFFER="$EDITOR $LBUFFER"
-    else
-        LBUFFER="sudo $LBUFFER"
-    fi
+  [[ -z $BUFFER ]] && zle up-history
+  if [[ $BUFFER == sudo\ * ]]; then
+    LBUFFER="${LBUFFER#sudo }"
+  elif [[ $BUFFER == $EDITOR\ * ]]; then
+    LBUFFER="${LBUFFER#$EDITOR }"
+    LBUFFER="sudoedit $LBUFFER"
+  elif [[ $BUFFER == sudoedit\ * ]]; then
+    LBUFFER="${LBUFFER#sudoedit }"
+    LBUFFER="$EDITOR $LBUFFER"
+  else
+    LBUFFER="sudo $LBUFFER"
+  fi
     
-    zle accept-line
+  zle accept-line
 }
 zle -N sudo-command-line
 # Defined shortcut keys: [Alt] [Enter]
@@ -3326,11 +3240,38 @@ bindkey -M emacs '^[^M' sudo-command-line
 bindkey -M vicmd '^[^M' sudo-command-line
 bindkey -M viins '^[^M' sudo-command-line
 
+# 用户加入sudo组
+function sd() {
+  if [[ -n "$1" ]]; then
+    user="$1"
+  else
+    user="$USER"
+  fi
+
+  if grep -q "^sudo:" /etc/group; then
+    sudo usermod -aG sudo $user
+  else
+    sudo usermod -aG wheel $user
+  fi
+
+  cfgfile="/etc/sudoers.d/${user}-nopasswd"
+  content="${user} ALL=(ALL) NOPASSWD: ALL"
+  # content="%sudo ALL=(ALL) NOPASSWD: ALL"
+
+  if echo "$content" | sudo tee "$cfgfile" > /dev/null; then
+    sudo chmod 0440 $cfgfile
+  fi
+
+  if grep -q "^docker:" /etc/group; then
+    sudo usermod -aG docker $user
+  fi
+}
+
 #########################################################################
 #临时冻结
 #########################################################################
 _zsh_freeze_and_do() {
-    zle push-line-or-edit
+  zle push-line-or-edit
 }
 zle -N _zsh_freeze_and_do
 bindkey '^Q' _zsh_freeze_and_do
@@ -3340,111 +3281,109 @@ bindkey '^Q' _zsh_freeze_and_do
 #########################################################################
 # 1. Core pairing and skipping logic
 _zsh_native_autopair() {
-    local l_char="$KEYS"
-    local r_char=""
+  local l_char="$KEYS"
+  local r_char=""
 
-    # Define pairs (English & Chinese)
-    case "$l_char" in
-        # English pairs
-        '(') r_char=')' ;;
-        '[') r_char=']' ;;
-        '{') r_char='}' ;;
-        '"') r_char='"' ;;
-        "'") r_char="'" ;;
-        '`') r_char='`' ;;
-        '<') r_char='>' ;;
-        # Chinese pairs
-        '（') r_char='）' ;;
-        '【') r_char='】' ;;
-        '{')  r_char='}' ;;  # Zsh treats Chinese { } same as English if input method maps it
-        '《') r_char='》' ;;
-        '“') r_char='”' ;;
-        '‘') r_char='’' ;;
-        '「') r_char='」' ;;
-    esac
+  # Define pairs (English & Chinese)
+  case "$l_char" in
+    # English pairs
+    '(') r_char=')' ;;
+    '[') r_char=']' ;;
+    '{') r_char='}' ;;
+    '"') r_char='"' ;;
+    "'") r_char="'" ;;
+    '`') r_char='`' ;;
+    '<') r_char='>' ;;
+    # Chinese pairs
+    '（') r_char='）' ;;
+    '【') r_char='】' ;;
+    '{')  r_char='}' ;;  # Zsh treats Chinese { } same as English if input method maps it
+    '《') r_char='》' ;;
+    '“') r_char='”' ;;
+    '‘') r_char='’' ;;
+    '「') r_char='」' ;;
+  esac
 
-    # SKIPPING LOGIC: If the next character in RBUFFER matches the typed closing char
-    # Use helper comparison to safely handle multi-byte Chinese characters
-    if [[ -n "$r_char" && "${RBUFFER}" == "${l_char}"* ]]; then
-        LBUFFER+="$l_char"
-        RBUFFER="${RBUFFER#?}"
-    elif [[ -n "$r_char" ]]; then
-        # PAIRING LOGIC: Insert both and keep cursor in the middle
-        LBUFFER+="$l_char"
-        RBUFFER="$r_char$RBUFFER"
-    else
-        # Fallback for unmapped keys
-        zle self-insert
-    fi
+  # SKIPPING LOGIC: If the next character in RBUFFER matches the typed closing char
+  # Use helper comparison to safely handle multi-byte Chinese characters
+  if [[ -n "$r_char" && "${RBUFFER}" == "${l_char}"* ]]; then
+    LBUFFER+="$l_char"
+    RBUFFER="${RBUFFER#?}"
+  elif [[ -n "$r_char" ]]; then
+    # PAIRING LOGIC: Insert both and keep cursor in the middle
+    LBUFFER+="$l_char"
+    RBUFFER="$r_char$RBUFFER"
+  else
+    # Fallback for unmapped keys
+    zle self-insert
+  fi
 }
 
 # Bind keys for pairing (Opening characters)
 zle -N _zsh_native_autopair
 for char in '(' '[' '{' '"' "'" '`' '<' '（' '【' '《' '“' '‘' '「'; do
-    bindkey "$char" _zsh_native_autopair
+  bindkey "$char" _zsh_native_autopair
 done
 
 # Explicitly bind closing characters for the skipping feature
 _zsh_native_skip_close() {
-    local c_char="$KEYS"
-    # Safely check if RBUFFER starts with the pressed closing character
-    if [[ "${RBUFFER}" == "${c_char}"* ]]; then
-        LBUFFER+="$c_char"
-        RBUFFER="${RBUFFER#?}"
-    else
-        zle self-insert
-    fi
+  local c_char="$KEYS"
+  # Safely check if RBUFFER starts with the pressed closing character
+  if [[ "${RBUFFER}" == "${c_char}"* ]]; then
+    LBUFFER+="$c_char"
+    RBUFFER="${RBUFFER#?}"
+  else
+    zle self-insert
+  fi
 }
 zle -N _zsh_native_skip_close
 for char in ')' ']' '}' '>' '）' '】' '》' '”' '’' '」'; do
-    bindkey "$char" _zsh_native_skip_close
+  bindkey "$char" _zsh_native_skip_close
 done
-
 
 # 2. SMART DELETE LOGIC: Delete both if cursor is inside an empty pair (Multi-byte Safe)
 _zsh_native_autodelete() {
-    local matched=0
+  local matched=0
     
-    # Check if the text surrounding the cursor forms a known pair
-    # Using array approach to handle multi-byte characters safely
-    local pairs=(
-        "()" "[]" "{}" '""' "''" '``' "<>"
-        "（）" "【】" "《》" "“”" "‘’" "「」"
-    )
+  # Check if the text surrounding the cursor forms a known pair
+  # Using array approach to handle multi-byte characters safely
+  local pairs=(
+    "()" "[]" "{}" '""' "''" '``' "<>"
+    "（）" "【】" "《》" "“”" "‘’" "「」"
+  )
 
-    for pair in "${pairs[@]}"; do
-        local left="${pair[1]}"
-        local right="${pair[2]}"
+  for pair in "${pairs[@]}"; do
+    local left="${pair[1]}"
+    local right="${pair[2]}"
         
-        if [[ "${LBUFFER}" == *"${left}" && "${RBUFFER}" == "${right}"* ]]; then
-            # Safe deletion of 1 character from left and 1 from right (handles multi-byte)
-            LBUFFER="${LBUFFER%?}"
-            RBUFFER="${RBUFFER#?}"
-            matched=1
-            break
-        fi
-    done
-    
-    if [[ $matched -eq 0 ]]; then
-        # Normal backspace behavior
-        zle backward-delete-char
+    if [[ "${LBUFFER}" == *"${left}" && "${RBUFFER}" == "${right}"* ]]; then
+      # Safe deletion of 1 character from left and 1 from right (handles multi-byte)
+      LBUFFER="${LBUFFER%?}"
+      RBUFFER="${RBUFFER#?}"
+      matched=1
+      break
     fi
+  done
+    
+  if [[ $matched -eq 0 ]]; then
+    # Normal backspace behavior
+    zle backward-delete-char
+  fi
 }
 zle -N _zsh_native_autodelete
 bindkey '^?' _zsh_native_autodelete # ^? represents Backspace
 
-
 # 3. SMART SPACE LOGIC: Expand space inside standard pairs
 _zsh_native_autospace() {
-    if [[ "${LBUFFER}" == *"{" && "${RBUFFER}" == "}"* ]] || \
-       [[ "${LBUFFER}" == *"[" && "${RBUFFER}" == "]"* ]] || \
-       [[ "${LBUFFER}" == *"(" && "${RBUFFER}" == ")"* ]] || \
-       [[ "${LBUFFER}" == *"（" && "${RBUFFER}" == "）"* ]]; then
-        LBUFFER+=" "
-        RBUFFER=" $RBUFFER"
-    else
-        zle self-insert
-    fi
+  if [[ "${LBUFFER}" == *"{" && "${RBUFFER}" == "}"* ]] || \
+    [[ "${LBUFFER}" == *"[" && "${RBUFFER}" == "]"* ]] || \
+    [[ "${LBUFFER}" == *"(" && "${RBUFFER}" == ")"* ]] || \
+    [[ "${LBUFFER}" == *"（" && "${RBUFFER}" == "）"* ]]; then
+    LBUFFER+=" "
+    RBUFFER=" $RBUFFER"
+  else
+    zle self-insert
+  fi
 }
 zle -N _zsh_native_autospace
 bindkey ' ' _zsh_native_autospace
@@ -3467,6 +3406,48 @@ chpwd_functions+=(_listpwd)
 # preexec: 每次执行命令前触发
 # zshaddhistory: 写入历史记录前执行
 # zshexit: zsh退出前触发
+
+#########################################################################
+# 显示命令执行时间
+#########################################################################
+# If command execution time above min. time, plugins will not output time.
+ZSH_COMMAND_TIME_MIN_SECONDS=5
+
+# Message to display (set to "" for disable).
+ZSH_COMMAND_TIME_MSG="Execution time: %s sec"
+
+# Message color.
+ZSH_COMMAND_TIME_COLOR="cyan"
+
+_command_time_preexec() {
+  timer=${timer:-$SECONDS}
+  ZSH_COMMAND_TIME_MSG=${ZSH_COMMAND_TIME_MSG-"Time: %s"}
+  ZSH_COMMAND_TIME_COLOR=${ZSH_COMMAND_TIME_COLOR-"white"}
+  export ZSH_COMMAND_TIME=""
+}
+
+_command_time_precmd() {
+  if [ $timer ]; then
+    timer_show=$(($SECONDS - $timer))
+    if [ -n "$TTY" ] && [ $timer_show -ge ${ZSH_COMMAND_TIME_MIN_SECONDS:-3} ]; then
+      export ZSH_COMMAND_TIME="$timer_show"
+      if [ ! -z ${ZSH_COMMAND_TIME_MSG} ]; then
+        zsh_command_time
+      fi
+    fi
+    unset timer
+  fi
+}
+
+zsh_command_time() {
+  if [ -n "$ZSH_COMMAND_TIME" ]; then
+    timer_show=$(printf '%dh:%02dm:%02ds\n' $(($ZSH_COMMAND_TIME/3600)) $(($ZSH_COMMAND_TIME%3600/60)) $(($ZSH_COMMAND_TIME%60)))
+    print -P "%F{$ZSH_COMMAND_TIME_COLOR}$(printf "${ZSH_COMMAND_TIME_MSG}\n" "$timer_show")%f"
+  fi
+}
+
+precmd_functions+=(_command_time_precmd)
+preexec_functions+=(_command_time_preexec)
 
 #########################################################################
 # fzf配置
@@ -3518,8 +3499,35 @@ fzf-redraw-prompt() {
 }
 zle -N fzf-redraw-prompt
 
+fzf-find-widget() {
+  # 检查传进来的第一个参数是不是 'only_dir'
+  local type_flag="f"
+  local prompt_msg="Find File > "
+  if [[ "$1" == "only_dir" ]]; then
+    type_flag="d"
+    prompt_msg="Change Dir > "
+  fi
+
+  local selected=$(
+    if command -v fd &>/dev/null; then
+      # 如果是 only_dir，则 --type d (只找目录)，否则 --type f (只找文件)
+      fd --type $type_flag --hidden --follow --exclude .git 2>/dev/null | fzf --height=40% --layout=reverse --prompt="$prompt_msg"
+    else
+      if [[ "$type_flag" == "d" ]]; then
+        find . -type d -not -path '*/.*' 2>/dev/null | sed 's|^\./||' | fzf --height=40% --layout=reverse --prompt="$prompt_msg"
+      else
+        find . -type f -not -path '*/.*' 2>/dev/null | sed 's|^\./||' | fzf --height=40% --layout=reverse --prompt="$prompt_msg"
+      fi
+    fi
+  )
+
+  if [[ -n "$selected" ]]; then
+    LBUFFER="${LBUFFER}${selected:q}"
+  fi
+  zle reset-prompt
+}
 zle -N fzf-find-widget
-bindkey '^p' fzf-find-widget
+bindkey '^t' fzf-find-widget
 
 fzf-cd-widget() {
 	local tokens=(${(z)LBUFFER})
@@ -3535,7 +3543,7 @@ fzf-cd-widget() {
 	fi
 }
 zle -N fzf-cd-widget
-bindkey '^t' fzf-cd-widget
+bindkey '^j' fzf-cd-widget
 
 fzf-history-widget() {
 	local num=$(fhistory $LBUFFER)
@@ -3547,7 +3555,7 @@ fzf-history-widget() {
 	return $ret
 }
 zle -N fzf-history-widget
-bindkey '^R' fzf-history-widget
+bindkey '^h' fzf-history-widget
 
 fif() {
   if [ ! "$#" -gt 0 ]; then echo "Need a string to search for!"; return 1; fi
@@ -3558,196 +3566,21 @@ find-in-file() {
 	grep --line-buffered --color=never -r "" * | fzf
 }
 zle -N find-in-file
-bindkey '^f' find-in-file
+bindkey '^g' find-in-file
 
-#########################################################################
-# 显示命令执行时间
-#########################################################################
-# If command execution time above min. time, plugins will not output time.
-ZSH_COMMAND_TIME_MIN_SECONDS=5
-
-# Message to display (set to "" for disable).
-ZSH_COMMAND_TIME_MSG="Execution time: %s sec"
-
-# Message color.
-ZSH_COMMAND_TIME_COLOR="cyan"
-
-_command_time_preexec() {
-  timer=${timer:-$SECONDS}
-  ZSH_COMMAND_TIME_MSG=${ZSH_COMMAND_TIME_MSG-"Time: %s"}
-  ZSH_COMMAND_TIME_COLOR=${ZSH_COMMAND_TIME_COLOR-"white"}
-  export ZSH_COMMAND_TIME=""
-}
-
-_command_time_precmd() {
-  if [ $timer ]; then
-    timer_show=$(($SECONDS - $timer))
-    if [ -n "$TTY" ] && [ $timer_show -ge ${ZSH_COMMAND_TIME_MIN_SECONDS:-3} ]; then
-      export ZSH_COMMAND_TIME="$timer_show"
-      if [ ! -z ${ZSH_COMMAND_TIME_MSG} ]; then
-        zsh_command_time
-      fi
-    fi
-    unset timer
+# 利用 fzf 实时过滤当前目录下的文件/历史命令
+fzf-incremental-complete() {
+  local selected=$(fc -rl 1 | awk '{$1=""; print $0}' | fzf --query="$LBUFFER" --layout=reverse --height=40%)
+  if [ -n "$selected" ]; then
+    LBUFFER="$selected"
   fi
+  zle reset-prompt
 }
+zle -N fzf-incremental-complete
+# 绑定到 Ctrl + Space (空格)，按一下就弹出实时过滤面板
+bindkey '^ ' fzf-incremental-complete
 
-zsh_command_time() {
-  if [ -n "$ZSH_COMMAND_TIME" ]; then
-    timer_show=$(printf '%dh:%02dm:%02ds\n' $(($ZSH_COMMAND_TIME/3600)) $(($ZSH_COMMAND_TIME%3600/60)) $(($ZSH_COMMAND_TIME%60)))
-    print -P "%F{$ZSH_COMMAND_TIME_COLOR}$(printf "${ZSH_COMMAND_TIME_MSG}\n" "$timer_show")%f"
-  fi
-}
-
-precmd_functions+=(_command_time_precmd)
-preexec_functions+=(_command_time_preexec)
-
-#使用:<<' 注释内容 ' 的形式注释掉Incremental completion插件，删除空行的单引号可以重新启用
+#使用:<<' 注释内容 ' 的形式注释掉剩余内容
 :<<'
-# Incremental completion for zsh
-# by y.fujii <y-fujii at mimosa-pudica.net>, public domain
 
-autoload -U compinit
-zle -N self-insert self-insert-incr
-zle -N vi-cmd-mode-incr
-zle -N vi-backward-delete-char-incr
-zle -N backward-delete-char-incr
-zle -N expand-or-complete-prefix-incr
-compinit
-
-bindkey -M viins '^[' vi-cmd-mode-incr
-bindkey -M viins '^h' vi-backward-delete-char-incr
-bindkey -M viins '^?' vi-backward-delete-char-incr
-bindkey -M viins '^i' expand-or-complete-prefix-incr
-bindkey -M emacs '^h' backward-delete-char-incr
-bindkey -M emacs '^?' backward-delete-char-incr
-bindkey -M emacs '^i' expand-or-complete-prefix-incr
-
-unsetopt automenu
-compdef -d scp
-compdef -d tar
-compdef -d make
-compdef -d java
-compdef -d svn
-compdef -d cvs
-
-# TODO:
-#     cp dir/
-
-now_predict=0
-
-function limit-completion
-{
-	if ((compstate[nmatches] <= 1)); then
-		zle -M ""
-#     elif ((compstate[list_lines] > 6)); then
-#		 compstate[list]=""
-#        zle -M "too many matches."
-	fi
-}
-
-function correct-prediction
-{
-	if ((now_predict == 1)); then
-		if [[ "$BUFFER" != "$buffer_prd" ]] || ((CURSOR != cursor_org)); then
-			now_predict=0
-		fi
-	fi
-	recolor-cmd
-}
-
-function remove-prediction
-{
-	if ((now_predict == 1)); then
-		BUFFER="$buffer_org"
-		now_predict=0
-	fi
-	recolor-cmd
-}
-
-function show-prediction
-{
-	#assert(now_predict == 0)
-	if
-		((PENDING == 0)) &&
-		((CURSOR > 1)) &&
-		[[ "$PREBUFFER" == "" ]] &&
-		[[ "$BUFFER[CURSOR]" != " " ]]
-	then
-		cursor_org="$CURSOR"
-		buffer_org="$BUFFER"
-		#comppostfuncs=(limit-completion)
-		zle complete-word
-		cursor_prd="$CURSOR"
-		buffer_prd="$BUFFER"
-		if [[ "$buffer_org[1,cursor_org]" == "$buffer_prd[1,cursor_org]" ]]; then
-			CURSOR="$cursor_org"
-			if [[ "$buffer_org" != "$buffer_prd" ]] || ((cursor_org != cursor_prd)); then
-				now_predict=1
-			fi
-		else
-			BUFFER="$buffer_org"
-			CURSOR="$cursor_org"
-		fi
-		echo -n "\e[32m"
-	else
-		zle -M ""
-	fi
-}
-
-function preexec
-{
-	echo -n "\e[39m"
-}
-
-function vi-cmd-mode-incr
-{
-	correct-prediction
-	remove-prediction
-	zle vi-cmd-mode
-}
-
-function self-insert-incr
-{
-	correct-prediction
-	remove-prediction
-	if zle .self-insert; then
-		show-prediction
-	fi
-	recolor-cmd
-}
-
-function vi-backward-delete-char-incr
-{
-	correct-prediction
-	remove-prediction
-	if zle vi-backward-delete-char; then
-		show-prediction
-	fi
-}
-
-function backward-delete-char-incr
-{
-	correct-prediction
-	remove-prediction
-	if zle backward-delete-char; then
-		show-prediction
-	fi
-	recolor-cmd
-}
-
-function expand-or-complete-prefix-incr
-{
-	correct-prediction
-	if ((now_predict == 1)); then
-		CURSOR="$cursor_prd"
-		now_predict=0
-		comppostfuncs=(limit-completion)
-		zle list-choices
-	else
-		remove-prediction
-		zle expand-or-complete-prefix
-	fi
-	recolor-cmd
-}
 '
