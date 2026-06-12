@@ -1891,11 +1891,11 @@ function ex() {
     local item_count=0
     
     case "$file_lower" in
-      *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar)
+      *.tar.bz2|*.tar.gz|*.tar.xz|*.tar.zst|*.tbz2|*.tgz|*.txz|*.tzst|*.tar)
         item_count=$(tar -tf "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l) ;;
       *.zip)
         item_count=$(unzip -Z -1 "$n" 2>/dev/null | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l) ;;
-      *.7z|*.rar|*.arj|*.cab|*.deb|*.iso|*.rpm)
+      *.7z|*.rar|*.ar|*.arj|*.cab|*.deb|*.iso|*.rpm|*.apk|*.jar)
         item_count=$(7z l "$n" 2>/dev/null | awk '/----/ {flag=!flag; next} flag' | awk '{print $NF}' | awk -F/ '{print $1}' | sort -u | grep -v '^$' | wc -l) ;;
       *)
         item_count=1 ;;
@@ -1908,11 +1908,11 @@ function ex() {
     fi
 
     case "$file_lower" in
-      *.tar.bz2|*.tar.gz|*.tar.xz|*.tbz2|*.tgz|*.txz|*.tar) 
+      *.tar.bz2|*.tar.gz|*.tar.xz|*.tar.zst|*.tbz2|*.tgz|*.txz|*.tzst|*.tar) 
         tar -xvf "$n" -C "$target_dir" ;;
       *.zip)
         unzip "$n" -d "$target_dir" ;;
-      *.7z|*.arj|*.cab|*.deb|*.iso|*.rpm|*.rar)     
+      *.7z|*.ar|*.arj|*.cab|*.deb|*.iso|*.rpm|*.apk|*.rar|*.jar)     
         7z x "$n" -o"$target_dir" ;;
       *.lzma)
         [ "$target_dir" != "." ] && cp "$n" "$target_dir" && cd "$target_dir" && unlzma -k "$n" && rm "$n" && cd - >/dev/null || unlzma -k "$n" ;;
