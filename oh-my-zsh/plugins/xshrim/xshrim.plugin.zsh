@@ -479,20 +479,6 @@ RBUFFER=" ))$RBUFFER"
 zle -N arith-eval-echo
 bindkey "^[[11~" arith-eval-echo
 
-# 时间转换
-timeconv() {
-  # 检查是否存在 gdate (Mac 上通过 brew install coreutils 安装的 GNU date)
-  if command -v gdate &> /dev/null; then
-    gdate -d @"$1" +"%Y-%m-%d %T"
-  elif date --version &> /dev/null; then
-    # 如果原生 date 支持 --version，说明是 Linux 的 GNU date
-    date -d @"$1" +"%Y-%m-%d %T"
-  else
-    # 否则使用 Mac BSD 版 date 的语法
-    date -r "$1" +"%Y-%m-%d %T"
-  fi
-}
-
 # 命令未找到处理
 command_not_found_handler () {      #if the command is not found, let bash show the message and advice(zsh could only show "command not found").
   runcnf=1 
@@ -728,7 +714,7 @@ fi
 # highlight -h &> /dev/null && alias cat='highlight'
 
 alias ls='ls --color=auto'
-type exa &>/dev/null && exa --help &>/dev/null && alias ls='exa --color=auto'
+type eza &>/dev/null && eza --help &>/dev/null && alias ls='eza --color=auto'
 alias ll='ls -lh'
 alias la='ls -alh'
 alias lt='ls -alht'
@@ -840,7 +826,11 @@ zle -N backward-delete-char check-cmd-backward-delete-char
 #cp $(dirname $0)/DIR_COLORS /etc/DIR_COLORS.256color
 
 # 方式2(依赖外部文件)
-eval $(dircolors -b $cdir/DIR_COLORS)
+if [[ -f "$cdir/DIR_COLORS" ]]; then
+  eval $(dircolors -b "$cdir/DIR_COLORS")
+else
+  eval $(dircolors -b)
+fi
 
 export ZLSCOLORS="${LS_COLORS}"
 zmodload zsh/complist
@@ -912,6 +902,10 @@ ZSH_HIGHLIGHT_REGEXP+=('\bsudo\b' fg=123,bold)
 ########################################
 # Updates editor information when the keymap changes.
 zle-keymap-select() {
+  case $KEYMAP in
+    vicmd)      echo -ne "\e[2m" ;; # 方塊光標 (或 \e[2q)
+    main|viins) echo -ne "\e[5m" ;; # 豎線光標 (或 \e[5q)
+  esac
   zle reset-prompt
   zle -R
 }
@@ -995,6 +989,51 @@ function clock() {
     echo -ne "\r\033[1;33m🕒 $(date +%H:%M:%S)\033[0m"
     sleep 1
   done
+}
+
+#########################################################################
+# 时间戳转换
+#########################################################################
+function dts() {
+  local input="$1"
+
+  if [[ -z "$input" ]]; then
+    if (( $+commands[gdate] )); then
+      gdate +"%Y-%m-%d %T (%s)"
+    elif date --version &> /dev/null; then
+      date +"%Y-%m-%d %T (%s)"
+    else
+      date +"%Y-%m-%d %T (%s)"
+    fi
+    return 0
+  fi
+
+  if [[ "$input" =~ ^[0-9]+$ ]]; then
+    if (( $+commands[gdate] )); then
+      gdate -d @"$input" +"%Y-%m-%d %T"
+    elif date --version &> /dev/null; then
+      date -d @"$input" +"%Y-%m-%d %T"
+    else
+      date -r "$input" +"%Y-%m-%d %T"
+    fi
+    return 0
+  fi
+
+  if (( $+commands[gdate] )); then
+    gdate -d "$input" +"%s" 2>/dev/null
+  elif date --version &> /dev/null; then
+    date -d "$input" +"%s" 2>/dev/null
+  else
+    date -j -f "%Y-%m-%d %H:%M:%S" "$input" +"%s" &>/dev/null || \
+    date -j -f "%Y-%m-%d" "$input" +"%s" &>/dev/null || \
+    date -j -f "%T" "$input" +"%s" &>/dev/null || \
+    date -j "$input" +"%s" 2>/dev/null
+  fi
+
+  if [ $? -ne 0 ]; then
+    echo "Error: Cant parse '$input' as a valid timestamp or date-time string." >&2
+    return 1
+  fi
 }
 
 #########################################################################
@@ -2344,7 +2383,7 @@ function awesome(){
   echo "coreutils: https://github.com/uutils/coreutils (A cross-platform rust rewrite of the GNU coreutils)"
   echo "bat: https://github.com/sharkdp/bat (A cat clone with wings)"
   echo "fd: https://github.com/sharkdp/fd (A modern replacement for find)"
-  echo "exa: https://github.com/ogham/exa (A modern replacement for ls)"
+  echo "eza: https://github.com/eza-community/eza (A modern replacement for ls)"
   echo "procs: https://github.com/dalance/procs (A modern replacement for ps)"
   echo "dust: https://github.com/bootandy/dust ( A modern replacement for du)"
   echo "duf: https://github.com/muesli/duf (A modern replacement for df)"
