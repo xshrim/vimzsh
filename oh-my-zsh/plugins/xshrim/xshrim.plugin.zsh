@@ -2264,6 +2264,128 @@ function yd() {
 }
 
 #########################################################################
+# 一键推送代码
+#########################################################################
+function gtp() {
+  # 1. 校验自定义的 Git 环境变量是否存在
+  if [[ -z "$GIT_USER" || -z "$GIT_TOKEN" ]]; then
+    echo "❌ 错误: 请先设置环境变量 GIT_USER 和 GIT_TOKEN"
+    return 1
+  fi
+
+  local is_new_repo=false
+
+  # 2. 检查当前目录是否是一个 Git 仓库，如果不是则自动初始化
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "🛈 检测到当前目录不是 Git 仓库, 正在自动初始化 ..."
+    git init
+    # 强制将默认分支设为 main (符合现代 Git 习惯)
+    git branch -M main
+    is_new_repo=true
+  else
+    local git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    local current_dir=$(pwd)
+
+    if [[ "$git_root" != "$current_dir" ]]; then
+      echo -n "⚠️ 是否自动切换到代码仓库根目录并继续提交?(Y/n): "
+      read response
+      if [[ -z "$response" ]] || [[ "$response" =~ ^[Yy]$ ]]; then
+        cd "$git_root" || return 1
+        echo "✦ 已切换至代码仓库根目录, 继续执行 ..."
+      else
+        echo "✧ 已取消操作, 请手动切换到根目录后重试"
+        return 1
+      fi
+    fi
+  fi
+
+  # 3. 获取或提示输入远端仓库地址
+  local remote_name="origin"
+  local remote_url=$(git remote get-url "$remote_name" 2>/dev/null)
+
+  if [[ -z "$remote_url" && "$is_new_repo" == false ]]; then
+    remote_url=$(git remote -v | head -n 1 | awk '{print $2}')
+  fi
+
+  # 如果是全新仓库且没有关联过远端，提示用户输入一次
+  if [[ -z "$remote_url" ]]; then
+    echo -n "☞ 未检测到远端仓库, 请粘贴远端仓库 HTTPS 或 SSH 地址: "
+    read input_url
+    if [[ -z "$input_url" ]]; then
+      echo "❌ 错误: 远端仓库地址不能为空"
+      return 1
+    fi
+    remote_url="$input_url"
+    # 本地关联该地址，方便以后直接使用
+    git remote add "$remote_name" "$remote_url"
+    echo "📦 已成功关联远端仓库 $remote_name"
+  fi
+
+  # 4. 自动暂存和创建首次/后续提交
+  if [[ -n $(git status --porcelain) || "$is_new_repo" == true ]]; then
+    # 检查是否有文件可以提交，全新目录如果是空的，先建一个说明文件避免提交失败
+    if [[ -z $(ls -A) ]]; then
+      echo "# New Project" > README.md
+      echo "🛈 当前为空目录, 已自动生成 README.md"
+    fi
+      
+    echo "♨ 正在创建本地 Commit ..."
+    git add .
+    
+    local commit_msg="$1"
+    if [[ -z "$commit_msg" ]]; then
+      if [ "$is_new_repo" = true ]; then
+        commit_msg="Initial commit via gpush"
+      else
+        commit_msg="Auto commit via gpush"
+      fi
+    fi
+    git commit -m "$commit_msg"
+  fi
+
+  # 5. 获取当前分支名称 (此时确保一定有分支了)
+  local current_branch=$(git branch --show-current)
+  if [[ -z "$current_branch" ]]; then
+    current_branch="main"
+  fi
+
+  # 6. 解析并重构带 Token 的 URL
+  local target_url=""
+  if [[ "$remote_url" =~ https://(.*) ]]; then
+    local clean_url="${match[1]}"
+    clean_url="${clean_url#*@}"
+    target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
+  elif [[ "$remote_url" =~ git@(.*):(.*) ]]; then
+    local domain="${match[1]}"
+    local path="${match[2]}"
+    target_url="https://${GIT_USER}:${GIT_TOKEN}@${domain}/${path}"
+  else
+    echo "❌ 错误: 无法解析的远端 URL 格式: $remote_url"
+    return 1
+  fi
+
+  # 7. 执行推送
+  echo "⏳ 正在推送分支 [$current_branch] 到远端仓库 $remote_url ..."
+  
+  # 如果是全新仓库，推送时加上 -u 参数以锁定上游分支
+  if [ "$is_new_repo" = true ]; then
+    if git push -u "$target_url" "$current_branch"; then
+      echo "⛳ 全新仓库首次推送成功"
+    else
+      echo "❌ 推送失败，请检查 GIT_TOKEN 权限, 网络, 或远端仓库是否为空"
+      return 1
+    fi
+  else
+    if git push "$target_url" "$current_branch"; then
+      echo "⛳ 代码推送成功"
+    else
+      echo "❌ 推送失败，请检查 GIT_TOKEN 权限或网络连接"
+      return 1
+    fi
+  fi
+}
+
+#########################################################################
 # AI问答
 #########################################################################
 function ai() {
