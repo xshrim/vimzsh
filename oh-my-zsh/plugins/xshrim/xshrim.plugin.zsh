@@ -2342,13 +2342,16 @@ function gtp() {
 
   local target_url=""
   if [[ "$remote_url" =~ ^https://(.*) ]]; then
-    local clean_url="${BASH_REMATCH[1]}"
-    clean_url="${clean_url#*@}"
+    local no_proto="${remote_url#*://}"
+    local clean_url="${no_proto#*@}"
     target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
   elif [[ "$remote_url" =~ ^git@(.*):(.*) ]]; then
-    local domain="${BASH_REMATCH[1]}"
-    local path="${BASH_REMATCH[2]}"
-    target_url="https://${GIT_USER}:${GIT_TOKEN}@${domain}/${path}"
+    local spatial_url="${remote_url#git@}"
+    local clean_url="${spatial_url/:/\/}"
+    target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
+  elif [[ "$remote_url" == ssh://git@* ]]; then
+    local clean_url="${remote_url#ssh://git@}"
+    target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
   else
     echo "❌ Error: Unsupported remote URL format: $remote_url"
     return 1
