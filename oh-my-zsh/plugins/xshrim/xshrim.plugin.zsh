@@ -2188,6 +2188,58 @@ alias zzl='web zhongzilou'
 # add your own !bang searches here
 
 #########################################################################
+# 视频字幕整合
+#########################################################################
+function msrt() {
+  if [ "$#" -ne 2 ]; then
+    echo "Usage: msrt <video_file> <srt_file>"
+    return 1
+  fi
+
+  local video_file="$1"
+  local srt_file="$2"
+
+  if [ ! -f "$video_file" ]; then
+    echo "❌ Error: Video file not found: $video_file"
+    return 1
+  fi
+  if [ ! -f "$srt_file" ]; then
+    echo "❌ Error: SRT file not found: $srt_file"
+    return 1
+  fi
+
+  if ! command -v ffmpeg &> /dev/null; then
+    echo "❌ Error: ffmpeg not found. Please install ffmpeg first."
+    return 1
+  fi
+
+  local filename="${video_file%.*}"
+  local extension="${video_file##*.}"
+  local tmp_output="${filename}_subtitle_tmp.${extension}"
+
+  echo "🎬 Start encoding subtitle..."
+  echo "▣ Video source: $video_file"
+  echo "☰ Subtitle source: $srt_file"
+
+  ffmpeg -i "$video_file" -i "$srt_file" -c:v copy -c:a copy -c:s mov_text -y "$tmp_output" > /dev/null 2>&1
+
+  if [ $? -eq 0 ] && [ -s "$tmp_output" ]; then
+    echo "⛳ Subtitle encoding successful! Cleaning up original files and renaming..."
+    
+    rm -f "$video_file"
+    rm -f "$srt_file"
+    
+    mv "$tmp_output" "$video_file"
+    
+    echo "✔ Subtitle encoding Complete! New file ready: $video_file"
+  else
+    echo "❌ Error: ffmpeg encoding failed."
+    rm -f "$tmp_output"
+    return 2
+  fi
+}
+
+#########################################################################
 # YouTube下载
 #########################################################################
 function yd() {
