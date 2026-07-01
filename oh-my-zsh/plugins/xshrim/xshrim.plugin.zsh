@@ -409,9 +409,9 @@ precmd () {
   }
 
   # 启动无限事件循环刷新右侧提示符
-  if [ -n "$RPROMPT" ]; then
-    _zsh_background_clock
-  fi
+  #if [ -n "$RPROMPT" ]; then
+  #  _zsh_background_clock
+  #fi
 
   # 在 Emacs终端 中使用 Zsh 的一些设置
   if [[ "$TERM" == "dumb" ]]; then
