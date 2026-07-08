@@ -2433,7 +2433,7 @@ function gtp() {
 #########################################################################
 function ai() {
   if ! (( $+commands[curl] )) || ! (( $+commands[jq] )); then
-    echo "\e[1;31m❌ Error: 'curl' and 'jq' are required for this function\e[0m" >&2
+    echo -e "\e[1;31m❌ Error: 'curl' and 'jq' are required for this function\e[0m" >&2
     return 1
   fi
 
@@ -2461,7 +2461,7 @@ function ai() {
     fi
   else
     if [[ -z "$1" ]]; then
-      echo "Usage: ai \"your question here\" or cat file.txt | ai \"explain this\""
+      echo "Usage: ai \"your question here\" or cat file.txt | ai \"explain this\"" >&2
       return 1
     fi
     prompt="$1"
@@ -2482,7 +2482,7 @@ function ai() {
     }')
 
   local response
-  response=$(curl -s -X POST "$api_base/chat/completions" \
+  response=$(curl -s --connect-timeout 10 -m 300 -X POST "$api_base/chat/completions" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $api_key" \
     -d "$json_payload")
@@ -2492,13 +2492,13 @@ function ai() {
     return 1
   fi
 
-  local error_msg=$(echo "$response" | jq -r '.error.message // empty')
+  local error_msg=$(jq -r '.error.message // empty' <<< "$response")
   if [[ -n "$error_msg" ]]; then
     echo -e "\e[1;31m❌ Error: $error_msg\e[0m" >&2
     return 1
   fi
 
-  local reply=$(echo "$response" | jq -r '.choices[0].message.content // empty')
+  local reply=$(jq -r '.choices[0].message.content // empty' <<< "$response")
 
   if [[ -z "$reply" ]]; then
     echo -e "\e[1;31m❌ Error: Empty response or invalid format from API: $response\e[0m" >&2
@@ -2507,9 +2507,9 @@ function ai() {
 
   echo -e "\e[1;32m❖ AI ($model) Response:\e[0m"
   if (( $+commands[glow] )); then
-    echo "$reply" | glow -
+    printf "%s\n" "$reply" | glow -
   else
-    echo "$reply"
+    printf "%s\n" "$reply"
   fi
 }
 
@@ -2517,9 +2517,18 @@ function ai() {
 # AI词典
 #########################################################################
 function dict() {
-  local key="xxxx"
-  local url="https://open.bigmodel.cn/api/paas/v4/chat/completions"
-  local model="glm-4-flash"
+  local api_key="${OPENAI_API_KEY}"
+  local api_base="${OPENAI_API_BASE:-https://api.openai.com/v1}"
+  local model="${OPENAI_MODEL:-gpt-4o-mini}"
+
+  [[ -z "$api_key" ]] && api_key="${AI_API_KEY}"
+  [[ "$api_base" == "https://api.openai.com/v1" && -n "$AI_API_BASE" ]] && api_base="$AI_API_BASE"
+  [[ "$model" == "gpt-4o-mini" && -n "$AI_MODEL" ]] && model="$AI_MODEL"
+
+  if [[ -z "$api_key" ]]; then
+    echo -e "\e[1;31m❌ Error: Environment AI_API_KEY not set\e[0m" >&2
+    return 1
+  fi
 
   if [[ -z "$1" ]]; then echo "Usage: dict word/sentence"; return; fi
 
@@ -2606,7 +2615,7 @@ EOF
     'temperature': 0.1
   }))" "$model" "$system_content" "$*")
 
-  curl -s -X POST "$url" -H "Content-Type: application/json" -H "Authorization: Bearer $key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败, 请检查网络或APIKey"
+  curl -s -X POST "$api_base/chat/completions" -H "Content-Type: application/json" -H "Authorization: Bearer $api_key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败, 请检查网络或APIKey"
 }
 
 #########################################################################
