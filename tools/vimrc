@@ -704,7 +704,7 @@ Plug 'alvan/vim-closetag'
 """""""""""""""""""""""""""""""""""""Leaderd""""""""""""""""""""""""""""""""
 " 模糊查找
 "if version >= 704 || (version == 704 && has('patch399'))
-if has("patch-7.4-399")
+if has("patch-7.4-399") && has('python'))
   Plug 'Yggdroot/LeaderF'
 endif
 
