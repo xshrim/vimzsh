@@ -435,6 +435,10 @@ setopt INTERACTIVE_COMMENTS
 #禁用自动解析通配符
 setopt no_nomatch
 
+#开启通配匹配
+setopt GLOB_COMPLETE
+setopt EXTENDED_GLOB
+
 # 扩展路径
 # /v/c/p/p => /var/cache/pacman/pkg
 setopt complete_in_word
@@ -562,7 +566,6 @@ zstyle ':completion:*' completer _complete _prefix _correct _prefix _match _appr
 zstyle ':completion:*' expand 'yes'
 zstyle ':completion:*' squeeze-slashes 'yes'
 zstyle ':completion::complete:*' '\\'
-
 
 # 修正大小写
 zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
@@ -928,64 +931,106 @@ ZSH_HIGHLIGHT_STYLES[assign]=fg=magenta,bold
 ZSH_HIGHLIGHT_REGEXP+=('\bsudo\b' fg=123,bold)
 
 ########################################
-# vi模式
+# 自动转义粘贴的 URL
 ########################################
-# Updates editor information when the keymap changes.
-zle-keymap-select() {
-  case $KEYMAP in
-    vicmd)      echo -ne "\e[2m" ;; # 方塊光標 (或 \e[2q)
-    main|viins) echo -ne "\e[5m" ;; # 豎線光標 (或 \e[5q)
-  esac
-  zle reset-prompt
-  zle -R
+autoload -Uz url-quote-magic
+zle -N self-insert url-quote-magic
+
+autoload -Uz bracketed-paste-magic
+zle -N bracketed-paste bracketed-paste-magic
+
+#########################################################################
+# 危险命令拦截
+#########################################################################
+_safe_accept_line() {
+  # 正则匹配：rm -rf (或 -f -r) 后面跟着纯 /、~、/*、.、.. 等高危路径
+  if [[ "$BUFFER" =~ '(^|.*[;&|])\s*rm\s+.*(-[a-zA-Z]*[rR][a-zA-Z]*|--recursive).*\s+(/|~|/root|/\*|~\/\*|/root/\*|\.|\.\.)/*(\s+.*)?$' ]]; then
+    # 打印警告提示 从 /dev/tty 强制读取标准输入，确保交互式 read 能够正常捕获按键
+    echo -ne "\n\033[1;31m⚠️ [高危检测]\033[0m 正在试图执行高危命令: \033[1;33m$BUFFER\033[0m 确定继续吗？[y/N]:"
+    read -q "reply" < /dev/tty
+
+    if [[ "$reply" =~ "^[Yy]$" ]]; then
+      echo -n "\n✅ 用户已确认继续执行..."
+      zle .accept-line  # 呼叫 Zsh 原生的回车动作，真正提交执行
+    else
+      echo "\n❌ 操作已取消！"
+      # 取消执行，清除当前命令行文本（防止手滑再次误触）
+      BUFFER=""
+      zle reset-prompt
+      return 1
+    fi
+  else
+    # 普通命令无缝直接放行
+    zle .accept-line
+  fi
 }
 
-# Ensure that the prompt is redrawn when the terminal size changes.
-TRAPWINCH() {
-  zle &&  zle -R
-}
+# 将我们自定义的逻辑覆盖默认的 Enter 键 (accept-line)
+zle -N accept-line _safe_accept_line
 
-zle -N zle-keymap-select
-zle -N edit-command-line
-
+#########################################################################
+# Zsh Vim 模式光标动态切换
+#########################################################################
+# 1. 开启 Zsh 的 Vi/Vim 键盘映射模式
 bindkey -v
 
-# allow v to edit the command line (standard behaviour)
+# 2. 消除按下 Esc 键后的响应延迟（单位：10ms，设置为 1 极速切模式）
+export KEYTIMEOUT=1
+
+# 3. 核心：定义不同模式下的光标转义码
+_set_cursor_shape() {
+  case "$KEYMAP" in
+    vicmd)      echo -ne "\e[1 q" ;; # Normal 模式：闪烁方块 █
+    main|viins) echo -ne "\e[5 q" ;; # Insert 模式：闪烁细竖线 |
+    *)          echo -ne "\e[5 q" ;; # 默认：闪烁细竖线 |
+    #*)          echo -ne "\e[3 q" ;; # 默认：闪烁下横线 _
+  esac
+}
+
+# 4. 监听 Vim 模式切换事件 (按 Esc 或 i 时触发)
+_zle_keymap_select() {
+  _set_cursor_shape
+  zle reset-prompt 2>/dev/null  # 可选：确保 Prompt 实时刷新
+}
+zle -N zle-keymap-select _zle_keymap_select
+
+# 5. 新一行命令行初始化时，默认恢复为 Insert 模式（闪烁细竖线）
+_zle_line_init() {
+  zle vi-insert                 # 确保默认进入插入模式
+  echo -ne "\e[5 q"            # 强制设定为闪烁细竖线
+}
+zle -N zle-line-init _zle_line_init
+
+# 6. 当在命令行按下回车准备执行命令时触发
+_zle_line_finish() {
+  echo -ne "\e[5 q"            # 保持闪烁细竖线
+}
+zle -N zle-line-finish _zle_line_finish
+
+# 7. 命令开始执行/输出结果前触发（防止运行系统命令如 git/python 改变光标样式）
+preexec() {
+  echo -ne "\e[5 q"
+}
+
+# 8. 命令行编辑与快捷键映射
 autoload -Uz edit-command-line
+zle -N edit-command-line
+
+# 9. 在 vicmd 模式下按 'v' 用外部编辑器 (Vim) 编辑当前命令行
 bindkey -M vicmd 'v' edit-command-line
 
-# allow ctrl-p, ctrl-n for navigate history (standard behaviour)
+# 10. 恢复常用的 Emacs 风格快捷键（即使在 Vi 模式下也能用）
 bindkey '^P' up-history
 bindkey '^N' down-history
-
-# allow ctrl-h, ctrl-w, ctrl-? for char and word deletion (standard behaviour)
 bindkey '^?' backward-delete-char
 bindkey '^h' backward-delete-char
 bindkey '^w' backward-kill-word
-
-# allow ctrl-r to perform backward search in history
 bindkey '^r' history-incremental-search-backward
-
-# allow ctrl-a and ctrl-e to move to beginning/end of line
 bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line
 
-# 将回车绑定到其他键上(如按a代表回车)
-# bindkey 'a' accept-line
-
-# if mode indicator wasn't setup by theme, define default
-if [[ "$MODE_INDICATOR" == "" ]]; then
-  MODE_INDICATOR="%{$fg_bold[red]%}<%{$fg[red]%}<<%{$reset_color%}"
-fi
-
-vi_mode_prompt_info() {
-  echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
-}
-
-# define right prompt, if it wasn't defined by a theme
-if [[ "$RPS1" == "" && "$RPROMPT" == "" ]]; then
-  RPS1='$(vi_mode_prompt_info)'
-fi
+# 11. 终端启动加载 .zshrc 时立即生效一次
+echo -ne "\e[5 q"
 
 #########################################################################
 # 额外功能函数
@@ -3607,114 +3652,204 @@ bindkey '^Q' _zsh_freeze_and_do
 #########################################################################
 #标点符号自动补全
 #########################################################################
-# 1. Core pairing and skipping logic
-_zsh_native_autopair() {
-  local l_char="$KEYS"
-  local r_char=""
+AUTOPAIR_INHIBIT_INIT=${AUTOPAIR_INHIBIT_INIT:-}
+AUTOPAIR_BETWEEN_WHITESPACE=${AUTOPAIR_BETWEEN_WHITESPACE:-}
+AUTOPAIR_SPC_WIDGET=${AUTOPAIR_SPC_WIDGET:-"$(bindkey " " | cut -c5-)"}
+AUTOPAIR_BKSPC_WIDGET=${AUTOPAIR_BKSPC_WIDGET:-"$(bindkey "^?" | cut -c6-)"}
+AUTOPAIR_DELWORD_WIDGET=${AUTOPAIR_DELWORD_WIDGET:-"$(bindkey "^w" | cut -c6-)"}
 
-  # Define pairs (English & Chinese)
-  case "$l_char" in
-    # English pairs
-    '(') r_char=')' ;;
-    '[') r_char=']' ;;
-    '{') r_char='}' ;;
-    '"') r_char='"' ;;
-    "'") r_char="'" ;;
-    '`') r_char='`' ;;
-    '<') r_char='>' ;;
-    # Chinese pairs
-    '（') r_char='）' ;;
-    '【') r_char='】' ;;
-    '{')  r_char='}' ;;  # Zsh treats Chinese { } same as English if input method maps it
-    '《') r_char='》' ;;
-    '“') r_char='”' ;;
-    '‘') r_char='’' ;;
-    '「') r_char='」' ;;
-  esac
+typeset -gA AUTOPAIR_PAIRS
+AUTOPAIR_PAIRS=('`' '`' "'" "'" '"' '"' '{' '}' '[' ']' '(' ')' ' ' ' ')
 
-  # SKIPPING LOGIC: If the next character in RBUFFER matches the typed closing char
-  # Use helper comparison to safely handle multi-byte Chinese characters
-  if [[ -n "$r_char" && "${RBUFFER}" == "${l_char}"* ]]; then
-    LBUFFER+="$l_char"
-    RBUFFER="${RBUFFER#?}"
-  elif [[ -n "$r_char" ]]; then
-    # PAIRING LOGIC: Insert both and keep cursor in the middle
-    LBUFFER+="$l_char"
-    RBUFFER="$r_char$RBUFFER"
-  else
-    # Fallback for unmapped keys
-    zle self-insert
-  fi
-}
+typeset -gA AUTOPAIR_LBOUNDS
+AUTOPAIR_LBOUNDS=(all '[.:/\!]')
+AUTOPAIR_LBOUNDS+=(quotes '[]})a-zA-Z0-9]')
+AUTOPAIR_LBOUNDS+=(spaces '[^{([]')
+AUTOPAIR_LBOUNDS+=(braces '')
+AUTOPAIR_LBOUNDS+=('`' '`')
+AUTOPAIR_LBOUNDS+=('"' '"')
+AUTOPAIR_LBOUNDS+=("'" "'")
 
-# Bind keys for pairing (Opening characters)
-zle -N _zsh_native_autopair
-for char in '(' '[' '{' '"' "'" '`' '<' '（' '【' '《' '“' '‘' '「'; do
-  bindkey "$char" _zsh_native_autopair
-done
+typeset -gA AUTOPAIR_RBOUNDS
+AUTOPAIR_RBOUNDS=(all '[[{(<,.:?/%$!a-zA-Z0-9]')
+AUTOPAIR_RBOUNDS+=(quotes '[a-zA-Z0-9]')
+AUTOPAIR_RBOUNDS+=(spaces '[^]})]')
+AUTOPAIR_RBOUNDS+=(braces '')
 
-# Explicitly bind closing characters for the skipping feature
-_zsh_native_skip_close() {
-  local c_char="$KEYS"
-  # Safely check if RBUFFER starts with the pressed closing character
-  if [[ "${RBUFFER}" == "${c_char}"* ]]; then
-    LBUFFER+="$c_char"
-    RBUFFER="${RBUFFER#?}"
-  else
-    zle self-insert
-  fi
-}
-zle -N _zsh_native_skip_close
-for char in ')' ']' '}' '>' '）' '】' '》' '”' '’' '」'; do
-  bindkey "$char" _zsh_native_skip_close
-done
-
-# 2. SMART DELETE LOGIC: Delete both if cursor is inside an empty pair (Multi-byte Safe)
-_zsh_native_autodelete() {
-  local matched=0
-    
-  # Check if the text surrounding the cursor forms a known pair
-  # Using array approach to handle multi-byte characters safely
-  local pairs=(
-    "()" "[]" "{}" '""' "''" '``' "<>"
-    "（）" "【】" "《》" "“”" "‘’" "「」"
-  )
-
-  for pair in "${pairs[@]}"; do
-    local left="${pair[1]}"
-    local right="${pair[2]}"
-        
-    if [[ "${LBUFFER}" == *"${left}" && "${RBUFFER}" == "${right}"* ]]; then
-      # Safe deletion of 1 character from left and 1 from right (handles multi-byte)
-      LBUFFER="${LBUFFER%?}"
-      RBUFFER="${RBUFFER#?}"
-      matched=1
-      break
+_ap-get-pair() {
+    if [[ -n $1 ]]; then
+        echo ${AUTOPAIR_PAIRS[$1]}
+    elif [[ -n $2 ]]; then
+        local i
+        for i in ${(@k)AUTOPAIR_PAIRS}; do
+            [[ $2 == ${AUTOPAIR_PAIRS[$i]} ]] && echo $i && break
+        done
     fi
-  done
-    
-  if [[ $matched -eq 0 ]]; then
-    # Normal backspace behavior
-    zle backward-delete-char
-  fi
 }
-zle -N _zsh_native_autodelete
-bindkey '^?' _zsh_native_autodelete # ^? represents Backspace
 
-# 3. SMART SPACE LOGIC: Expand space inside standard pairs
-_zsh_native_autospace() {
-  if [[ "${LBUFFER}" == *"{" && "${RBUFFER}" == "}"* ]] || \
-    [[ "${LBUFFER}" == *"[" && "${RBUFFER}" == "]"* ]] || \
-    [[ "${LBUFFER}" == *"(" && "${RBUFFER}" == ")"* ]] || \
-    [[ "${LBUFFER}" == *"（" && "${RBUFFER}" == "）"* ]]; then
-    LBUFFER+=" "
-    RBUFFER=" $RBUFFER"
-  else
-    zle self-insert
-  fi
+_ap-boundary-p() {
+    [[ -n $1 && $LBUFFER =~ "$1$" ]] || [[ -n $2 && $RBUFFER =~ "^$2" ]]
 }
-zle -N _zsh_native_autospace
-bindkey ' ' _zsh_native_autospace
+
+_ap-next-to-boundary-p() {
+    local -a groups
+    groups=(all)
+    case $1 in
+        \'|\"|\`)    groups+=quotes ;;
+        \{|\[|\(|\<) groups+=braces ;;
+        " ")         groups+=spaces ;;
+    esac
+    groups+=$1
+    local group
+    for group in $groups; do
+        _ap-boundary-p ${AUTOPAIR_LBOUNDS[$group]} ${AUTOPAIR_RBOUNDS[$group]} && return 0
+    done
+    return 1
+}
+
+_ap-balanced-p() {
+    local lbuf="${LBUFFER//\\$1}"
+    local rbuf="${RBUFFER//\\$2}"
+    local llen="${#lbuf//[^$1]}"
+    local rlen="${#rbuf//[^$2]}"
+    if (( rlen == 0 && llen == 0 )); then
+        return 0
+    elif [[ $1 == $2 ]]; then
+        if [[ $1 == " " ]]; then
+            local match=
+            local mbegin=
+            local mend=
+
+            [[ $LBUFFER =~ "[^'\"]([ 	]+)$" && $RBUFFER =~ "^${match[1]}" ]] && return 0
+            return 1
+        elif (( llen == rlen || (llen + rlen) % 2 == 0 )); then
+            return 0
+        fi
+    else
+        local l2len="${#lbuf//[^$2]}"
+        local r2len="${#rbuf//[^$1]}"
+        local ltotal=$((llen - l2len))
+        local rtotal=$((rlen - r2len))
+
+        (( ltotal < 0 )) && ltotal=0
+        (( ltotal < rtotal )) && return 1
+        return 0
+    fi
+    return 1
+}
+
+_ap-can-pair-p() {
+    local rchar="$(_ap-get-pair $KEYS)"
+
+    [[ -n $rchar ]] || return 1
+
+    if [[ $rchar != " " ]]; then
+        [[ -n $AUTOPAIR_BETWEEN_WHITESPACE && \
+            $LBUFFER =~ "(^|[ 	])$" && \
+            $RBUFFER =~ "^($|[ 	])" ]] && return 0
+
+        ! _ap-balanced-p $KEYS $rchar && return 1
+    elif [[ $RBUFFER =~ "^[ 	]*$" ]]; then
+        return 1
+    fi
+
+    _ap-next-to-boundary-p $KEYS $rchar && return 1
+
+    return 0
+}
+
+_ap-can-skip-p() {
+    if [[ -z $LBUFFER ]]; then
+        return 1
+    elif [[ $1 == $2 ]]; then
+        if [[ $1 == " " ]]; then
+            return 1
+        elif ! _ap-balanced-p $1 $2; then
+            return 1
+        fi
+    fi
+    if ! [[ -n $2 && ${RBUFFER[1]} == $2 && ${LBUFFER[-1]} != '\' ]]; then
+        return 1
+    fi
+    return 0
+}
+
+_ap-can-delete-p() {
+    local lchar="${LBUFFER[-1]}"
+    local rchar="$(_ap-get-pair $lchar)"
+    ! [[ -n $rchar && ${RBUFFER[1]} == $rchar ]] && return 1
+    if [[ $lchar == $rchar ]]; then
+        if [[ $lchar == ' ' && ( $LBUFFER =~ "[^{([] +$" || $RBUFFER =~ "^ +[^]})]" ) ]]; then
+            return 1
+        elif ! _ap-balanced-p $lchar $rchar; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+_ap-self-insert() {
+    LBUFFER+=$1
+    RBUFFER="$2$RBUFFER"
+}
+
+autopair-insert() {
+    local rchar="$(_ap-get-pair $KEYS)"
+    if [[ $KEYS == (\'|\"|\`| ) ]] && _ap-can-skip-p $KEYS $rchar; then
+        zle forward-char
+    elif _ap-can-pair-p; then
+        _ap-self-insert $KEYS $rchar
+    elif [[ $rchar == " " ]]; then
+        zle ${AUTOPAIR_SPC_WIDGET:-self-insert}
+    else
+        zle self-insert
+    fi
+}
+
+autopair-close() {
+    if _ap-can-skip-p "$(_ap-get-pair "" $KEYS)" $KEYS; then
+        zle forward-char
+    else
+        zle self-insert
+    fi
+}
+
+autopair-delete() {
+    _ap-can-delete-p && RBUFFER=${RBUFFER:1}
+    zle ${AUTOPAIR_BKSPC_WIDGET:-backward-delete-char}
+}
+
+autopair-delete-word() {
+    _ap-can-delete-p && RBUFFER=${RBUFFER:1}
+    zle ${AUTOPAIR_DELWORD_WIDGET:-backward-delete-word}
+}
+
+autopair-init() {
+    zle -N autopair-insert
+    zle -N autopair-close
+    zle -N autopair-delete
+    zle -N autopair-delete-word
+
+    local p
+    for p in ${(@k)AUTOPAIR_PAIRS}; do
+        bindkey "$p" autopair-insert
+        bindkey -M isearch "$p" self-insert
+
+        local rchar="$(_ap-get-pair $p)"
+        if [[ $p != $rchar ]]; then
+            bindkey "$rchar" autopair-close
+            bindkey -M isearch "$rchar" self-insert
+        fi
+    done
+
+    bindkey "^?" autopair-delete
+    bindkey "^h" autopair-delete
+    bindkey "^w" autopair-delete-word
+    bindkey -M isearch "^?" backward-delete-char
+    bindkey -M isearch "^h" backward-delete-char
+    bindkey -M isearch "^w" backward-delete-word
+}
+[[ -n $AUTOPAIR_INHIBIT_INIT ]] || autopair-init
 
 #########################################################################
 #目录跳转后自动显示目录内容
