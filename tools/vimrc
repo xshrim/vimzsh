@@ -517,42 +517,44 @@ endif
 
 """""""""""""""""""""""""""""""""""vim-which-key"""""""""""""""""""""""""""""
 " 显示按键绑定
-Plug 'liuchengxu/vim-which-key'
-let g:which_key_use_floating_win = 1
-let g:which_key_map = {}
-let g:which_key_map['<F1>'] = '帮助文档'
-let g:which_key_map['<F2>'] = '浮动终端'
-let g:which_key_map['<F3>'] = '文件列表'
-let g:which_key_map['<F4>'] = '显示标记'
-let g:which_key_map['<F5>'] = '编译运行'
-let g:which_key_map['<F6>'] = '执行调试'
-let g:which_key_map['<F7>'] = '切换行号'
-let g:which_key_map['<F8>'] = '格式内容'
-let g:which_key_map['<F9>'] = '去除空行'
-let g:which_key_map['<PgUp>'] = '上一主题'
-let g:which_key_map['<PgDn>'] = '下一主题'
-let g:which_key_map[':bn/:bd'] = '切换/删除缓冲区'
-let g:which_key_map['f/s'] = '单/双字符查找'
-let g:which_key_map['>/<'] = '向右/向左缩进'
-let g:which_key_map['za'] = '折叠切换'
+if has('patch-7.4.2189')
+  Plug 'liuchengxu/vim-which-key'
+  let g:which_key_use_floating_win = 1
+  let g:which_key_map = {}
+  let g:which_key_map['<F1>'] = '帮助文档'
+  let g:which_key_map['<F2>'] = '浮动终端'
+  let g:which_key_map['<F3>'] = '文件列表'
+  let g:which_key_map['<F4>'] = '显示标记'
+  let g:which_key_map['<F5>'] = '编译运行'
+  let g:which_key_map['<F6>'] = '执行调试'
+  let g:which_key_map['<F7>'] = '切换行号'
+  let g:which_key_map['<F8>'] = '格式内容'
+  let g:which_key_map['<F9>'] = '去除空行'
+  let g:which_key_map['<PgUp>'] = '上一主题'
+  let g:which_key_map['<PgDn>'] = '下一主题'
+  let g:which_key_map[':bn/:bd'] = '切换/删除缓冲区'
+  let g:which_key_map['f/s'] = '单/双字符查找'
+  let g:which_key_map['>/<'] = '向右/向左缩进'
+  let g:which_key_map['za'] = '折叠切换'
 
-let g:which_key_map.k = { 'name': '+功能键(F1-F12)' }
-let g:which_key_map.k['1'] = [ '<F1>', '帮助文档' ]
-let g:which_key_map.k['2'] = [ '<F2>', '浮动终端' ]
-let g:which_key_map.k['3'] = [ '<F3>', '文件列表' ]
-let g:which_key_map.k['4'] = [ '<F4>', '显示标记' ]
-let g:which_key_map.k['5'] = [ '<F5>', '编译运行' ]
-let g:which_key_map.k['6'] = [ '<F6>', '执行调试' ]
-let g:which_key_map.k['7'] = [ '<F7>', '切换行号' ]
-let g:which_key_map.k['8'] = [ '<F8>', '格式内容' ]
-let g:which_key_map.k['9'] = [ '<F9>', '去除空行' ]
-nnoremap <silent> <leader> :<c-u>WhichKey mapleader<CR>
-vnoremap <silent> <leader> :<c-u>WhichKeyVisual mapleader<CR>
-"highlight WhichKey          ctermfg=155 cterm=bold
-"highlight WhichKeyGroup     ctermfg=81  cterm=bold
-"highlight WhichKeyDesc      ctermfg=225
+  let g:which_key_map.k = { 'name': '+功能键(F1-F12)' }
+  let g:which_key_map.k['1'] = [ '<F1>', '帮助文档' ]
+  let g:which_key_map.k['2'] = [ '<F2>', '浮动终端' ]
+  let g:which_key_map.k['3'] = [ '<F3>', '文件列表' ]
+  let g:which_key_map.k['4'] = [ '<F4>', '显示标记' ]
+  let g:which_key_map.k['5'] = [ '<F5>', '编译运行' ]
+  let g:which_key_map.k['6'] = [ '<F6>', '执行调试' ]
+  let g:which_key_map.k['7'] = [ '<F7>', '切换行号' ]
+  let g:which_key_map.k['8'] = [ '<F8>', '格式内容' ]
+  let g:which_key_map.k['9'] = [ '<F9>', '去除空行' ]
+  nnoremap <silent> <leader> :<c-u>WhichKey mapleader<CR>
+  vnoremap <silent> <leader> :<c-u>WhichKeyVisual mapleader<CR>
+  "highlight WhichKey          ctermfg=155 cterm=bold
+  "highlight WhichKeyGroup     ctermfg=81  cterm=bold
+  "highlight WhichKeyDesc      ctermfg=225
 
-autocmd VimEnter * if exists(':WhichKey') | call which_key#register(mapleader, "g:which_key_map") | endif
+  autocmd VimEnter * if exists(':WhichKey') | call which_key#register(mapleader, "g:which_key_map") | endif
+endif
 
 """"""""""""""""""""""""""""""""toggle-terminal"""""""""""""""""""""""""""
 " vim8
@@ -586,19 +588,21 @@ endif
 
 """""""""""""""""""""""""""""""""vim-translator"""""""""""""""""""""""""""
 " 单词翻译
-Plug 'voldikss/vim-translator'
-" Echo translation in the cmdline
-nmap <silent> <Leader>t <Plug>Translate
-vmap <silent> <Leader>t <Plug>TranslateV
-" Display translation in a window
-nmap <silent> <Leader>w <Plug>TranslateW
-vmap <silent> <Leader>w <Plug>TranslateWV
-" Replace the text with translation
-nmap <silent> <Leader>r <Plug>TranslateR
-vmap <silent> <Leader>r <Plug>TranslateRV
-" Translate the text in clipboard
-nmap <silent> <Leader>z <Plug>TranslateX
-"nmap <silent>di :!curl dict://dict.org/d:<cword><CR><CR>
+if version >=800
+  Plug 'voldikss/vim-translator'
+  " Echo translation in the cmdline
+  nmap <silent> <Leader>t <Plug>Translate
+  vmap <silent> <Leader>t <Plug>TranslateV
+  " Display translation in a window
+  nmap <silent> <Leader>w <Plug>TranslateW
+  vmap <silent> <Leader>w <Plug>TranslateWV
+  " Replace the text with translation
+  nmap <silent> <Leader>r <Plug>TranslateR
+  vmap <silent> <Leader>r <Plug>TranslateRV
+  " Translate the text in clipboard
+  nmap <silent> <Leader>z <Plug>TranslateX
+  "nmap <silent>di :!curl dict://dict.org/d:<cword><CR><CR>
+endif
 
 """""""""""""""""""""""""""""""""vim-fugitive"""""""""""""""""""""""""""""
 " Git包装(disabled)
@@ -723,7 +727,9 @@ Plug 'rhysd/clever-f.vim'
 
 """"""""""""""""""""""""""""""""""""""vim-qf""""""""""""""""""""""""""""""""
 " quickfix增强
-Plug 'romainl/vim-qf'
+if has('patch-7.4.2210')
+  Plug 'romainl/vim-qf'
+endif
 
 """"""""""""""""""""""""""""""""""asyncrun.vim""""""""""""""""""""""""""""""
 " vim8
