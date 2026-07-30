@@ -207,7 +207,7 @@ h6 code {
 } */
 h1 {
   text-align: center;
-  color: #9966cc;
+  color: #96abca;
   padding-bottom: 0.3em;
   font-size: 2em;
   line-height: 1.2;
@@ -222,7 +222,7 @@ h1:after {
   margin: 0.2em auto 0;
   width: 150px;
   height: 2px;
-  border-bottom: 2px dashed #af9ed4;
+  border-bottom: 2px dashed #cbd5e1;
 }
 
 h2 {
@@ -246,20 +246,20 @@ h3 {
 h4 {
   font-size: 22px;
   /*color: #f85787;*/
-  color: #ff3399;
+  color: #ff3388;
   font-weight: 400;
   counter-reset: h5;
 }
 
 h5 {
   font-size: 20px;
-  color: #ff6644;
+  color: #ff6655;
   font-weight: 400;
   counter-reset: h6;
 }
 
 h6 {
-  color: #cc9933;
+  color: #cc9922;
   font-size: 18px;
   font-weight: 400;
 }
@@ -370,11 +370,12 @@ h6.md-focus:before {
 =============================================================================*/
 
 a {
-  color: #8fb92c;
+  color: #ea580c;
   text-decoration: none;
 }
 
 a:hover {
+  color: #c2410c;
   text-decoration: underline;
 }
 
@@ -460,7 +461,7 @@ ul li ol:first-of-type,
 ol li ul:first-of-type {
   margin-top: 0px;
   /* color: #00868B; */
-  color: #008800;
+  color: #04b177;
 }
 
 ul ul,
@@ -1097,4 +1098,15 @@ content {
 .md-heading code,
 #typora-sidebar code {
   color: inherit;
+}
+
+#write {
+  /* 最新标准规范 */
+  text-autospace: normal;
+
+  /* 部分引擎对组合值的写法 */
+  text-autospace: ideograph-alpha ideograph-numeric;
+
+  /* 相关的排版间距控制开关 */
+  text-spacing-trim: normal;
 }

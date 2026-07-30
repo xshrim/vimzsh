@@ -64,6 +64,20 @@ else
     echo "❌ 未找到 license.html 文件，跳过步骤 3。"
 fi
 
+# 4. 启用插件支持
+HTML_FILE="$TYPORA_DIR/resources/window.html"
+
+if [ -f "$HTML_FILE" ]; then
+    echo "📦 找到窗口 HTML: $HTML_FILE"
+    cp "$HTML_FILE" "${HTML_FILE}.bak"
+    # 注入自动关闭的 script 脚本
+    INJECT_SCRIPT='<\/body><script src="typora://app/userData/plugins/loader.js" type="module"><\/script><\/html>'
+    sed -i "s@<\/body><\/html>@$INJECT_SCRIPT@g" "$HTML_FILE"
+    echo "✅ 修改主界面启用插件功能完成。"
+else
+    echo "❌ 未找到 window.html 文件，跳过步骤 4。"
+fi
+
 echo "----------------------------------------"
 echo "🎉 恭喜！脚本执行完毕。如果软件处于打开状态，请完全重启 Typora 查看效果。"
 echo "💡 提示：如果更新了软件，只需重新运行此脚本即可。"
