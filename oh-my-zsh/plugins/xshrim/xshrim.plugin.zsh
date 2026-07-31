@@ -2663,7 +2663,22 @@ EOF
     'temperature': 0.1
   }))" "$model" "$system_content" "$*")
 
-  curl -s -X POST "$api_base/chat/completions" -H "Content-Type: application/json" -H "Authorization: Bearer $api_key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败, 请检查网络或APIKey"
+  response=$(curl -s -w "\n%{http_code}" -X POST "$api_base/chat/completions" -H "Content-Type: application/json" -H "Authorization: Bearer $api_key" -d "$payload")
+
+  if [ $? -ne 0 ]; then
+    echo "网络连接或 Curl 执行失败"
+    return
+  fi
+
+  http_code=$(echo "$response" | tail -n1)
+  if [ "$http_code" -ne 200 ]; then
+    echo "请求失败 [HTTP 状态码: $http_code]: $body"
+    return
+  fi
+
+  echo $response | sed '$d' | python3 -c "import sys, json; data = json.load(sys.stdin,strict=False); print(data['choices'][0]['message']['content'] if 'choices' in data else f'请求响应内容解析错误: {data}')"
+
+  # curl -s -X POST "$api_base/chat/completions" -H "Content-Type: application/json" -H "Authorization: Bearer $api_key" -d "$payload" | python3 -c "import sys, json; print(json.load(sys.stdin,strict=False)['choices'][0]['message']['content'])" 2>/dev/null || echo "查询失败, 请检查网络或APIKey"
 }
 
 #########################################################################
