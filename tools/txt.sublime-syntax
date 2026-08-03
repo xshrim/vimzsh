@@ -1,0 +1,147 @@
+%YAML 1.2
+---
+name: Plain Syntax
+file_extensions:
+  - txt
+  - log
+scope: text.plain.enhanced
+first_line_match: '(?i)^(.*)$'
+
+contexts:
+  main:
+    # -------------------------------------------------------------------
+    # 1. 行首 # 标题高亮 (Markdown 风格)
+    # -------------------------------------------------------------------
+    - match: '^\s*#{1,6}\s+.*$'
+      scope: markup.heading.markdown.enhanced
+
+    # -------------------------------------------------------------------
+    # 2. 非行首的 # 行内注释高亮
+    # -------------------------------------------------------------------
+    - match: '(?<!^)\s*#.*$'
+      scope: comment.line.number-sign.enhanced
+
+    # -------------------------------------------------------------------
+    # 3. Markdown 风格列表高亮 (任务列表、无序列表、有序列表)
+    # -------------------------------------------------------------------
+    # (1) Task 任务列表：已完成 [x] 或 [X]（整行呈淡色/完成态风格）
+    - match: '^\s*([*\-+]|\d+[\.\)])\s+(\[(?:x|X)\])\s+(.*)$'
+      captures:
+        1: markup.list.numbered.bullet.enhanced
+        2: keyword.operator.checkbox.completed.enhanced
+        3: comment.line.task.completed.enhanced
+
+    # (2) Task 任务列表：未完成 [ ]
+    - match: '^\s*([*\-+]|\d+[\.\)])\s+(\[\s*\])'
+      captures:
+        1: markup.list.numbered.bullet.enhanced
+        2: entity.name.tag.checkbox.pending.enhanced
+
+    # (3) Markdown 无序列表 (- / * / +，支持层级缩进)
+    - match: '^\s*([*\-+])\s+'
+      captures:
+        1: markup.list.numbered.bullet.enhanced
+
+    # (4) Markdown 有序数字列表 (如 1. 或 1) 或 1.1.)
+    - match: '^\s*(\d+(?:\.\d+)*[\.\)])\s+'
+      captures:
+        1: markup.list.numbered.bullet.enhanced
+
+    # -------------------------------------------------------------------
+    # 4. URL / Email / 文件路径高亮 (优先匹配，避免被标点符号割裂)
+    # -------------------------------------------------------------------
+    # URL 链接
+    - match: '\b(https?|ftp|file)://[^\s()<>""''‘’“”「」『』]+'
+      scope: markup.underlined.link.enhanced
+
+    # Email 邮箱
+    - match: '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+      scope: markup.underline.link.email.enhanced
+
+    # 文件路径
+    - match: '(?:[a-zA-Z]:[\\/]|/)[^\s()<>""''‘’“”「」『』:]+'
+      scope: entity.name.filename.enhanced
+
+    # -------------------------------------------------------------------
+    # 5. 常用日志关键字 (FATAL, PANIC, ERROR, WARN, NOTICE, INFO, DEBUG)
+    # -------------------------------------------------------------------
+    - match: '\b(?i:FATAL|PANIC|CRITICAL|ERROR|SEVERE|FAIL|FAILED)\b'
+      scope: invalid.illegal.enhanced
+    - match: '\b(?i:WARN|WARNING)\b'
+      scope: markup.changed.enhanced
+    - match: '\b(?i:NOTICE|INFO|SUCCESS)\b'
+      scope: string.other.enhanced
+    - match: '\b(?i:DEBUG|TRACE)\b'
+      scope: comment.line.enhanced
+
+    # -------------------------------------------------------------------
+    # 6. 编程逻辑关键字 (if, else, for, while, return 等)
+    # -------------------------------------------------------------------
+    - match: '\b(?i:if|else|elif|then|for|while|do|loop|switch|case|break|continue|return|try|catch|finally|throw|class|function|def|var|let|const|import|export|from)\b'
+      scope: keyword.control.enhanced
+
+    # -------------------------------------------------------------------
+    # 7. Key = Value 键值对匹配 (Key 与 Value 区别高亮)
+    # -------------------------------------------------------------------
+    - match: '([a-zA-Z0-9_\-\.\u4e00-\u9fa5]+)\s*(=)\s*([^\s;,"''“”‘’「」『』()\[\]{}]+)'
+      captures:
+        1: entity.name.tag.key.enhanced
+        2: keyword.operator.assignment.enhanced
+        3: string.unquoted.value.enhanced
+
+    # -------------------------------------------------------------------
+    # 8. 引号内字符串 (使用字符串专用 Scope)
+    # -------------------------------------------------------------------
+    # 英文双引号与中文双引号 “”
+    - match: '"[^"]*"|“[^”]*”'
+      scope: string.quoted.double.enhanced
+
+    # 英文单引号与中文单引号 ‘’
+    - match: "'[^']*'|‘[^’]*’"
+      scope: string.quoted.single.enhanced
+
+    # 角标引号 「」与『』
+    - match: '「[^」]*」|『[^』]*』'
+      scope: string.quoted.other.bracket.enhanced
+
+    # -------------------------------------------------------------------
+    # 9. 各种括号内字符串 (包括尖括号 <>，独立不同颜色)
+    # -------------------------------------------------------------------
+    # 尖括号 < > 与 《 》
+    - match: '<[^>]*>|《[^》]*》'
+      scope: entity.name.tag.label.angle.enhanced
+
+    # 小括号 ( ) 与 （ ）
+    - match: '\([^\)]*\)|（[^）]*）'
+      scope: variable.parameter.parenthesis.enhanced
+
+    # 中括号 [ ] 与 【 】
+    - match: '\[[^\]]*\]|【[^】]*】'
+      scope: entity.other.inherited-class.bracket.enhanced
+
+    # 花括号 { }
+    - match: '\{[^\}]*\}'
+      scope: entity.name.type.curly.enhanced
+
+    # -------------------------------------------------------------------
+    # 10. 数字 (整数、浮点数、十六进制数)
+    # -------------------------------------------------------------------
+    - match: '\b0x[0-9a-fA-F]+\b|\b-?[0-9]+(\.[0-9]+)?\b'
+      scope: constant.numeric.enhanced
+
+    # -------------------------------------------------------------------
+    # 11. 中英文特殊字符与运算符
+    # -------------------------------------------------------------------
+    # 英文运算符与符号
+    - match: '[@#$%&*=+/\-\\<>!:=~^|]'
+      scope: keyword.operator.enhanced
+
+    # 中文常用标点符号
+    - match: '[，。！？；：……——·~]'
+      scope: punctuation.definition.chinese.enhanced
+    # -------------------------------------------------------------------
+    # 12. 普通默认文字兜底高亮 (放在 main context 的最末尾)
+    # -------------------------------------------------------------------
+    # 匹配所有非空白文本，赋予其特定的文本 Scope 颜色
+    - match: '\S+'
+      scope: variable.other.readwrite.plain.enhanced

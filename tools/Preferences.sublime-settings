@@ -1,0 +1,84 @@
+{
+	"color_scheme": "Mariana.sublime-color-scheme",
+	"ignored_packages":
+	[
+		"Vintage",
+	],
+	// 字体名称（填你电脑上已安装的字体）
+    "font_face": "YaHei Consolas Hybrid",
+
+    // 字号大小（数值，单位为 pt）
+    "font_size": 12,
+
+    // 可选：字重粗细（如 "normal", "bold"）
+    "font_options": ["subpixel_antialias"],
+    // 保存文件时自动去除行尾不必要的空格
+    "trim_trailing_white_space_on_save": true,
+
+    // 保存文件时自动在末尾确保有一个空行（符合 Unix/Linux 规范）
+    "ensure_newline_at_eof_by_default": true,
+
+    // 复制或剪切时，如果没有选中任何文字，则默认复制/剪切整行
+    "copy_with_empty_selection": true,
+
+    // 光标高亮当前所在行（方便快速定位光标）
+    "highlight_line": true,
+
+    // 突出显示有修改但尚未保存的标签页（标签页左侧会显示明显的修改标记）
+    "highlight_modified_tabs": true,
+
+    // 搜索框中自动使用选中的文本（在代码里选中某个词按 Ctrl+F 时自动填入搜索框）
+    "find_selected_text": true,
+
+    // 按住 Alt 键（macOS 为 Option 键）使用鼠标拖动时，开启列/块选择模式
+    "drag_text": false, // 禁止鼠标拖拽移动文字，防止误操作
+
+    // 光标平滑移动/呼吸效果（让光标闪烁和移动时有动画过渡感）
+    "caret_style": "smooth", // 可选: "smooth", "phase", "blink", "solid"
+    "caret_extra_top": 1,
+    "caret_extra_bottom": 1,
+
+    // ==========================================
+    // 2. 界面与排版优化
+    // ==========================================
+
+    // 开启自动换行（防止超长日志或文本出现横向滚动条）
+    "word_wrap": true,
+
+    // 调整行高间距（增加上下间距，让代码和文本呼吸感更强，不挤在一起）
+    "line_padding_top": 3,
+    "line_padding_bottom": 3,
+
+    // 缩进指南（显示代码块和缩进的对齐参考线）
+    "draw_indent_guides": true,
+    "indent_guide_options": ["draw_normal", "draw_active"],
+
+
+    // ==========================================
+    // 3. 标签页与文件检索
+    // ==========================================
+
+    // 侧边栏双击文件才打开标签页（避免单击预览时弹出一堆标签页）
+    "preview_on_click": false,
+
+    // 打开文件时自动在侧边栏定位并高亮该文件
+    "reveal_in_side_bar": true,
+
+    // 全局搜索 (Ctrl+Shift+F) 时默认排除的目录和文件（提升搜索速度）
+    "folder_exclude_patterns": [".git", ".svn", "node_modules", "target", "dist", "build"],
+    "file_exclude_patterns": ["*.pyc", "*.pyo", "*.exe", "*.dll", "*.so", "*.dylib", "*.log"],
+
+    // ==========================================
+    // 4. 性能与系统集成
+    // ==========================================
+
+    // 即使文件很大也依然开启语法高亮（ST4 默认对超大文件会关闭高亮以保流畅）
+    "animation_enabled": false, // 关闭动画提升低配机型流畅度
+
+    // 记住上次打开的文件和窗口状态（下次启动时自动恢复）
+    "hot_exit": true,
+    "remember_open_files": true,
+
+    // 关掉自动检查更新弹窗
+    "update_check": false
+}
