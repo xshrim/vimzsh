@@ -1,4 +1,5 @@
 {
+    "default_language": "Plain Syntax",
 	"color_scheme": "Mariana.sublime-color-scheme",
 	"ignored_packages":
 	[
