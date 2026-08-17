@@ -2367,11 +2367,6 @@ function yd() {
 # 一键推送代码
 #########################################################################
 function gtp() {
-  if [[ -z "$GIT_USER" || -z "$GIT_TOKEN" ]]; then
-    echo "❌ Error: Please set GIT_USER and GIT_TOKEN environment variables first."
-    return 1
-  fi
-
   local is_new_repo=false
 
   if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -2420,10 +2415,10 @@ function gtp() {
       echo "# New Project" > README.md
       echo "🛈 Directory is empty. Generated README.md automatically."
     fi
-      
+
     echo "♨ Creating local commit..."
     git add .
-    
+
     local commit_msg="$1"
     if [[ -z "$commit_msg" ]]; then
       if [ "$is_new_repo" = true ]; then
@@ -2441,38 +2436,58 @@ function gtp() {
   fi
 
   local target_url=""
-  if [[ "$remote_url" =~ ^https://(.*) ]]; then
-    local no_proto="${remote_url#*://}"
-    local clean_url="${no_proto#*@}"
-    target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
-  elif [[ "$remote_url" =~ ^git@(.*):(.*) ]]; then
-    local spatial_url="${remote_url#git@}"
-    local clean_url="${spatial_url/:/\/}"
-    target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
-  elif [[ "$remote_url" == ssh://git@* ]]; then
-    local clean_url="${remote_url#ssh://git@}"
-    target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
+
+  local ssh_cmd=""
+  if [[ "$remote_url" =~ ^ssh://([^@]+@)?([^/:]+)(:[0-9]+)?/(.*) ]]; then
+    ssh_cmd="ssh -o 'ProxyCommand=nc -X connect -x ${PROXY_HOST:-127.0.0.1:7890} %h %p'"
   else
-    echo "❌ Error: Unsupported remote URL format: $remote_url"
-    return 1
+    if [[ -z "$GIT_USER" || -z "$GIT_TOKEN" ]]; then
+      echo "❌ Error: Please set GIT_USER and GIT_TOKEN environment variables first."
+      return 1
+    fi
+
+    if [[ "$remote_url" =~ ^https://(.*) ]]; then
+      local no_proto="${remote_url#*://}"
+      local clean_url="${no_proto#*@}"
+      target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
+    elif [[ "$remote_url" =~ ^git@(.*):(.*) ]]; then
+      local spatial_url="${remote_url#git@}"
+      local clean_url="${spatial_url/:/\/}"
+      target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
+    elif [[ "$remote_url" == ssh://git@* ]]; then
+      local clean_url="${remote_url#ssh://git@}"
+      target_url="https://${GIT_USER}:${GIT_TOKEN}@${clean_url}"
+    else
+      echo "❌ Error: Unsupported remote URL format: $remote_url"
+      return 1
+    fi
   fi
 
   echo "⏳ Pushing branch [$current_branch] to remote $remote_url ..."
-  
+
+  local push_opts=""
   if [ "$is_new_repo" = true ]; then
-    if git push -u "$target_url" "$current_branch"; then
+    push_opts="-u"
+  fi
+
+  local push_status=1
+  if [[ -n "$ssh_cmd" ]]; then
+    git -c core.sshCommand="$ssh_cmd" push $push_opts "$target_url" "$current_branch"
+    push_status=$?
+  else
+    git push $push_opts "$target_url" "$current_branch"
+    push_status=$?
+  fi
+
+  if [ $push_status -eq 0 ]; then
+    if [ -n "$push_opts" ]; then
       echo "⛳ First push for the new repository succeeded."
     else
-      echo "❌ Push failed."
-      return 1
+      echo "⛳ Push succeeded"
     fi
   else
-    if git push "$target_url" "$current_branch"; then
-      echo "⛳ Pushed successfully."
-    else
-      echo "❌ Push failed."
-      return 1
-    fi
+    echo "❌ Push failed."
+    return 1
   fi
 }
 
