@@ -2239,52 +2239,117 @@ alias zzl='web zhongzilou'
 # 视频字幕整合
 #########################################################################
 function msrt() {
-  if [ "$#" -ne 2 ]; then
-    echo "Usage: msrt <video_file> <srt_file>"
-    return 1
-  fi
-
-  local video_file="$1"
-  local srt_file="$2"
-
-  if [ ! -f "$video_file" ]; then
-    echo "❌ Error: Video file not found: $video_file"
-    return 1
-  fi
-  if [ ! -f "$srt_file" ]; then
-    echo "❌ Error: SRT file not found: $srt_file"
-    return 1
-  fi
-
   if ! command -v ffmpeg &> /dev/null; then
     echo "❌ Error: ffmpeg not found. Please install ffmpeg first."
     return 1
   fi
 
-  local filename="${video_file%.*}"
-  local extension="${video_file##*.}"
-  local tmp_output="${filename}_subtitle_tmp.${extension}"
+  local -a video_list=()
+  local -a srt_list=()
 
-  echo "🎬 Start encoding subtitle..."
-  echo "▣ Video source: $video_file"
-  echo "☰ Subtitle source: $srt_file"
+  # ==================== 1. 参数解析与任务收集 (统一生成对象列表) ====================
+  if [ "$#" -eq 0 ]; then
+    # 情况 A：无参数，默认当前目录
+    local target_dir="."
+    if [ ! -d "$target_dir" ]; then
+      echo "❌ Error: Current directory not found."
+      return 1
+    fi
+    echo "🔍 Scanning current directory for video and subtitle pairs..."
 
-  ffmpeg -i "$video_file" -i "$srt_file" -c:v copy -c:a copy -c:s mov_text -y "$tmp_output" > /dev/null 2>&1
+    while IFS= read -r -d '' video_file; do
+      local filename="${video_file%.*}"
+      local srt_file="${filename}.srt"
+      if [ -f "$srt_file" ]; then
+        video_list+=("$video_file")
+        srt_list+=("$srt_file")
+      fi
+    done < <(find "$target_dir" -maxdepth 1 -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.avi" -o -name "*.mov" \) -print0)
 
-  if [ $? -eq 0 ] && [ -s "$tmp_output" ]; then
-    echo "⛳ Subtitle encoding successful! Cleaning up original files and renaming..."
-    
-    rm -f "$video_file"
-    rm -f "$srt_file"
-    
-    mv "$tmp_output" "$video_file"
-    
-    echo "✔ Subtitle encoding Complete! New file ready: $video_file"
+  elif [ "$#" -eq 1 ]; then
+    # 情况 B：一个参数，指定目录
+    local target_dir="$1"
+    if [ ! -d "$target_dir" ]; then
+      echo "❌ Error: Directory not found: $target_dir"
+      return 1
+    fi
+    echo "🔍 Scanning directory '$target_dir' for video and subtitle pairs..."
+
+    while IFS= read -r -d '' video_file; do
+      local filename="${video_file%.*}"
+      local srt_file="${filename}.srt"
+      if [ -f "$srt_file" ]; then
+        video_list+=("$video_file")
+        srt_list+=("$srt_file")
+      fi
+    done < <(find "$target_dir" -maxdepth 1 -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.avi" -o -name "*.mov" \) -print0)
+
+  elif [ "$#" -eq 2 ]; then
+    # 情况 C：两个参数，指定单个视频和单个字幕文件
+    local video_file="$1"
+    local srt_file="$2"
+
+    if [ ! -f "$video_file" ]; then
+      echo "❌ Error: Video file not found: $video_file"
+      return 1
+    fi
+    if [ ! -f "$srt_file" ]; then
+      echo "❌ Error: SRT file not found: $srt_file"
+      return 1
+    fi
+
+    video_list+=("$video_file")
+    srt_list+=("$srt_file")
   else
-    echo "❌ Error: ffmpeg encoding failed."
-    rm -f "$tmp_output"
-    return 2
+    # 错误用法
+    echo "Usage: msrt [directory] OR msrt <video_file> <srt_file>"
+    return 1
   fi
+
+  # 检查是否找到了任务
+  local total_tasks="${#video_list[@]}"
+  if [ "$total_tasks" -eq 0 ]; then
+    echo "ℹ️ No matching video and .srt subtitle pairs found to process."
+    return 0
+  fi
+
+  # ==================== 2. 统一批量处理逻辑 ====================
+  echo "🚀 Found $total_tasks task(s) to process."
+  local success_count=0
+
+  for ((i=0; i<total_tasks; i++)); do
+    local video_file="${video_list[i]}"
+    local srt_file="${srt_list[i]}"
+    local filename="${video_file%.*}"
+    local extension="${video_file##*.}"
+    local tmp_output="${filename}_subtitle_tmp.${extension}"
+
+    echo ""
+    echo "----------------------------------------"
+    echo "🎬 Processing [$((i+1))/$total_tasks]: $(basename "$video_file")"
+    echo "▣ Video: $video_file"
+    echo "☰ Subtitle: $srt_file"
+
+    # 执行 ffmpeg 压入字幕
+    ffmpeg -i "$video_file" -i "$srt_file" -c:v copy -c:a copy -c:s mov_text -y "$tmp_output" > /dev/null 2>&1
+
+    if [ $? -eq 0 ] && [ -s "$tmp_output" ]; then
+      echo "⛳ Subtitle encoding successful! Replacing original..."
+      rm -f "$video_file"
+      rm -f "$srt_file"
+      mv "$tmp_output" "$video_file"
+      success_count=$((success_count + 1))
+      echo "✔ Done: $(basename "$video_file")"
+    else
+      echo "❌ Error: ffmpeg encoding failed for $(basename "$video_file")"
+      rm -f "$tmp_output"
+    fi
+  done
+
+  echo ""
+  echo "========================================"
+  echo "✨ Batch complete! Successfully processed $success_count / $total_tasks files."
+  return 0
 }
 
 #########################################################################
