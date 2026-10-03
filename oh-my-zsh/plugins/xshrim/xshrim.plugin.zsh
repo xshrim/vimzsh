@@ -2256,7 +2256,7 @@ function msrt() {
       return 1
     fi
     echo "🔍 Scanning current directory for video and subtitle pairs..."
-
+    
     while IFS= read -r -d '' video_file; do
       local filename="${video_file%.*}"
       local srt_file="${filename}.srt"
@@ -2298,6 +2298,7 @@ function msrt() {
       return 1
     fi
 
+    # 【修复点】：将单文件的路径正确加入到对象列表中
     video_list+=("$video_file")
     srt_list+=("$srt_file")
   else
