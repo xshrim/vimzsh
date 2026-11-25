@@ -12,7 +12,6 @@ source /etc/profile
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
 #ZSH_THEME="robbyrussell"
-#ZSH_THEME="powerline"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -52,29 +51,14 @@ source /etc/profile
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-# plugins=(comm git zsh-syntax-highlighting zsh-autosuggestions)
-# plugins=(git-prompt comm zsh-syntax-highlighting)
-
-#plugins=(comm zsh-syntax-highlighting zsh-autosuggestions zsh-completions emoji nmap pip nvm npm redis-cli heroku fabric docker docker-compose kubectl oc helm kops)
-
-#plugins=(comm fast-syntax-highlighting zsh-autosuggestions zsh-autopair zsh-completions emoji vi-mode nmap pip nvm npm redis-cli heroku fabric docker docker-compose helm kops)
 plugins=(xshrim zsh-syntax-highlighting zsh-autosuggestions zsh-completions history-substring-search z docker docker-compose)
 
-#ZSH_THEME="powerline"
 # User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
 DISABLE_UPDATE_PROMPT=true
 DISABLE_AUTO_UPDATE=true
 
 source $ZSH/oh-my-zsh.sh
 
-# source <(kubectl completion zsh)
-
-# autoload -U compinit && compinit
-
-# autoload -U promptinit && promptinit
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
@@ -98,56 +82,7 @@ source $ZSH/oh-my-zsh.sh
 #
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
-#user history audit
-#PS1="`whoami`@`hostname`:"'[$PWD]'
-#history
-#HISTDIR='/var/log/histaudit'
-#uinfo=`who -u am i 2>/dev/null`
-#UNAME=`echo $uinfo|awk '{print $1}'`
-#UNAME=`who am i 2>/dev/null | awk '{print $1}'`
-#UIP=`echo $uinfo|awk '{print $NF}'|sed -e 's/[()]//g'`
-#if [ "$UIP" = "" ]
-#then
-#    UIP=`hostname`
-#fi
-#if [ ! -d "$HISTDIR" ]
-#then
-#    mkdir $HISTDIR
-#    chmod 777 $HISTDIR
-#fi
-#if [ ! -d "$HISTDIR/$UNAME" ]
-#then
-#    mkdir $HISTDIR/$UNAME
-#    chmod 300 $HISTDIR/$UNAME
-#fi
-#DT=`date +"%Y%m%d_%H%M%S"`
-#export HISTFILE="$HISTDIR/${UNAME}_history"
-#export HISTFILE="$HISTDIR/$UNAME/${UNAME}_${UIP}_history.$DT"
-#chmod 600 $HISTDIR/${UNAME}_history 2>/dev/null
-#export HISTFILE='var/log/histaudit'
-#export HISTSIZE=10000
-#export HISTFILESIZE=50000
-#export HISTTIMEFORMAT="`who am i 2>/dev/null | awk '{print $1" "$NF}'` %F %T ==> "
-#export HISTCONTROL=ignoredups
-#shopt -s histappend
-#typeset -r HISTTIMEFORMAT
-#readonly PROMPT_COMMAND="history -a"
-#chmod 600 $HISTFILE 2>/dev/null
-#usrinfo="["$(whoami)":"$( who am i|awk '{print $1" "$2" "$3" "$4" " $NF}' )"]"
-#uname=$(who am i|awk '{print $1}')
-#export PROMPT_COMMAND='echo [$( date +"%F %T" )] $usrinfo --- {"$( history 1 | sed -r "s|^[ \t]+[0-9]+[ \t]+||" )"} >>/var/log/histaudit.log'
-#export PROMPT_COMMAND='{ thisHistID=`history 1|awk "{print \\$1}"`;lastCommand=`history 1| awk "{\\$1=\"\" ;print}"`;user=`id -un`;whoStr=(`who -u am i`);realUser=${whoStr[0]};logMonth=${whoStr[2]};logDay=${whoStr[3]};logTime=${whoStr[4]};pid=${whoStr[6]};ip=${whoStr[7]};if [ ${thisHistID}x != ${lastHistID}x ];then echo -E `date "+%Y/%m/%d %H:%M:%S"` $user\($realUser\)@$ip[PID:$pid][LOGIN:$logMonth $logDay $logTime] --- $lastCommand ;lastHistID=$thisHistID;fi; } >> $HISTORY_FILE'
 
-#PROXY
-# export http_proxy=http://127.0.0.1:9999/
-# export http_proxy=http://127.0.0.1:9999/
-
-#export PATH=/home/xshrim/gopath/bin:$PATH
-#export PATH=/home/xshrim/source/fabric-samples/scripts/bin:/usr/pgsql-10/bin:$PATH
-
-# This speeds up pasting w/ autosuggest
-# https://github.com/zsh-users/zsh-autosuggestions/issues/238
 pasteinit() {
   OLD_SELF_INSERT=${${(s.:.)widgets[self-insert]}[2,3]}
   zle -N self-insert url-quote-magic # I wonder if you'd need `.url-quote-magic`?
@@ -160,8 +95,4 @@ zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
 autoload -U +X bashcompinit && bashcompinit
-
-# zstyle -e ':completion:*:default' list-colors 'reply=("${PREFIX:+=(#bi)($PREFIX:t)*==34=34}:${(s.:.)LS_COLORS}")'
-
-complete -o nospace -C /usr/bin/mc mc
 
