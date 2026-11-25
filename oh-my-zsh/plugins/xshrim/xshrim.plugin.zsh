@@ -1389,35 +1389,114 @@ function port() {
 function px() {
   local default_port="7890"
   local proxy_host="127.0.0.1"
+  local no_proxy_val="localhost,127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16,100.64.0.0/10,*.local"
+  local target_file="$HOME/.zshrc"
 
-  if [ "$1" = "off" ]; then
-    unset http_proxy https_proxy all_proxy
-    echo "❀ Proxy Disabled"
-    return 0
-  fi
+  local begin_mark="# >>> px persistent start >>>"
+  local end_mark="# <<< px persistent end <<<"
 
-  if [ "$1" = "show" ]; then
-    if [ -z "$http_proxy" ]; then
-      echo "🛈️ Current Proxy: [NONE]"
+  local persist=0
+  local args=()
+  local arg
+  for arg in "$@"; do
+    if [ "$arg" = "-p" ]; then
+      persist=1
     else
-      echo "🛈 Current Proxy: $http_proxy"
+      args+=("$arg")
+    fi
+  done
+
+  local cmd="${args[1]}"
+  local val="${args[2]}"
+
+  _px_enable() {
+    local port="$1"
+    export HTTP_PROXY="http://${proxy_host}:${port}"
+    export HTTPS_PROXY="http://${proxy_host}:${port}"
+    export ALL_PROXY="socks5://${proxy_host}:${port}"
+    export NO_PROXY="$no_proxy_val"
+  }
+
+  _px_disable() {
+    unset HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY
+  }
+
+  _px_write_persist() {
+    local block_content="$1"
+
+    [ -f "$target_file" ] || touch "$target_file"
+
+    local tmp_file
+    tmp_file="$(mktemp)" || return 1
+
+    awk -v b="$begin_mark" -v e="$end_mark" '
+      $0 == b { skip = 1; next }
+      $0 == e { skip = 0; next }
+      !skip { print }
+    ' "$target_file" > "$tmp_file"
+
+    awk 'NF { p = NR } { lines[NR] = $0 } END { for (i = 1; i <= p; i++) print lines[i] }' "$tmp_file" > "${tmp_file}.clean"
+    {
+      [ -s "${tmp_file}.clean" ] && cat "${tmp_file}.clean"
+      printf '\n%s\n%s\n%s\n' "$begin_mark" "$block_content" "$end_mark"
+    } > "$target_file"
+
+    rm -f "$tmp_file" "${tmp_file}.clean"
+  }
+
+  if [ "$cmd" = "off" ]; then
+    _px_disable
+    if [ "$persist" -eq 1 ]; then
+      local off_block
+      off_block="unset HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY"
+      _px_write_persist "$off_block" || return 1
+      echo "❀ Proxy Disabled & Persisted to ${target_file}"
+    else
+      echo "❀ Proxy Disabled"
     fi
     return 0
   fi
 
-  local port=$default_port
-  if [[ "$1" =~ ^[0-9]+$ ]]; then
-    port=$1
-  elif [ -n "$1" ] && [ "$1" != "on" ]; then
-    echo "Usage: px [port_number|on|off|show]"
+  if [ "$cmd" = "show" ]; then
+    if [ -z "$HTTP_PROXY" ]; then
+      echo "🛈 Current Proxy: [NONE]"
+    else
+      echo "🛈 Current Proxy: $HTTP_PROXY (NO_PROXY=$NO_PROXY)"
+    fi
+    if [ -f "$target_file" ] && grep -qF "$begin_mark" "$target_file"; then
+      echo "🛈 Persisted in ${target_file}:"
+      awk -v b="$begin_mark" -v e="$end_mark" '$0 == b { f = 1; next } $0 == e { f = 0; next } f { print "   " $0 }' "$target_file"
+    else
+      echo "🛈 Persisted in ${target_file}: [NONE]"
+    fi
+    return 0
+  fi
+
+  local port="$default_port"
+  if [[ "$cmd" =~ ^[0-9]+$ ]]; then
+    port="$cmd"
+  elif [ -n "$cmd" ] && [ "$cmd" != "on" ]; then
+    echo "Usage: px [on [port]|port|off|show] [-p]"
+    return 1
+  elif [[ "$val" =~ ^[0-9]+$ ]]; then
+    port="$val"
+  elif [ -n "$val" ]; then
+    echo "Usage: px [on [port]|port|off|show] [-p]"
     return 1
   fi
 
-  export http_proxy="http://${proxy_host}:${port}"
-  export https_proxy="http://${proxy_host}:${port}"
-  export all_proxy="socks5://${proxy_host}:${port}"
-  
-  echo "✿ Proxy Enabled <${proxy_host}:${port}>"
+  _px_enable "$port"
+  if [ "$persist" -eq 1 ]; then
+    local on_block
+    on_block="export HTTP_PROXY=\"http://${proxy_host}:${port}\"
+export HTTPS_PROXY=\"http://${proxy_host}:${port}\"
+export ALL_PROXY=\"socks5://${proxy_host}:${port}\"
+export NO_PROXY=\"${no_proxy_val}\""
+    _px_write_persist "$on_block" || return 1
+    echo "✿ Proxy Enabled & Persisted to ${target_file} <${proxy_host}:${port}>"
+  else
+    echo "✿ Proxy Enabled <${proxy_host}:${port}>"
+  fi
 }
 
 #########################################################################
