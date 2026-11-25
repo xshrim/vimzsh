@@ -1555,35 +1555,254 @@ function wa() {
 }
 
 #########################################################################
-# 证书检测
+# 证书签发与检测
 #########################################################################
-function cert() {
-  local target="$1"
+cert() {
+  _cert_help_root() {
+    cat <<'EOF'
+用法: cert <子命令> [选项/参数]
 
-  if [ -z "$target" ]; then
-    echo "Usage: cert <file_path | domain_or_url>"
+可用子命令:
+  issue   生成自签名根 CA 并签发带 SAN 的服务端证书
+  check   检查本地证书文件或远程 HTTPS/TLS 服务端证书
+
+查看子命令帮助:
+  cert issue -h
+  cert check -h
+EOF
+  }
+
+  _cert_help_issue() {
+    cat <<'EOF'
+用法: cert issue [-o 机构] [-d 域名] [-i IP] [-t 有效天数] [-p 输出目录] [-h]
+
+选项:
+  -o <机构>    机构名称，支持 a/b/c 形式自动拆分为多级机构 (默认: DevOrg/Local/CA；传空不覆盖默认值)
+  -d <域名>    证书目标域名 (默认: localhost；传空不覆盖默认值)
+  -i <IP>      证书目标 IP 地址 (默认: 127.0.0.1；传空不覆盖默认值)
+  -t <天数>    证书与 CA 有效天数 (默认: 365)
+  -p <目录>    证书与密钥输出目录 (默认: ./certs)
+  -h           显示此帮助信息
+
+示例:
+  cert issue
+  cert issue -d app.local.test
+  cert issue -d '' -i 192.168.1.50
+  cert issue -o Lab/Network.Edge/Router -d router.lan -i 192.168.1.1 -t 825 -p ./ssl
+EOF
+  }
+
+  _cert_help_check() {
+    cat <<'EOF'
+用法: cert check [-h] <证书文件路径 | 域名 | URL | host:port>
+
+参数与选项:
+  <目标>       本地证书文件 (.crt/.pem/.cer) 或远端地址 (如 example.com、https://a.com:8443、192.168.1.1:443)
+  -h           显示此帮助信息
+
+示例:
+  cert check ./certs/server.crt
+  cert check example.com
+  cert check https://example.com:8443/health
+  cert check 10.0.0.10:8443
+EOF
+  }
+
+  local subcmd="$1"
+  if [[ -z "$subcmd" ]]; then
+    _cert_help_root
     return 1
   fi
 
-  if [[ "$target" =~ ^https?:// ]] || [[ "$target" =~ \.[a-z]{2,} && ! -f "$target" ]]; then
-    echo "--- [Remote SSL Certificate: $target] ---"
-        
-    local clean_host=$(echo "$target" | sed -E 's|https?://||; s|/.*||')
-    local host=$(echo "$clean_host" | cut -d: -f1)
-    local port=$(echo "$clean_host" | grep ":" | cut -d: -f2)
-    port=${port:-443}
+  case "$subcmd" in
+    -h|--help|help)
+      _cert_help_root
+      return 0
+      ;;
+    issue)
+      shift
+      local org="DevOrg/Local/CA" domain="localhost" ip="127.0.0.1" days="365" outdir="./certs"
+      local OPTIND opt
+      while getopts "o:d:i:t:p:h" opt; do
+        case "$opt" in
+          o) [[ -n "$OPTARG" ]] && org="$OPTARG" ;;
+          d) [[ -n "$OPTARG" ]] && domain="$OPTARG" ;;
+          i) [[ -n "$OPTARG" ]] && ip="$OPTARG" ;;
+          t) [[ -n "$OPTARG" ]] && days="$OPTARG" ;;
+          p) [[ -n "$OPTARG" ]] && outdir="$OPTARG" ;;
+          h)
+            _cert_help_issue
+            return 0
+            ;;
+          \?)
+            echo ""
+            _cert_help_issue
+            return 1
+            ;;
+        esac
+      done
+      shift $((OPTIND - 1))
 
-    timeout 5 openssl s_client -servername "$host" -connect "$host:$port" </dev/null 2>/dev/null | \
-    openssl x509 -noout -text
+      if [[ $# -gt 0 ]]; then
+        echo "错误: issue 子命令不支持多余位置参数: $*" >&2
+        echo ""
+        _cert_help_issue
+        return 1
+      fi
 
-  elif [ -f "$target" ]; then
-    echo "--- [Local Certificate File: $target] ---"
-    openssl x509 -in "$target" -noout -text
+      if ! [[ "$days" =~ ^[1-9][0-9]*$ ]]; then
+        echo "错误: -t 有效天数必须为正整数 (当前: $days)" >&2
+        return 1
+      fi
 
-  else
-    echo "Error: '$target' is neither a valid file nor a reachable URL."
-    return 1
-  fi
+      local -a parts
+      local item subj_ou="" cn_joined="" san_entries=()
+      parts=("${(@s:/:)org}")
+      for item in "${parts[@]}"; do
+        [[ -n "$item" ]] && {
+          subj_ou+="/O=$item"
+          cn_joined+="${cn_joined:+.}$item"
+        }
+      done
+      [[ -z "$subj_ou" ]] && {
+        subj_ou="/O=DevOrg/O=Local/O=CA"
+        cn_joined="DevOrg.Local.CA"
+      }
+
+      [[ -n "$domain" ]] && san_entries+=("DNS:$domain")
+      [[ -n "$ip" ]] && san_entries+=("IP:$ip")
+      local san_str="${(j:,:)san_entries}"
+      local leaf_cn="${domain:-$ip}"
+
+      mkdir -p "$outdir" || return 1
+      local extfile
+      extfile=$(mktemp) || return 1
+
+      # 兼容 OpenSSL 1.1.1f：显式写入配置段，避免 -addext 扩展丢失
+      cat > "$extfile" <<EOF
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_ca
+prompt = no
+
+[req_distinguished_name]
+CN = ${cn_joined}.RootCA
+
+[v3_ca]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, keyCertSign, cRLSign
+
+[server_cert]
+basicConstraints = CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = ${san_str}
+EOF
+
+      if [[ ! -f "$outdir/ca.key" || ! -f "$outdir/ca.crt" ]]; then
+        openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:prime256v1 -out "$outdir/ca.key" || { rm -f "$extfile"; return 1; }
+        chmod 600 "$outdir/ca.key"
+        openssl req -x509 -new -key "$outdir/ca.key" -days "$days" -sha256 \
+          -config "$extfile" -extensions v3_ca \
+          -subj "${subj_ou}/CN=${cn_joined}.RootCA" \
+          -out "$outdir/ca.crt" || { rm -f "$extfile"; return 1; }
+      fi
+
+      openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:prime256v1 -out "$outdir/server.key" || { rm -f "$extfile"; return 1; }
+      chmod 600 "$outdir/server.key"
+
+      openssl req -new -key "$outdir/server.key" \
+        -subj "${subj_ou}/CN=${leaf_cn}" \
+        -out "$outdir/server.csr" || { rm -f "$extfile"; return 1; }
+
+      openssl x509 -req -in "$outdir/server.csr" \
+        -CA "$outdir/ca.crt" -CAkey "$outdir/ca.key" -CAcreateserial \
+        -out "$outdir/server.crt" -days "$days" -sha256 \
+        -extfile "$extfile" -extensions server_cert || { rm -f "$extfile"; return 1; }
+
+      rm -f "$extfile"
+      if ! openssl verify -CAfile "$outdir/ca.crt" "$outdir/server.crt"; then
+        echo "校验失败，请确认输出目录中不存在旧版不匹配的 ca.crt/ca.key" >&2
+        return 1
+      fi
+      ;;
+    check)
+      shift
+      local OPTIND opt
+      while getopts "h" opt; do
+        case "$opt" in
+          h)
+            _cert_help_check
+            return 0
+            ;;
+          \?)
+            echo ""
+            _cert_help_check
+            return 1
+            ;;
+        esac
+      done
+      shift $((OPTIND - 1))
+
+      if [[ $# -ne 1 ]]; then
+        echo "错误: check 子命令需要且仅需要一个目标参数" >&2
+        echo ""
+        _cert_help_check
+        return 1
+      fi
+
+      local target="$1"
+      if [[ -f "$target" ]]; then
+        echo "--- [Local Certificate File: $target] ---"
+        openssl x509 -in "$target" -noout -text || return 1
+      elif [[ "$target" =~ ^https?:// ]] || [[ "$target" =~ ^[A-Za-z0-9.-]+(:[0-9]+)?(/.*)?$ ]]; then
+        local clean_host="${target#http://}"
+        clean_host="${clean_host#https://}"
+        clean_host="${clean_host%%/*}"
+
+        local host port
+        if [[ "$clean_host" == *:* ]]; then
+          host="${clean_host%%:*}"
+          port="${clean_host##*:}"
+        else
+          host="$clean_host"
+          port="443"
+        fi
+
+        if [[ -z "$host" || ! "$port" =~ ^[0-9]+$ ]]; then
+          echo "错误: 无效的远端主机或端口 '$target'" >&2
+          echo ""
+          _cert_help_check
+          return 1
+        fi
+
+        echo "--- [Remote SSL Certificate: $host:$port (SNI: $host)] ---"
+        local cert_pem
+        cert_pem=$(timeout 5 openssl s_client -servername "$host" -connect "$host:$port" </dev/null 2>/dev/null | \
+          openssl x509 -outform PEM 2>/dev/null)
+
+        if [[ -z "$cert_pem" ]]; then
+          echo "错误: 无法从 '$host:$port' 获取有效的 TLS/SSL 证书" >&2
+          return 1
+        fi
+
+        printf '%s\n' "$cert_pem" | openssl x509 -noout -text
+      else
+        echo "错误: '$target' 既不是有效的本地证书文件，也不是合法的域名/URL/地址" >&2
+        echo ""
+        _cert_help_check
+        return 1
+      fi
+      ;;
+    *)
+      echo "错误: 未知子命令 '$subcmd'" >&2
+      echo ""
+      _cert_help_root
+      return 1
+      ;;
+  esac
 }
 
 #########################################################################
